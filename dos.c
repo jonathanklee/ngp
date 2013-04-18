@@ -56,7 +56,7 @@ static void ncurses_stop()
 
 static void check_alloc()
 {
-        if(nbentry < size - 1 ) {
+        if(nbentry >= size) {
                 size = size + 500;
                 entry = (entry_t*) realloc(entry, size * sizeof(entry_t)); 
         }
