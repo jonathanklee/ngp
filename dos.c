@@ -80,16 +80,16 @@ static int display_entry(int *y, int *index, int color)
         if(*index <= nbentry) {
                 if(strcmp(entry[*index].line, "")) {
                         if(color == 1) {
-                                attron(COLOR_PAIR(1));
+                                attron(A_REVERSE);
                                 printl(y, entry[*index].line);
-                                attroff(COLOR_PAIR(1));
+                                attroff(A_REVERSE);
                         } else {
                                 printl(y, entry[*index].line);
                         }
                 } else {
-                        attron(COLOR_PAIR(2));
+                        attron(A_BOLD);
                         printl(y, entry[*index].file + 3);
-                        attroff(COLOR_PAIR(2));
+                        attroff(A_BOLD);
                 }
         }
 }
