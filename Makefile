@@ -6,7 +6,7 @@ OBJ = $(SRC:.c=.o)
 
 TARGET = dos
 LDFLAGS = -lncurses
-CFLAFS = 
+CFLAGS = 
 INCLUDE_DIR = 
 
 all: $(TARGET)
