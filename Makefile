@@ -20,3 +20,5 @@ $(TARGET): $(OBJ)
 clean:
 	rm -f $(TARGET) *.o
 	
+install:
+	cp $(TARGET) /usr/bin
