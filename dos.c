@@ -113,7 +113,7 @@ static void ncurses_add_line(const char *line, const char* file)
 	nbentry++;
 }
 
-static int parse_file(const char *file, const char *pattern)
+static int parse_file(const char *file, const char *pattern, char *options)
 {
 	FILE *f;
 	char line[256];
@@ -121,7 +121,8 @@ static int parse_file(const char *file, const char *pattern)
 	int first;
 	errno = 0;
 
-	snprintf(command, sizeof(command), "grep -n %s %s", pattern,  file);
+	snprintf(command, sizeof(command), "grep -n %s %s %s", options, 
+							pattern,  file);
 	f = popen(command, "r");
 	if(f == NULL) {
 		fprintf(stderr, "popen : %d %s\n", errno, strerror(errno));
@@ -140,7 +141,7 @@ static int parse_file(const char *file, const char *pattern)
 	return 0;
 }
 
-static void lookup_file(const char *file, const char *pattern)
+static void lookup_file(const char *file, const char *pattern, char *options)
 {
 	int i;
 	regex_t preg;
@@ -153,7 +154,7 @@ static void lookup_file(const char *file, const char *pattern)
 			fprintf(stderr, "regcomp : %s\n", strerror(errno));
 		}
 		if(regexec(&preg, file, 0, NULL, 0) == 0) {
-			parse_file(file, pattern);
+			parse_file(file, pattern, options);
 		}
 		regfree(&preg);
 	}
@@ -166,7 +167,7 @@ static char * extract_line_number(char *line)
 	return token;
 }
 
-static void lookup_directory(const char *dir, const char *pattern)
+static void lookup_directory(const char *dir, const char *pattern, char *options)
 {
 	DIR *dp;
 
@@ -186,7 +187,7 @@ static void lookup_directory(const char *dir, const char *pattern)
 		if(strcmp(ep->d_name, ".") != 0 && strcmp(ep->d_name, "..") != 0) {
 			char file_path[PATH_MAX];
 			snprintf(file_path, PATH_MAX, "%s/%s", dir,ep->d_name); 
-			lookup_file(file_path, pattern);
+			lookup_file(file_path, pattern, options);
 			refresh();
 			
 		}
@@ -196,7 +197,7 @@ static void lookup_directory(const char *dir, const char *pattern)
 			strcmp(ep->d_name, ".") !=0 ) {
 				char path_dir[PATH_MAX]=""; 
 				snprintf(path_dir, PATH_MAX, "%s/%s", dir, ep->d_name);
-				lookup_directory(path_dir, pattern);
+				lookup_directory(path_dir, pattern, options);
 			}
 		} 
 	}
@@ -291,25 +292,35 @@ void main(int argc, char *argv[])
 	int opt;
 	struct dirent *ep;
 	int ch;
+	int first = 0;
 	int cursor = 0;
 	int index = 0;
 	char command[128];
+	char pattern[128] = "";
+	char options[128] = "";
 	const char *editor;
 	config_t cfg;
 
-	if(argc < 2) {
-		usage();
-		exit(-1);
-	}
-
-	while ((opt = getopt(argc, argv, "h")) != -1) {
+	while ((opt = getopt(argc, argv, "hi")) != -1) {
 		switch (opt) {
 		case 'h':
 			usage();
 			break;
+		case 'i':
+			strcpy(options, "-i");	
+			break;
 		default:
 			exit(-1);
 			break;
+		}
+	}
+
+	for(; optind < argc; optind++) {
+		if(!first) {
+			strcpy(pattern, argv[optind]);	
+			first = 1;
+		} else {
+			strcpy(directory, argv[optind]);	
 		}
 	}
 
@@ -319,17 +330,13 @@ void main(int argc, char *argv[])
 		exit(-1);
 	}
 
-	if(argv[2] != NULL) {
-		strncpy((char*)directory, (char*)argv[2], sizeof(directory)); 
-	} 
-
 	signal(SIGINT, sig_handler);
 
 	ncurses_init();
 
 	entry = (entry_t *) calloc(size, sizeof(entry_t));
 
-	lookup_directory(directory, argv[1]);
+	lookup_directory(directory, pattern, options);
 	display_entries(&index, &cursor);
 
 	if(!nbentry) {
