@@ -321,12 +321,13 @@ void main(int argc, char *argv[])
                 case 'k': 
                         cursor_up(&index, &cursor);
                         break;
+                case '\n':
                 case 'p':
                         open_entry(cursor + index);
                         goto quit;
-                        break;
+                case 'q':
+                	goto quit;
                 default:
-                        goto quit;
                         break;
                 }
         }
