@@ -1,0 +1,5 @@
+
+/* editor command :
+arg #1 = line number
+arg #2 = file path */
+editor = "vim +%s %s";

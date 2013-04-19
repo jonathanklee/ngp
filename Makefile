@@ -5,7 +5,7 @@ SRC = $(shell find -name "*.c")
 OBJ = $(SRC:.c=.o)
 
 TARGET = dos
-LDFLAGS = -lncurses
+LDFLAGS = -lncurses -lconfig
 CFLAGS = 
 INCLUDE_DIR = 
 

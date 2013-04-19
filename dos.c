@@ -10,6 +10,7 @@
 #include <ncurses.h>
 #include <menu.h>
 #include <signal.h>
+#include <libconfig.h>
 
 #define BOTTOM (LINES - 2)
 
@@ -253,22 +254,33 @@ static void cursor_down(int *index, int *cursor)
         display_entries(index, cursor);
 }
 
-static void open_entry(int index)
+static void open_entry(int index, const char *editor)
 {
         char command[256];
-        snprintf(command, sizeof(command), "vim +%s %s/%s", 
-                extract_line_number(entry[index].line), directory, 
+        snprintf(command, sizeof(command), editor, 
+                extract_line_number(entry[index].line),
                 entry[index].file+3);
         system(command);              
 }
 
-void sig_handler(int signo)
+static void sig_handler(int signo)
 {
 	if(signo == SIGINT) {
 		free(entry);
 		ncurses_stop();
 		exit(-1);
 	}
+}
+
+static void configuration_init(config_t *cfg)
+{
+        config_init(cfg);
+        if(!config_read_file(cfg, "/etc/dosrc")) {
+		fprintf(stderr, "%s:%d - %s\n", config_error_file(cfg),
+			config_error_line(cfg), config_error_text(cfg));
+		config_destroy(cfg);
+		exit(1);
+        }
 }
 
 void main(int argc, char *argv[])
@@ -280,6 +292,8 @@ void main(int argc, char *argv[])
         int cursor = 0;
         int index = 0;
         char command[128];
+        const char *editor;
+        config_t cfg;
 
         if(argc < 2) {
                 usage();
@@ -294,6 +308,12 @@ void main(int argc, char *argv[])
                 default:
                         break;
                 }
+        }
+
+        configuration_init(&cfg);
+        if(!config_lookup_string(&cfg, "editor", &editor)) {
+		fprintf(stderr, "dosrc: no editor string found!\n");	
+		exit(-1);
         }
 
         if(argv[2] != NULL) {
@@ -323,7 +343,7 @@ void main(int argc, char *argv[])
                         break;
                 case '\n':
                 case 'p':
-                        open_entry(cursor + index);
+                        open_entry(cursor + index, editor);
                         goto quit;
                 case 'q':
                 	goto quit;
