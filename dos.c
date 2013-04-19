@@ -39,6 +39,7 @@ static char directory[64] = "./";
 static void usage() 
 {
 	fprintf(stderr, "Usage: dos regexp [directory]\n");
+	exit(-1);
 }
 
 static void ncurses_init()
@@ -309,6 +310,7 @@ void main(int argc, char *argv[])
 			usage();
 			break;
 		default:
+			exit(-1);
 			break;
 		}
 	}
