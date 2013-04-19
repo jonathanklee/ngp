@@ -8,6 +8,7 @@ TARGET = dos
 LDFLAGS = -lncurses -lconfig
 CFLAGS = 
 INCLUDE_DIR = 
+CONFIG_FILE = dosrc
 
 all: $(TARGET)
 
@@ -22,3 +23,4 @@ clean:
 	
 install:
 	cp $(TARGET) /usr/bin
+	cp $(CONFIG_FILE) /etc
