@@ -12,7 +12,10 @@
 #include <signal.h>
 #include <libconfig.h>
 
-#define BOTTOM (LINES - 2)
+#define CURSOR_UP 	'k'
+#define CURSOR_DOWN 	'j'
+#define ENTER	 	'p'
+#define QUIT	 	'q'
 
 char *regex_langages[] = {
 	"([/[:alnum:]]+\\.c$)",
@@ -334,17 +337,17 @@ void main(int argc, char *argv[])
 
 	while(ch = getch()) {
 		switch(ch) {
-		case 'j':
+		case CURSOR_DOWN:
 			cursor_down(&index, &cursor);
 			break;
-		case 'k': 
+		case CURSOR_UP: 
 			cursor_up(&index, &cursor);
 			break;
+		case ENTER:
 		case '\n':
-		case 'p':
 			open_entry(cursor + index, editor);
 			goto quit;
-		case 'q':
+		case QUIT:
 			goto quit;
 		default:
 			break;
