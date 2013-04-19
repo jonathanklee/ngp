@@ -91,7 +91,8 @@ static int display_entry(int *y, int *index, int color)
 			}
 		} else {
 			attron(A_BOLD);
-			printl(y, entry[*index].file + 3);
+			strcmp(directory, "./") == 0 ? printl(y, entry[*index].file + 3) :
+				printl(y, entry[*index].file);	
 			attroff(A_BOLD);
 		}
 	}
@@ -261,7 +262,7 @@ static void open_entry(int index, const char *editor)
 	char command[256];
 	snprintf(command, sizeof(command), editor, 
 		extract_line_number(entry[index].line),
-		entry[index].file+3);
+		entry[index].file);
 	system(command);              
 }
 
@@ -320,7 +321,7 @@ void main(int argc, char *argv[])
 
 	if(argv[2] != NULL) {
 		strncpy((char*)directory, (char*)argv[2], sizeof(directory)); 
-	}
+	} 
 
 	signal(SIGINT, sig_handler);
 
