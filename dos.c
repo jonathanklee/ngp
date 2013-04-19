@@ -38,7 +38,7 @@ static char directory[64] = "./";
 
 static void usage() 
 {
-	printf("Usage: dos regexp [directory]\n");
+	fprintf(stderr, "Usage: dos regexp [directory]\n");
 }
 
 static void ncurses_init()
@@ -124,7 +124,7 @@ static int parse_file(const char *file, const char *pattern)
 	snprintf(command, sizeof(command), "grep -n %s %s", pattern,  file);
 	f = popen(command, "r");
 	if(f == NULL) {
-		printf("popen : %d %s\n", errno, strerror(errno));
+		fprintf(stderr, "popen : %d %s\n", errno, strerror(errno));
 		return -1;       
 	}
 
@@ -150,7 +150,7 @@ static void lookup_file(const char *file, const char *pattern)
 	nb_regex = sizeof(regex_langages) / sizeof(*regex_langages);
 	for (i = 0;i < nb_regex; i++) {
 		if(regcomp(&preg, regex_langages[i], REG_NOSUB|REG_EXTENDED)) {
-			printf("regcomp : %s\n", strerror(errno));
+			fprintf(stderr, "regcomp : %s\n", strerror(errno));
 		}
 		if(regexec(&preg, file, 0, NULL, 0) == 0) {
 			parse_file(file, pattern);
