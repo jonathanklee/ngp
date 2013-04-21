@@ -346,9 +346,11 @@ void main(int argc, char *argv[])
 	while(ch = getch()) {
 		switch(ch) {
 		case CURSOR_DOWN:
+		case KEY_DOWN:
 			cursor_down(&index, &cursor);
 			break;
 		case CURSOR_UP: 
+		case KEY_UP:
 			cursor_up(&index, &cursor);
 			break;
 		case ENTER:
