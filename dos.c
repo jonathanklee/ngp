@@ -224,6 +224,16 @@ static void display_entries(int *index, int *cursor)
 	}
 }
 
+static void resize(int *index, int *cursor)
+{
+	/* right now this is a bit trivial,
+	 * but we may do more complex moving around
+	 * when the window is resized */
+	clear();
+	display_entries(index, cursor);
+	refresh();
+}
+
 static void page_up(int *index, int *cursor)
 {
 	clear();
@@ -373,6 +383,9 @@ void main(int argc, char *argv[])
 
 	while(ch = getch()) {
 		switch(ch) {
+		case KEY_RESIZE:
+			resize(&index, &cursor);
+			break;
 		case CURSOR_DOWN:
 		case KEY_DOWN:
 			cursor_down(&index, &cursor);
