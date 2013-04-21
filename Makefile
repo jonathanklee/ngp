@@ -1,7 +1,7 @@
 CC = gcc
 
 
-SRC = $(shell find -name "*.c")
+SRC = $(shell find . -name "*.c")
 OBJ = $(SRC:.c=.o)
 
 TARGET = dos
