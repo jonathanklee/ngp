@@ -14,6 +14,8 @@
 
 #define CURSOR_UP 	'k'
 #define CURSOR_DOWN 	'j'
+#define PAGE_UP	'K'
+#define PAGE_DOWN	'J'
 #define ENTER	 	'p'
 #define QUIT	 	'q'
 
@@ -221,14 +223,43 @@ static void display_entries(int *index, int *cursor)
 	}
 }
 
+static void page_up(int *index, int *cursor)
+{
+	clear();
+	refresh();
+	if (*index == 0)
+		*cursor = 0;
+	else
+		*cursor = LINES - 1;
+	*index -= LINES;
+	*index = (*index < 0 ? 0 : *index);
+	display_entries(index, cursor);
+}
+
+static void page_down(int *index, int *cursor)
+{
+	int max_index;
+	if (nbentry % LINES == 0)
+		max_index = (nbentry - LINES);
+	else
+		max_index = (nbentry - (nbentry % LINES));
+
+	if (*index == max_index)
+		*cursor = LINES - 1;
+	else
+		*cursor = 0;
+
+	clear();
+	refresh();
+	*index += LINES;
+	*index = (*index > max_index ? max_index : *index);
+	display_entries(index, cursor);
+}
+
 static void cursor_up(int *index, int *cursor)
 {
-	if(*cursor == 0 && *index > 0) {
-		clear();
-		refresh();
-		*cursor = LINES;
-		*index = *index - LINES;
-		display_entries(index, cursor);
+	if(*cursor == 0) {
+		page_up(index, cursor);
 		return;
 	}
 
@@ -242,13 +273,9 @@ static void cursor_up(int *index, int *cursor)
 static void cursor_down(int *index, int *cursor)
 {
 	if(*cursor == (LINES - 1)) {
-		clear();
-		refresh();
-		*cursor = 0;
-		*index = *index + LINES;
-		display_entries(index, cursor);
+		page_down(index, cursor);
 		return;
-	} 
+	}
 
 	if(*cursor + *index < nbentry - 1) {
 		*cursor = *cursor + 1;
@@ -352,6 +379,14 @@ void main(int argc, char *argv[])
 		case CURSOR_UP: 
 		case KEY_UP:
 			cursor_up(&index, &cursor);
+			break;
+		case KEY_PPAGE:
+		case PAGE_UP:
+			page_up(&index, &cursor);
+			break;
+		case KEY_NPAGE:
+		case PAGE_DOWN:
+			page_down(&index, &cursor);
 			break;
 		case ENTER:
 		case '\n':
