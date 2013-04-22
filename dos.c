@@ -246,7 +246,7 @@ static void page_down(int *index, int *cursor)
 		max_index = (nbentry - (nbentry % LINES));
 
 	if (*index == max_index)
-		*cursor = LINES - 1;
+		*cursor = (nbentry - 1)%LINES;
 	else
 		*cursor = 0;
 
