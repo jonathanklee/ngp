@@ -148,7 +148,7 @@ static int parse_file(const char *file, const char *pattern, char *options)
 	int first;
 	errno = 0;
 
-	snprintf(command, sizeof(command), "grep -n %s %s %s", options, 
+	snprintf(command, sizeof(command), "grep -n %s \'%s\' %s", options, 
 							pattern,  file);
 	f = popen(command, "r");
 	if(f == NULL) {
