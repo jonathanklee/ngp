@@ -39,6 +39,29 @@ static long size = 100;
 static entry_t *entry; 
 static char directory[64] = "./";
 
+static char * remove_double_appearance(char *initial, char c, char *final)
+{
+	int i, j;
+	int len = strlen(initial);
+
+	for (i = 0, j = 0; i < len; j++ ) {
+		if (initial[i] != c) {
+			final[j] = initial[i]; 
+			i++;
+		} else {
+			final[j] = initial[i];
+			if (initial[i + 1] == c) {
+				i = i + 2;
+			} else {
+				i++;
+			}
+		}
+	}
+	final[j] = '\0';
+
+	return final;
+}
+
 static void usage() 
 {
 	fprintf(stderr, "Usage: dos regexp [directory]\n");
@@ -73,11 +96,12 @@ static void printl(int *y, char *line)
 	int size;
 	int crop = COLS;
 	char cropped_line[PATH_MAX];
+	char filtered_line[PATH_MAX];
 
 	size = strlen(line);
 	strncpy(cropped_line, line, crop);
 	cropped_line[COLS] = '\0';
-	mvprintw(*y, 0, "%s", cropped_line);
+	mvprintw(*y, 0, "%s", remove_double_appearance(cropped_line, '/', filtered_line));
 }
 
 static int display_entry(int *y, int *index, int color) 
@@ -302,10 +326,12 @@ static void cursor_down(int *index, int *cursor)
 
 static void open_entry(int index, const char *editor)
 {
-	char command[256];
+	char command[PATH_MAX];
+	char filtered_file_name[PATH_MAX];
+
 	snprintf(command, sizeof(command), editor, 
 		extract_line_number(entry[index].line),
-		entry[index].file);
+		remove_double_appearance(entry[index].file, '/', filtered_file_name));
 	system(command);              
 }
 
