@@ -187,12 +187,12 @@ static void lookup_directory(const char *dir, const char *pattern, char *options
 			break;
 		}
 
-		if(strcmp(ep->d_name, ".") != 0 && strcmp(ep->d_name, "..") != 0) {
+		if (!(ep->d_type & DT_DIR) && strcmp(ep->d_name, ".") != 0 && 
+			strcmp(ep->d_name, "..") != 0) {
 			char file_path[PATH_MAX];
 			snprintf(file_path, PATH_MAX, "%s/%s", dir,ep->d_name); 
 			lookup_file(file_path, pattern, options);
 			refresh();
-			
 		}
 
 		if(ep->d_type & DT_DIR) { 
