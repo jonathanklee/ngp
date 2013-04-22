@@ -85,7 +85,7 @@ static void ncurses_stop()
 
 static void check_alloc()
 {
-	if(nbentry >= size) {
+	if (nbentry >= size) {
 		size = size + 500;
 		entry = (entry_t*) realloc(entry, size * sizeof(entry_t)); 
 	}
@@ -106,9 +106,9 @@ static void printl(int *y, char *line)
 
 static int display_entry(int *y, int *index, int color) 
 {
-	if(*index <= nbentry) {
-		if(strcmp(entry[*index].line, "")) {
-			if(color == 1) {
+	if (*index <= nbentry) {
+		if (strcmp(entry[*index].line, "")) {
+			if (color == 1) {
 				attron(A_REVERSE);
 				printl(y, entry[*index].line);
 				attroff(A_REVERSE);
@@ -151,14 +151,14 @@ static int parse_file(const char *file, const char *pattern, char *options)
 	snprintf(command, sizeof(command), "grep -n %s \'%s\' %s", options, 
 							pattern,  file);
 	f = popen(command, "r");
-	if(f == NULL) {
+	if (f == NULL) {
 		fprintf(stderr, "popen : %d %s\n", errno, strerror(errno));
 		return -1;       
 	}
 
 	first = 1;
-	while(fgets(line, sizeof(line), f)) {
-		if(first) {
+	while (fgets(line, sizeof(line), f)) {
+		if (first) {
 			ncurses_add_file(file);
 			first = 0;
 		}
@@ -181,10 +181,10 @@ static void lookup_file(const char *file, const char *pattern, char *options)
 
 	nb_regex = sizeof(regex_langages) / sizeof(*regex_langages);
 	for (i = 0;i < nb_regex; i++) {
-		if(regcomp(&preg, regex_langages[i], REG_NOSUB|REG_EXTENDED)) {
+		if (regcomp(&preg, regex_langages[i], REG_NOSUB|REG_EXTENDED)) {
 			fprintf(stderr, "regcomp : %s\n", strerror(errno));
 		}
-		if(regexec(&preg, file, 0, NULL, 0) == 0) {
+		if (regexec(&preg, file, 0, NULL, 0) == 0) {
 			parse_file(file, pattern, options);
 		}
 		regfree(&preg);
@@ -198,7 +198,8 @@ static char * extract_line_number(char *line)
 	return token;
 }
 
-static void lookup_directory(const char *dir, const char *pattern, char *options)
+static void lookup_directory(const char *dir, const char *pattern, 
+	char *options)
 {
 	DIR *dp;
 
@@ -207,28 +208,29 @@ static void lookup_directory(const char *dir, const char *pattern, char *options
 		return;
 	}
 
-	while(1) {
+	while (1) {
 		struct dirent *ep;
 		ep = readdir(dp);
 
-		if(!ep) {
+		if (!ep) {
 			break;
 		}
 
 		if (!(ep->d_type & DT_DIR) && strcmp(ep->d_name, ".") != 0 && 
 			strcmp(ep->d_name, "..") != 0) {
 			char file_path[PATH_MAX];
-			snprintf(file_path, PATH_MAX, "%s/%s", dir,ep->d_name); 
+			snprintf(file_path, PATH_MAX, "%s/%s", dir,ep->d_name);
 			lookup_file(file_path, pattern, options);
 			refresh();
 		}
 
-		if(ep->d_type & DT_DIR) { 
+		if (ep->d_type & DT_DIR) { 
 			if (strcmp(ep->d_name, "..") != 0 && 
 			strcmp(ep->d_name, ".") != 0 && 
 			strcmp(ep->d_name, ".git") != 0) {
 				char path_dir[PATH_MAX]=""; 
-				snprintf(path_dir, PATH_MAX, "%s/%s", dir, ep->d_name);
+				snprintf(path_dir, PATH_MAX, "%s/%s", dir, 
+					ep->d_name);
 				lookup_directory(path_dir, pattern, options);
 			}
 		} 
@@ -243,9 +245,9 @@ static void display_entries(int *index, int *cursor)
 	int how_deep = 0;
 	int ptr_deep = 0;
 
-	for(i = 0; i < LINES; i++) {
+	for (i = 0; i < LINES; i++) {
 		ptr = *index + i;
-		if(i == *cursor) {
+		if (i == *cursor) {
 			display_entry(&i, &ptr, 1);
 		} else {
 			display_entry(&i, &ptr, 0);
@@ -285,7 +287,7 @@ static void page_down(int *index, int *cursor)
 		max_index = (nbentry - (nbentry % LINES));
 
 	if (*index == max_index)
-		*cursor = (nbentry - 1)%LINES;
+		*cursor = (nbentry - 1) % LINES;
 	else
 		*cursor = 0;
 
@@ -298,12 +300,12 @@ static void page_down(int *index, int *cursor)
 
 static void cursor_up(int *index, int *cursor)
 {
-	if(*cursor == 0) {
+	if (*cursor == 0) {
 		page_up(index, cursor);
 		return;
 	}
 
-	if(*cursor > 0) {
+	if (*cursor > 0) {
 		*cursor = *cursor - 1;
 	}
 
@@ -312,12 +314,12 @@ static void cursor_up(int *index, int *cursor)
 
 static void cursor_down(int *index, int *cursor)
 {
-	if(*cursor == (LINES - 1)) {
+	if (*cursor == (LINES - 1)) {
 		page_down(index, cursor);
 		return;
 	}
 
-	if(*cursor + *index < nbentry - 1) {
+	if (*cursor + *index < nbentry - 1) {
 		*cursor = *cursor + 1;
 	}
 
@@ -331,13 +333,14 @@ static void open_entry(int index, const char *editor)
 
 	snprintf(command, sizeof(command), editor, 
 		extract_line_number(entry[index].line),
-		remove_double_appearance(entry[index].file, '/', filtered_file_name));
+		remove_double_appearance(entry[index].file, '/',
+		filtered_file_name));
 	system(command);              
 }
 
 static void sig_handler(int signo)
 {
-	if(signo == SIGINT) {
+	if (signo == SIGINT) {
 		free(entry);
 		ncurses_stop();
 		exit(-1);
@@ -347,7 +350,7 @@ static void sig_handler(int signo)
 static void configuration_init(config_t *cfg)
 {
 	config_init(cfg);
-	if(!config_read_file(cfg, "/etc/dosrc")) {
+	if (!config_read_file(cfg, "/etc/dosrc")) {
 		fprintf(stderr, "%s:%d - %s\n", config_error_file(cfg),
 			config_error_line(cfg), config_error_text(cfg));
 		config_destroy(cfg);
@@ -389,8 +392,8 @@ void main(int argc, char *argv[])
 		}
 	}
 
-	for(; optind < argc; optind++) {
-		if(!first) {
+	for ( ; optind < argc; optind++) {
+		if (!first) {
 			strcpy(pattern, argv[optind]);	
 			first = 1;
 		} else {
@@ -399,7 +402,7 @@ void main(int argc, char *argv[])
 	}
 
 	configuration_init(&cfg);
-	if(!config_lookup_string(&cfg, "editor", &editor)) {
+	if (!config_lookup_string(&cfg, "editor", &editor)) {
 		fprintf(stderr, "dosrc: no editor string found!\n");	
 		exit(-1);
 	}
@@ -413,11 +416,11 @@ void main(int argc, char *argv[])
 	lookup_directory(directory, pattern, options);
 	display_entries(&index, &cursor);
 
-	if(!nbentry) {
+	if (!nbentry) {
 		goto quit;
 	}
 
-	while(ch = getch()) {
+	while (ch = getch()) {
 		switch(ch) {
 		case KEY_RESIZE:
 			resize(&index, &cursor);
