@@ -15,7 +15,7 @@
 
 #define CURSOR_UP 	'k'
 #define CURSOR_DOWN 	'j'
-#define PAGE_UP	'K'
+#define PAGE_UP		'K'
 #define PAGE_DOWN	'J'
 #define ENTER	 	'p'
 #define QUIT	 	'q'
@@ -30,14 +30,21 @@ char *regex_langages[] = {
 
 typedef struct s_entry_t {
 	char file[PATH_MAX];
-	char line[256];
+	char line[NAME_MAX];
 } entry_t;
 
+typedef struct s_data_t {
+	int index;
+	int cursor;
+	int nbentry;
+	int size;
+	entry_t *entry;
+	char directory[PATH_MAX];
+	char pattern[NAME_MAX];
+	char options[NAME_MAX];
+} data_t;
 
-static int nbentry = 0;
-static long size = 100;
-static entry_t *entry; 
-static char directory[64] = "./";
+data_t data;
 
 static char * remove_double_appearance(char *initial, char c, char *final)
 {
@@ -85,9 +92,9 @@ static void ncurses_stop()
 
 static void check_alloc()
 {
-	if (nbentry >= size) {
-		size = size + 500;
-		entry = (entry_t*) realloc(entry, size * sizeof(entry_t)); 
+	if (data.nbentry >= data.size) {
+		data.size = data.size + 500;
+		data.entry = (entry_t*) realloc(data.entry, data.size * sizeof(entry_t)); 
 	}
 }
 
@@ -106,19 +113,19 @@ static void printl(int *y, char *line)
 
 static int display_entry(int *y, int *index, int color) 
 {
-	if (*index <= nbentry) {
-		if (strcmp(entry[*index].line, "")) {
+	if (*index <= data.nbentry) {
+		if (strcmp(data.entry[*index].line, "")) {
 			if (color == 1) {
 				attron(A_REVERSE);
-				printl(y, entry[*index].line);
+				printl(y, data.entry[*index].line);
 				attroff(A_REVERSE);
 			} else {
-				printl(y, entry[*index].line);
+				printl(y, data.entry[*index].line);
 			}
 		} else {
 			attron(A_BOLD);
-			strcmp(directory, "./") == 0 ? printl(y, entry[*index].file + 3) :
-				printl(y, entry[*index].file);	
+			strcmp(data.directory, "./") == 0 ? printl(y, data.entry[*index].file + 3) :
+				printl(y, data.entry[*index].file);	
 			attroff(A_BOLD);
 		}
 	}
@@ -127,17 +134,17 @@ static int display_entry(int *y, int *index, int color)
 static void ncurses_add_file(const char *file)
 {
 	check_alloc();
-	strcpy(entry[nbentry].file, file);
-	strcpy(entry[nbentry].line, "");
-	nbentry++;
+	strcpy(data.entry[data.nbentry].file, file);
+	strcpy(data.entry[data.nbentry].line, "");
+	data.nbentry++;
 }
 
 static void ncurses_add_line(const char *line, const char* file)
 {
 	check_alloc();
-	strcpy(entry[nbentry].file,file);
-	strcpy(entry[nbentry].line,line);
-	nbentry++;
+	strcpy(data.entry[data.nbentry].file,file);
+	strcpy(data.entry[data.nbentry].line,line);
+	data.nbentry++;
 }
 
 static int parse_file(const char *file, const char *pattern, char *options)
@@ -219,7 +226,8 @@ static void lookup_directory(const char *dir, const char *pattern,
 		if (!(ep->d_type & DT_DIR) && strcmp(ep->d_name, ".") != 0 && 
 			strcmp(ep->d_name, "..") != 0) {
 			char file_path[PATH_MAX];
-			snprintf(file_path, PATH_MAX, "%s/%s", dir,ep->d_name);
+			snprintf(file_path, PATH_MAX, "%s/%s", dir, 
+				ep->d_name);
 			lookup_file(file_path, pattern, options);
 			refresh();
 		}
@@ -228,7 +236,7 @@ static void lookup_directory(const char *dir, const char *pattern,
 			if (strcmp(ep->d_name, "..") != 0 && 
 			strcmp(ep->d_name, ".") != 0 && 
 			strcmp(ep->d_name, ".git") != 0) {
-				char path_dir[PATH_MAX]=""; 
+				char path_dir[PATH_MAX] = ""; 
 				snprintf(path_dir, PATH_MAX, "%s/%s", dir, 
 					ep->d_name);
 				lookup_directory(path_dir, pattern, options);
@@ -281,13 +289,13 @@ static void page_up(int *index, int *cursor)
 static void page_down(int *index, int *cursor)
 {
 	int max_index;
-	if (nbentry % LINES == 0)
-		max_index = (nbentry - LINES);
+	if (data.nbentry % LINES == 0)
+		max_index = (data.nbentry - LINES);
 	else
-		max_index = (nbentry - (nbentry % LINES));
+		max_index = (data.nbentry - (data.nbentry % LINES));
 
 	if (*index == max_index)
-		*cursor = (nbentry - 1) % LINES;
+		*cursor = (data.nbentry - 1) % LINES;
 	else
 		*cursor = 0;
 
@@ -319,7 +327,7 @@ static void cursor_down(int *index, int *cursor)
 		return;
 	}
 
-	if (*cursor + *index < nbentry - 1) {
+	if (*cursor + *index < data.nbentry - 1) {
 		*cursor = *cursor + 1;
 	}
 
@@ -332,16 +340,16 @@ static void open_entry(int index, const char *editor, const char *pattern)
 	char filtered_file_name[PATH_MAX];
 
 	snprintf(command, sizeof(command), editor, 
-		extract_line_number(entry[index].line),
-		remove_double_appearance(entry[index].file, '/', filtered_file_name),
-		pattern);
+		extract_line_number(data.entry[index].line),
+		remove_double_appearance(data.entry[index].file, '/',
+		filtered_file_name), pattern);
 	system(command);              
 }
 
 static void sig_handler(int signo)
 {
 	if (signo == SIGINT) {
-		free(entry);
+		free(data.entry);
 		ncurses_stop();
 		exit(-1);
 	}
@@ -365,11 +373,7 @@ void main(int argc, char *argv[])
 	struct dirent *ep;
 	int ch;
 	int first = 0;
-	int cursor = 0;
-	int index = 0;
 	char command[128];
-	char pattern[128] = "";
-	char options[128] = "";
 	const char *editor;
 	config_t cfg;
 
@@ -378,13 +382,19 @@ void main(int argc, char *argv[])
 		exit(-1);
 	}
 
+	data.index = 0;
+	data.cursor = 0;
+	data.size = 100;
+	data.nbentry = 0;
+	strcpy(data.directory, "./");
+
 	while ((opt = getopt(argc, argv, "hi")) != -1) {
 		switch (opt) {
 		case 'h':
 			usage();
 			break;
 		case 'i':
-			strcpy(options, "-i");	
+			strcpy(data.options, "-i");	
 			break;
 		default:
 			exit(-1);
@@ -394,10 +404,10 @@ void main(int argc, char *argv[])
 
 	for ( ; optind < argc; optind++) {
 		if (!first) {
-			strcpy(pattern, argv[optind]);	
+			strcpy(data.pattern, argv[optind]);	
 			first = 1;
 		} else {
-			strcpy(directory, argv[optind]);	
+			strcpy(data.directory, argv[optind]);	
 		}
 	}
 
@@ -409,41 +419,42 @@ void main(int argc, char *argv[])
 
 	signal(SIGINT, sig_handler);
 
-	ncurses_init();
+	data.entry = (entry_t *) calloc(data.size, sizeof(entry_t));
 
-	entry = (entry_t *) calloc(size, sizeof(entry_t));
+	lookup_directory(data.directory, data.pattern, data.options);
 
-	lookup_directory(directory, pattern, options);
-	display_entries(&index, &cursor);
-
-	if (!nbentry) {
+	if (!data.nbentry) {
 		goto quit;
 	}
+
+	ncurses_init();
+	display_entries(&data.index, &data.cursor);
 
 	while (ch = getch()) {
 		switch(ch) {
 		case KEY_RESIZE:
-			resize(&index, &cursor);
+			resize(&data.index, &data.cursor);
 			break;
 		case CURSOR_DOWN:
 		case KEY_DOWN:
-			cursor_down(&index, &cursor);
+			cursor_down(&data.index, &data.cursor);
 			break;
 		case CURSOR_UP: 
 		case KEY_UP:
-			cursor_up(&index, &cursor);
+			cursor_up(&data.index, &data.cursor);
 			break;
 		case KEY_PPAGE:
 		case PAGE_UP:
-			page_up(&index, &cursor);
+			page_up(&data.index, &data.cursor);
 			break;
 		case KEY_NPAGE:
 		case PAGE_DOWN:
-			page_down(&index, &cursor);
+			page_down(&data.index, &data.cursor);
 			break;
 		case ENTER:
 		case '\n':
-			open_entry(cursor + index, editor, pattern);
+			open_entry(data.cursor + data.index, editor, 
+				data.pattern);
 			goto quit;
 		case QUIT:
 			goto quit;
@@ -453,6 +464,6 @@ void main(int argc, char *argv[])
 	}
 
 quit:
-	free(entry);
+	free(data.entry);
 	ncurses_stop();
 }
