@@ -200,8 +200,9 @@ static void lookup_directory(const char *dir, const char *pattern, char *options
 		}
 
 		if(ep->d_type & DT_DIR) { 
-			if(strcmp(ep->d_name, "..") !=0 && \
-			strcmp(ep->d_name, ".") !=0 ) {
+			if (strcmp(ep->d_name, "..") != 0 && 
+			strcmp(ep->d_name, ".") != 0 && 
+			strcmp(ep->d_name, ".git") != 0) {
 				char path_dir[PATH_MAX]=""; 
 				snprintf(path_dir, PATH_MAX, "%s/%s", dir, ep->d_name);
 				lookup_directory(path_dir, pattern, options);
