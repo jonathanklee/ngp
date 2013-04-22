@@ -344,6 +344,11 @@ void main(int argc, char *argv[])
 	const char *editor;
 	config_t cfg;
 
+	if (argc < 2) {
+		usage();
+		exit(-1);
+	}
+
 	while ((opt = getopt(argc, argv, "hi")) != -1) {
 		switch (opt) {
 		case 'h':
