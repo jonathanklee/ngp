@@ -326,15 +326,15 @@ static void cursor_down(int *index, int *cursor)
 	display_entries(index, cursor);
 }
 
-static void open_entry(int index, const char *editor)
+static void open_entry(int index, const char *editor, const char *pattern)
 {
 	char command[PATH_MAX];
 	char filtered_file_name[PATH_MAX];
 
 	snprintf(command, sizeof(command), editor, 
 		extract_line_number(entry[index].line),
-		remove_double_appearance(entry[index].file, '/',
-		filtered_file_name));
+		remove_double_appearance(entry[index].file, '/', filtered_file_name),
+		pattern);
 	system(command);              
 }
 
@@ -443,7 +443,7 @@ void main(int argc, char *argv[])
 			break;
 		case ENTER:
 		case '\n':
-			open_entry(cursor + index, editor);
+			open_entry(cursor + index, editor, pattern);
 			goto quit;
 		case QUIT:
 			goto quit;
