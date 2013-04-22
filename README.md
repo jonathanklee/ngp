@@ -1,4 +1,4 @@
-dos
+ngp
 ===
 
-Ncurses code parsing tool
+Ncurses grep tool

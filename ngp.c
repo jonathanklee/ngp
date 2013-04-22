@@ -64,7 +64,7 @@ static char * remove_double_appearance(char *initial, char c, char *final)
 
 static void usage() 
 {
-	fprintf(stderr, "Usage: dos regexp [directory]\n");
+	fprintf(stderr, "Usage: ngp regexp [directory]\n");
 	exit(-1);
 }
 
@@ -350,7 +350,7 @@ static void sig_handler(int signo)
 static void configuration_init(config_t *cfg)
 {
 	config_init(cfg);
-	if (!config_read_file(cfg, "/etc/dosrc")) {
+	if (!config_read_file(cfg, "/etc/ngprc")) {
 		fprintf(stderr, "%s:%d - %s\n", config_error_file(cfg),
 			config_error_line(cfg), config_error_text(cfg));
 		config_destroy(cfg);
@@ -403,7 +403,7 @@ void main(int argc, char *argv[])
 
 	configuration_init(&cfg);
 	if (!config_lookup_string(&cfg, "editor", &editor)) {
-		fprintf(stderr, "dosrc: no editor string found!\n");	
+		fprintf(stderr, "ngprc: no editor string found!\n");	
 		exit(-1);
 	}
 

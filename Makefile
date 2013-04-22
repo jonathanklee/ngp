@@ -4,11 +4,11 @@ CC = gcc
 SRC = $(shell find . -name "*.c")
 OBJ = $(SRC:.c=.o)
 
-TARGET = dos
+TARGET = ngp
 LDFLAGS = -lncurses -lconfig
 CFLAGS = 
 INCLUDE_DIR = 
-CONFIG_FILE = dosrc
+CONFIG_FILE = ngprc
 
 all: $(TARGET)
 
