@@ -138,6 +138,10 @@ static int parse_file(const char *file, const char *pattern, char *options)
 			ncurses_add_file(file);
 			first = 0;
 		}
+
+		/* cleanup bad files that have a \r at the end of lines */
+		if (line[strlen(line) - 2] == '\r')
+			line[strlen(line) - 2] = '\0';
 		ncurses_add_line(line, file);
 	}
 	pclose(f);
