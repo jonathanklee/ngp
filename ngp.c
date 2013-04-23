@@ -411,7 +411,6 @@ void main(int argc, char *argv[])
 	data.status = 1;
 	strcpy(data.directory, "./");
 
-	pthread_mutex_init(&data.data_mutex, NULL);
 
 	while ((opt = getopt(argc, argv, "hi")) != -1) {
 		switch (opt) {
@@ -435,6 +434,8 @@ void main(int argc, char *argv[])
 			strcpy(data.directory, argv[optind]);	
 		}
 	}
+
+	pthread_mutex_init(&data.data_mutex, NULL);
 
 	configuration_init(&cfg);
 	if (!config_lookup_string(&cfg, "editor", &editor)) {
