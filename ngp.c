@@ -399,18 +399,12 @@ void main(int argc, char *argv[])
 	const char *editor;
 	config_t cfg;
 
-	if (argc < 2) {
-		usage();
-		exit(-1);
-	}
-
 	data.index = 0;
 	data.cursor = 0;
 	data.size = 100;
 	data.nbentry = 0;
 	data.status = 1;
 	strcpy(data.directory, "./");
-
 
 	while ((opt = getopt(argc, argv, "hi")) != -1) {
 		switch (opt) {
@@ -424,6 +418,10 @@ void main(int argc, char *argv[])
 			exit(-1);
 			break;
 		}
+	}
+
+	if (argc - optind < 1 || argc - optind > 2) {
+		usage();
 	}
 
 	for ( ; optind < argc; optind++) {
