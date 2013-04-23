@@ -84,7 +84,9 @@ static char * remove_double_appearance(char *initial, char c, char *final)
 
 static void usage() 
 {
-	fprintf(stderr, "Usage: ngp regexp [directory] [-t type]\n");
+	fprintf(stderr, "Usage: ngp [options]... pattern [directory]\n\n");
+	fprintf(stderr, "options:\n");
+	fprintf(stderr, " -i : Ignore case distinctions in pattern\n");
 	exit(-1);
 }
 
