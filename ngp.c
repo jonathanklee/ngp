@@ -92,6 +92,7 @@ static void ncurses_init()
 	cbreak();
 	noecho();
 	keypad(stdscr, TRUE);
+	nodelay(stdscr, TRUE);
 	start_color();
 	curs_set(0);
 }
@@ -493,6 +494,8 @@ void main(int argc, char *argv[])
 				break;
 			}
 		}
+		usleep(10000);
+		refresh();
 	}
 
 quit:
