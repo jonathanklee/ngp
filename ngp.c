@@ -322,6 +322,11 @@ static void page_down(int *index, int *cursor)
 
 static void cursor_up(int *index, int *cursor)
 {
+	if (*cursor == 0) {
+		page_up(index, cursor);
+		return;
+	}
+
 	if (*cursor > 0) {
 		*cursor = *cursor - 1;
 	}
@@ -330,7 +335,7 @@ static void cursor_up(int *index, int *cursor)
 	if (!strcmp(data.entry[*cursor + *index].line, ""))
 		*cursor = *cursor - 1;
 
-	if (*cursor <= 0) {
+	if (*cursor < 0) {
 		page_up(index, cursor);
 		return;
 	}
