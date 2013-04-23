@@ -422,6 +422,7 @@ void main(int argc, char *argv[])
 	char command[128];
 	const char *editor;
 	config_t cfg;
+	int i = 0, time = 0;
 
 	if (argc < 2) {
 		usage();
@@ -515,7 +516,14 @@ void main(int argc, char *argv[])
 				break;
 			}
 		}
+		if (time == 0) {
+			attron(A_BOLD);
+			mvaddch(0, COLS - 10, (data.status == 1) ? ACS_LTEE+i++%4 : ACS_BULLET);
+			attroff(A_BOLD);
+		}
 		usleep(10000);
+		time += 1;
+		time %=10;
 		
 		refresh();
 
