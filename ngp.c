@@ -49,6 +49,7 @@ typedef struct s_data_t {
 	char pattern[NAME_MAX];
 	char options[NAME_MAX];
 	pthread_mutex_t data_mutex;
+	int status;
 } data_t;
 
 static data_t data;
@@ -384,6 +385,7 @@ void * lookup_thread(void *arg)
 	data_t *d = (data_t *) arg;
 
 	lookup_directory(d->directory, d->pattern, d->options);
+	d->status = 0;
 }
 
 void main(int argc, char *argv[])
@@ -406,6 +408,7 @@ void main(int argc, char *argv[])
 	data.cursor = 0;
 	data.size = 100;
 	data.nbentry = 0;
+	data.status = 1;
 	strcpy(data.directory, "./");
 
 	pthread_mutex_init(&data.data_mutex, NULL);
@@ -449,12 +452,6 @@ void main(int argc, char *argv[])
 		exit(-1);
 	}
 
-	usleep(200000);
-
-	if (!data.nbentry) {
-		goto quit;
-	}
-
 	ncurses_init();
 
 	synchronized(data.data_mutex, 2) {
@@ -496,6 +493,10 @@ void main(int argc, char *argv[])
 		}
 		usleep(10000);
 		refresh();
+
+		if (data.status == 0 && data.nbentry == 0) {
+			goto quit;
+		}
 	}
 
 quit:
