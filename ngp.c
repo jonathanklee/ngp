@@ -297,6 +297,9 @@ static void page_up(int *index, int *cursor)
 		*cursor = LINES - 1;
 	*index -= LINES;
 	*index = (*index < 0 ? 0 : *index);
+	if (!strcmp(data.entry[*index + *cursor].line, "") && *index != 0)
+		*cursor -= 1;
+
 	display_entries(index, cursor);
 }
 
@@ -317,18 +320,30 @@ static void page_down(int *index, int *cursor)
 	refresh();
 	*index += LINES;
 	*index = (*index > max_index ? max_index : *index);
+
+	if (!strcmp(data.entry[*index + *cursor].line, ""))
+		*cursor += 1;
 	display_entries(index, cursor);
 }
 
 static void cursor_up(int *index, int *cursor)
 {
-	if (*cursor == 0) {
-		page_up(index, cursor);
-		return;
+	if (*cursor == 0) { 
+		page_up(index, cursor); 
+		return; 
 	}
 
 	if (*cursor > 0) {
 		*cursor = *cursor - 1;
+	}
+
+	/* If line is a file, skip it*/
+	if (!strcmp(data.entry[*cursor + *index].line, ""))
+		*cursor = *cursor - 1;
+
+	if (*cursor < 0) {
+		page_up(index, cursor);
+		return;
 	}
 
 	display_entries(index, cursor);
@@ -343,6 +358,15 @@ static void cursor_down(int *index, int *cursor)
 
 	if (*cursor + *index < data.nbentry - 1) {
 		*cursor = *cursor + 1;
+	}
+
+	/* If line is a file, skip it*/
+	if (!strcmp(data.entry[*cursor + *index].line, ""))
+		*cursor = *cursor + 1;
+
+	if (*cursor > (LINES - 1)) {
+		page_down(index, cursor);
+		return;
 	}
 
 	display_entries(index, cursor);
@@ -492,6 +516,7 @@ void main(int argc, char *argv[])
 			}
 		}
 		usleep(10000);
+		
 		refresh();
 
 		if (data.status == 0 && data.nbentry == 0) {
