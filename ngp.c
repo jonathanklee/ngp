@@ -20,7 +20,7 @@
 #define ENTER	 	'p'
 #define QUIT	 	'q'
 
-#define synchronized(MUTEX, X) \
+#define synchronized(MUTEX) \
 pthread_mutex_t *mutex ; \
 for(mutex = &MUTEX; \
 mutex && !pthread_mutex_lock(mutex); \
@@ -189,7 +189,7 @@ static void lookup_file(const char *file, const char *pattern, char *options)
 			fprintf(stderr, "regcomp : %s\n", strerror(errno));
 		}
 		if (regexec(&preg, file, 0, NULL, 0) == 0) {
-			synchronized(data.data_mutex, 1) {
+			synchronized(data.data_mutex) {
 				parse_file(file, pattern, options);
 			}
 		}
@@ -454,12 +454,12 @@ void main(int argc, char *argv[])
 
 	ncurses_init();
 
-	synchronized(data.data_mutex, 2) {
+	synchronized(data.data_mutex) {
 		display_entries(&data.index, &data.cursor);
 	}
 
 	while (ch = getch()) {
-		synchronized(data.data_mutex, 2) {
+		synchronized(data.data_mutex) {
 			switch(ch) {
 			case KEY_RESIZE:
 				resize(&data.index, &data.cursor);
