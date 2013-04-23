@@ -34,6 +34,11 @@ char *regex_langages[] = {
 	"([/[:alnum:]]+\\.sh$)"
 };
 
+const char *statuses[] = {
+	"Working...",
+	"Done.     ",
+};
+
 typedef struct s_entry_t {
 	char file[PATH_MAX];
 	char line[NAME_MAX];
@@ -504,8 +509,8 @@ void main(int argc, char *argv[])
 				break;
 			}
 		}
+		mvprintw(0, COLS - 10, statuses[!data.status]);
 		usleep(10000);
-		
 		refresh();
 
 		if (data.status == 0 && data.nbentry == 0) {
