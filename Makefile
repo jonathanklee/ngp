@@ -5,7 +5,7 @@ SRC = $(shell find . -name "*.c")
 OBJ = $(SRC:.c=.o)
 
 TARGET = ngp
-LDFLAGS = -lncurses -lconfig
+LDFLAGS = -lncurses -lconfig -lpthread
 CFLAGS = 
 INCLUDE_DIR = 
 CONFIG_FILE = ngprc

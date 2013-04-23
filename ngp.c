@@ -20,6 +20,12 @@
 #define ENTER	 	'p'
 #define QUIT	 	'q'
 
+#define synchronized(MUTEX, X) \
+pthread_mutex_t *mutex ; \
+for(mutex = &MUTEX; \
+mutex && !pthread_mutex_lock(mutex); \
+pthread_mutex_unlock(mutex), mutex = 0)
+
 char *regex_langages[] = {
 	"([/[:alnum:]]+\\.c$)",
 	"([/[:alnum:]]+\\.h$)",
@@ -42,9 +48,14 @@ typedef struct s_data_t {
 	char directory[PATH_MAX];
 	char pattern[NAME_MAX];
 	char options[NAME_MAX];
+	pthread_mutex_t data_mutex;
 } data_t;
 
-data_t data;
+static data_t data;
+static pid_t pid;
+
+static void ncurses_add_file(const char *file);
+static void ncurses_add_line(const char *line, const char* file);
 
 static char * remove_double_appearance(char *initial, char c, char *final)
 {
@@ -131,22 +142,6 @@ static int display_entry(int *y, int *index, int color)
 	}
 }
 
-static void ncurses_add_file(const char *file)
-{
-	check_alloc();
-	strcpy(data.entry[data.nbentry].file, file);
-	strcpy(data.entry[data.nbentry].line, "");
-	data.nbentry++;
-}
-
-static void ncurses_add_line(const char *line, const char* file)
-{
-	check_alloc();
-	strcpy(data.entry[data.nbentry].file,file);
-	strcpy(data.entry[data.nbentry].line,line);
-	data.nbentry++;
-}
-
 static int parse_file(const char *file, const char *pattern, char *options)
 {
 	FILE *f;
@@ -192,7 +187,9 @@ static void lookup_file(const char *file, const char *pattern, char *options)
 			fprintf(stderr, "regcomp : %s\n", strerror(errno));
 		}
 		if (regexec(&preg, file, 0, NULL, 0) == 0) {
-			parse_file(file, pattern, options);
+			synchronized(data.data_mutex, 1) {
+				parse_file(file, pattern, options);
+			}
 		}
 		regfree(&preg);
 	}
@@ -201,7 +198,8 @@ static void lookup_file(const char *file, const char *pattern, char *options)
 static char * extract_line_number(char *line)
 {
 	char *token;
-	token = strtok(line, " :");
+	char *buffer;
+	token = strtok_r(line, " :", &buffer);
 	return token;
 }
 
@@ -229,7 +227,6 @@ static void lookup_directory(const char *dir, const char *pattern,
 			snprintf(file_path, PATH_MAX, "%s/%s", dir, 
 				ep->d_name);
 			lookup_file(file_path, pattern, options);
-			refresh();
 		}
 
 		if (ep->d_type & DT_DIR) { 
@@ -250,8 +247,6 @@ static void display_entries(int *index, int *cursor)
 {
 	int i = 0;
 	int ptr = 0;
-	int how_deep = 0;
-	int ptr_deep = 0;
 
 	for (i = 0; i < LINES; i++) {
 		ptr = *index + i;
@@ -261,6 +256,23 @@ static void display_entries(int *index, int *cursor)
 			display_entry(&i, &ptr, 0);
 		}
 	}
+}
+
+static void ncurses_add_file(const char *file)
+{
+	check_alloc();
+	strcpy(data.entry[data.nbentry].file, file);
+	strcpy(data.entry[data.nbentry].line, "");
+	data.nbentry++;
+}
+
+static void ncurses_add_line(const char *line, const char* file)
+{
+	check_alloc();
+	strcpy(data.entry[data.nbentry].file,file);
+	strcpy(data.entry[data.nbentry].line,line);
+	data.nbentry++;
+	display_entries(&data.index, &data.cursor);
 }
 
 static void resize(int *index, int *cursor)
@@ -366,6 +378,13 @@ static void configuration_init(config_t *cfg)
 	}
 }
 
+void * lookup_thread(void *arg)
+{
+	data_t *d = (data_t *) arg;
+
+	lookup_directory(d->directory, d->pattern, d->options);
+}
+
 void main(int argc, char *argv[])
 {
 	DIR *dp;
@@ -387,6 +406,8 @@ void main(int argc, char *argv[])
 	data.size = 100;
 	data.nbentry = 0;
 	strcpy(data.directory, "./");
+
+	pthread_mutex_init(&data.data_mutex, NULL);
 
 	while ((opt = getopt(argc, argv, "hi")) != -1) {
 		switch (opt) {
@@ -421,45 +442,56 @@ void main(int argc, char *argv[])
 
 	data.entry = (entry_t *) calloc(data.size, sizeof(entry_t));
 
-	lookup_directory(data.directory, data.pattern, data.options);
+	if (pthread_create(&pid, NULL, &lookup_thread, &data)) {
+		fprintf(stderr, "ngp: cannot create thread");		
+		free(data.entry);
+		exit(-1);
+	}
+
+	usleep(200000);
 
 	if (!data.nbentry) {
 		goto quit;
 	}
 
 	ncurses_init();
-	display_entries(&data.index, &data.cursor);
+
+	synchronized(data.data_mutex, 2) {
+		display_entries(&data.index, &data.cursor);
+	}
 
 	while (ch = getch()) {
-		switch(ch) {
-		case KEY_RESIZE:
-			resize(&data.index, &data.cursor);
-			break;
-		case CURSOR_DOWN:
-		case KEY_DOWN:
-			cursor_down(&data.index, &data.cursor);
-			break;
-		case CURSOR_UP: 
-		case KEY_UP:
-			cursor_up(&data.index, &data.cursor);
-			break;
-		case KEY_PPAGE:
-		case PAGE_UP:
-			page_up(&data.index, &data.cursor);
-			break;
-		case KEY_NPAGE:
-		case PAGE_DOWN:
-			page_down(&data.index, &data.cursor);
-			break;
-		case ENTER:
-		case '\n':
-			open_entry(data.cursor + data.index, editor, 
-				data.pattern);
-			goto quit;
-		case QUIT:
-			goto quit;
-		default:
-			break;
+		synchronized(data.data_mutex, 2) {
+			switch(ch) {
+			case KEY_RESIZE:
+				resize(&data.index, &data.cursor);
+				break;
+			case CURSOR_DOWN:
+			case KEY_DOWN:
+				cursor_down(&data.index, &data.cursor);
+				break;
+			case CURSOR_UP: 
+			case KEY_UP:
+				cursor_up(&data.index, &data.cursor);
+				break;
+			case KEY_PPAGE:
+			case PAGE_UP:
+				page_up(&data.index, &data.cursor);
+				break;
+			case KEY_NPAGE:
+			case PAGE_DOWN:
+				page_down(&data.index, &data.cursor);
+				break;
+			case ENTER:
+			case '\n':
+				open_entry(data.cursor + data.index, editor, 
+					data.pattern);
+				goto quit;
+			case QUIT:
+				goto quit;
+			default:
+				break;
+			}
 		}
 	}
 
