@@ -566,17 +566,13 @@ void main(int argc, char *argv[])
 				page_down(&data.index, &data.cursor);
 			break;
 		case ENTER:
+		case '\n':
 			ncurses_stop();
 			open_entry(data.cursor + data.index, editor, 
 				data.pattern);
 			ncurses_init();
 			resize(&data.index, &data.cursor);
 			break;
-		case '\n':
-			synchronized(data.data_mutex)
-				open_entry(data.cursor + data.index, editor, 
-					data.pattern);
-			goto quit;
 		case QUIT:
 			goto quit;
 		default:
