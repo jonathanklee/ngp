@@ -117,15 +117,16 @@ static void printl(int *y, char *line)
 	int size;
 	int crop = COLS;
 	char cropped_line[PATH_MAX];
-	char filtered_line[PATH_MAX];
 
 	strncpy(cropped_line, line, crop);
 	cropped_line[COLS] = '\0';
-	mvprintw(*y, 0, "%s", remove_double_appearance(cropped_line, '/', filtered_line));
+	mvprintw(*y, 0, "%s", cropped_line);
 }
 
 static int display_entry(int *y, int *index, int color) 
 {
+	char filtered_line[PATH_MAX];
+	
 	if (*index <= data.nbentry) {
 		if (strcmp(data.entry[*index].line, "")) {
 			if (color == 1) {
@@ -137,8 +138,14 @@ static int display_entry(int *y, int *index, int color)
 			}
 		} else {
 			attron(A_BOLD);
-			strcmp(data.directory, "./") == 0 ? printl(y, data.entry[*index].file + 3) :
-				printl(y, data.entry[*index].file);	
+			if (strcmp(data.directory, "./") == 0)
+				printl(y, remove_double_appearance(
+					data.entry[*index].file + 3, '/', 
+					filtered_line));
+			else
+				printl(y, remove_double_appearance(
+					data.entry[*index].file, '/',
+					filtered_line));	
 			attroff(A_BOLD);
 		}
 	}
