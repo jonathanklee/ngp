@@ -12,6 +12,7 @@ ngp lets you open a result with your favorite editor at the right line.
 Installation
 ------------
 
-1. make
-2. make install
-3. enjoy !
+- ./configure
+- make
+- make install
+- enjoy !
