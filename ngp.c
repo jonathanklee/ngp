@@ -55,6 +55,7 @@ typedef struct s_data_t {
 
 static data_t data;
 static pid_t pid;
+static int nb_of_files, nb_of_hits;
 
 static void ncurses_add_file(const char *file);
 static void ncurses_add_line(const char *line, const char* file);
@@ -126,7 +127,7 @@ static void printl(int *y, char *line)
 	init_pair(1, COLOR_WHITE, COLOR_BLACK);
 	init_pair(2, COLOR_YELLOW, COLOR_BLACK);
 	init_pair(3, COLOR_RED, COLOR_BLACK);
-	init_pair(4, COLOR_MAGENTA, COLOR_BLACK);
+	init_pair(4, COLOR_CYAN, COLOR_BLACK);
 
 	strncpy(cropped_line, line, crop);
 	cropped_line[COLS] = '\0';
@@ -141,6 +142,7 @@ static void printl(int *y, char *line)
 	} else {
 		attron(COLOR_PAIR(4));
 		mvprintw(*y, 0, "%s", cropped_line, remove_double_appearance(cropped_line, '/', filtered_line));
+		attron(COLOR_PAIR(1));
 	}
 }
 
@@ -172,6 +174,7 @@ static int parse_file(const char *file, const char *pattern, char *options)
 	int first;
 	errno = 0;
 
+	nb_of_files++;
 	snprintf(command, sizeof(command), "grep -n %s \'%s\' %s", options, 
 							pattern,  file);
 	f = popen(command, "r");
@@ -185,6 +188,7 @@ static int parse_file(const char *file, const char *pattern, char *options)
 		if (first) {
 			ncurses_add_file(file);
 			first = 0;
+			nb_of_hits++;
 		}
 
 		/* cleanup bad files that have a \r at the end of lines */
@@ -555,6 +559,8 @@ void main(int argc, char *argv[])
 		if (time == 0) {
 			attron(A_BOLD);
 			mvaddch(0, COLS - 10, (data.status == 1) ? ACS_LTEE+i++%4 : ACS_BULLET);
+			if (!data.status)
+				mvprintw(1, COLS - 10, "%d/%d", nb_of_hits, nb_of_files);
 			attroff(A_BOLD);
 		}
 		usleep(10000);
