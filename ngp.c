@@ -48,6 +48,7 @@ typedef struct s_data_t {
 	char directory[PATH_MAX];
 	char pattern[NAME_MAX];
 	char options[NAME_MAX];
+	char file_type[4];
 	pthread_mutex_t data_mutex;
 	int status;
 } data_t;
@@ -83,7 +84,7 @@ static char * remove_double_appearance(char *initial, char c, char *final)
 
 static void usage() 
 {
-	fprintf(stderr, "Usage: ngp regexp [directory]\n");
+	fprintf(stderr, "Usage: ngp regexp [directory] [-t type]\n");
 	exit(-1);
 }
 
@@ -184,7 +185,7 @@ static void lookup_file(const char *file, const char *pattern, char *options)
 	errno = 0;
 
 	nb_regex = sizeof(regex_langages) / sizeof(*regex_langages);
-	for (i = 0;i < nb_regex; i++) {
+	for (i = 0; i < nb_regex; i++) {
 		if (regcomp(&preg, regex_langages[i], REG_NOSUB|REG_EXTENDED)) {
 			fprintf(stderr, "regcomp : %s\n", strerror(errno));
 		}
@@ -206,7 +207,7 @@ static char * extract_line_number(char *line)
 }
 
 static void lookup_directory(const char *dir, const char *pattern, 
-	char *options)
+	char *options, char *file_type)
 {
 	DIR *dp;
 
@@ -228,7 +229,12 @@ static void lookup_directory(const char *dir, const char *pattern,
 			char file_path[PATH_MAX];
 			snprintf(file_path, PATH_MAX, "%s/%s", dir, 
 				ep->d_name);
-			lookup_file(file_path, pattern, options);
+			if (file_type != NULL) {
+				if (!strcmp(file_type, ep->d_name + strlen(ep->d_name) - strlen(file_type) ))
+					lookup_file(file_path, pattern, options);
+			} else {
+				lookup_file(file_path, pattern, options);
+			}
 		}
 
 		if (ep->d_type & DT_DIR) { 
@@ -238,7 +244,7 @@ static void lookup_directory(const char *dir, const char *pattern,
 				char path_dir[PATH_MAX] = ""; 
 				snprintf(path_dir, PATH_MAX, "%s/%s", dir, 
 					ep->d_name);
-				lookup_directory(path_dir, pattern, options);
+				lookup_directory(path_dir, pattern, options, file_type);
 			}
 		} 
 	}
@@ -408,7 +414,7 @@ void * lookup_thread(void *arg)
 {
 	data_t *d = (data_t *) arg;
 
-	lookup_directory(d->directory, d->pattern, d->options);
+	lookup_directory(d->directory, d->pattern, d->options, d->file_type);
 	d->status = 0;
 }
 
@@ -438,13 +444,16 @@ void main(int argc, char *argv[])
 
 	pthread_mutex_init(&data.data_mutex, NULL);
 
-	while ((opt = getopt(argc, argv, "hi")) != -1) {
+	while ((opt = getopt(argc, argv, "hit:")) != -1) {
 		switch (opt) {
 		case 'h':
 			usage();
 			break;
 		case 'i':
 			strcpy(data.options, "-i");	
+			break;
+		case 't':
+			strncpy(data.file_type, optarg, 3);
 			break;
 		default:
 			exit(-1);
