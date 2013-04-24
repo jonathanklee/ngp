@@ -21,7 +21,6 @@
 #define QUIT	 	'q'
 
 #define synchronized(MUTEX) \
-pthread_mutex_t *mutex ; \
 for(mutex = &MUTEX; \
 mutex && !pthread_mutex_lock(mutex); \
 pthread_mutex_unlock(mutex), mutex = 0)
@@ -183,6 +182,7 @@ static void lookup_file(const char *file, const char *pattern, char *options)
 	regex_t preg;
 	int nb_regex;
 	errno = 0;
+	pthread_mutex_t *mutex;
 
 	nb_regex = sizeof(regex_langages) / sizeof(*regex_langages);
 	for (i = 0;i < nb_regex; i++) {
@@ -190,9 +190,8 @@ static void lookup_file(const char *file, const char *pattern, char *options)
 			fprintf(stderr, "regcomp : %s\n", strerror(errno));
 		}
 		if (regexec(&preg, file, 0, NULL, 0) == 0) {
-			synchronized(data.data_mutex) {
+			synchronized(data.data_mutex) 
 				parse_file(file, pattern, options);
-			}
 		}
 		regfree(&preg);
 	}
@@ -354,13 +353,15 @@ static void open_entry(int index, const char *editor, const char *pattern)
 	char command[PATH_MAX];
 	char filtered_file_name[PATH_MAX];
 	char line_copy[PATH_MAX];
+	pthread_mutex_t *mutex;
 
-	strcpy(line_copy, data.entry[index].line);
-
-	snprintf(command, sizeof(command), editor, 
-		extract_line_number(line_copy),
-		remove_double_appearance(data.entry[index].file, '/',
-		filtered_file_name), pattern);
+	synchronized(data.data_mutex) {
+		strcpy(line_copy, data.entry[index].line);
+		snprintf(command, sizeof(command), editor, 
+			extract_line_number(line_copy),
+			remove_double_appearance(data.entry[index].file, '/',
+			filtered_file_name), pattern);
+	}
 	system(command);              
 }
 
@@ -402,6 +403,7 @@ void main(int argc, char *argv[])
 	char command[128];
 	const char *editor;
 	config_t cfg;
+	pthread_mutex_t *mutex;
 
 	data.index = 0;
 	data.cursor = 0;
@@ -457,54 +459,60 @@ void main(int argc, char *argv[])
 
 	ncurses_init();
 
-	synchronized(data.data_mutex) {
+	synchronized(data.data_mutex)
 		display_entries(&data.index, &data.cursor);
-	}
 
 	while (ch = getch()) {
-		synchronized(data.data_mutex) {
-			switch(ch) {
-			case KEY_RESIZE:
+		switch(ch) {
+		case KEY_RESIZE:
+			synchronized(data.data_mutex)
 				resize(&data.index, &data.cursor);
-				break;
-			case CURSOR_DOWN:
-			case KEY_DOWN:
+			break;
+		case CURSOR_DOWN:
+		case KEY_DOWN:
+			synchronized(data.data_mutex)
 				cursor_down(&data.index, &data.cursor);
-				break;
-			case CURSOR_UP: 
-			case KEY_UP:
+			break;
+		case CURSOR_UP: 
+		case KEY_UP:
+			synchronized(data.data_mutex)
 				cursor_up(&data.index, &data.cursor);
-				break;
-			case KEY_PPAGE:
-			case PAGE_UP:
+			break;
+		case KEY_PPAGE:
+		case PAGE_UP:
+			synchronized(data.data_mutex)
 				page_up(&data.index, &data.cursor);
-				break;
-			case KEY_NPAGE:
-			case PAGE_DOWN:
+			break;
+		case KEY_NPAGE:
+		case PAGE_DOWN:
+			synchronized(data.data_mutex)
 				page_down(&data.index, &data.cursor);
-				break;
-			case ENTER:
-				ncurses_stop();
+			break;
+		case ENTER:
+			ncurses_stop();
+			open_entry(data.cursor + data.index, editor, 
+				data.pattern);
+			ncurses_init();
+			resize(&data.index, &data.cursor);
+			break;
+		case '\n':
+			synchronized(data.data_mutex)
 				open_entry(data.cursor + data.index, editor, 
 					data.pattern);
-				ncurses_init();
-				resize(&data.index, &data.cursor);
-				break;
-			case '\n':
-				open_entry(data.cursor + data.index, editor, 
-					data.pattern);
-				goto quit;
-			case QUIT:
-				goto quit;
-			default:
-				break;
-			}
+			goto quit;
+		case QUIT:
+			goto quit;
+		default:
+			break;
 		}
+
 		usleep(10000);
 		refresh();
 
-		if (data.status == 0 && data.nbentry == 0) {
-			goto quit;
+		synchronized(data.data_mutex) {
+			if (data.status == 0 && data.nbentry == 0) {
+				goto quit;
+			}
 		}
 	}
 
