@@ -120,7 +120,6 @@ static void printl(int *y, char *line)
 	char cropped_line[PATH_MAX];
 	char filtered_line[PATH_MAX];
 
-	size = strlen(line);
 	strncpy(cropped_line, line, crop);
 	cropped_line[COLS] = '\0';
 	mvprintw(*y, 0, "%s", remove_double_appearance(cropped_line, '/', filtered_line));
@@ -354,9 +353,12 @@ static void open_entry(int index, const char *editor, const char *pattern)
 {
 	char command[PATH_MAX];
 	char filtered_file_name[PATH_MAX];
+	char line_copy[PATH_MAX];
+
+	strcpy(line_copy, data.entry[index].line);
 
 	snprintf(command, sizeof(command), editor, 
-		extract_line_number(data.entry[index].line),
+		extract_line_number(line_copy),
 		remove_double_appearance(data.entry[index].file, '/',
 		filtered_file_name), pattern);
 	system(command);              
@@ -482,6 +484,12 @@ void main(int argc, char *argv[])
 				page_down(&data.index, &data.cursor);
 				break;
 			case ENTER:
+				ncurses_stop();
+				open_entry(data.cursor + data.index, editor, 
+					data.pattern);
+				ncurses_init();
+				resize(&data.index, &data.cursor);
+				break;
 			case '\n':
 				open_entry(data.cursor + data.index, editor, 
 					data.pattern);
