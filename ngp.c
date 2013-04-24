@@ -134,10 +134,29 @@ static void printl(int *y, char *line)
 	int size;
 	int crop = COLS;
 	char cropped_line[PATH_MAX];
+	char filtered_line[PATH_MAX];
+	char *pos;
+	int length=0;
+
+	init_pair(1, COLOR_WHITE, COLOR_BLACK);
+	init_pair(2, COLOR_YELLOW, COLOR_BLACK);
+	init_pair(3, COLOR_RED, COLOR_BLACK);
+	init_pair(4, COLOR_MAGENTA, COLOR_BLACK);
 
 	strncpy(cropped_line, line, crop);
 	cropped_line[COLS] = '\0';
-	mvprintw(*y, 0, "%s", cropped_line);
+
+	if (isdigit(cropped_line[0])) {
+		pos = strtok(cropped_line, ":");
+		attron(COLOR_PAIR(2));
+		mvprintw(*y, 0, "%s:", pos);
+		length = strlen(pos) + 1;
+		attron(COLOR_PAIR(1));
+		mvprintw(*y, length, "%s", cropped_line + length);
+	} else {
+		attron(COLOR_PAIR(4));
+		mvprintw(*y, 0, "%s", cropped_line, remove_double_appearance(cropped_line, '/', filtered_line));
+	}
 }
 
 static int display_entry(int *y, int *index, int color) 
