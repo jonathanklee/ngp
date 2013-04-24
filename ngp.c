@@ -65,6 +65,7 @@ typedef struct s_data_t {
 	char directory[PATH_MAX];
 	char pattern[NAME_MAX];
 	char options[NAME_MAX];
+	char file_type[4];
 	pthread_mutex_t data_mutex;
 	int status;
 } data_t;
@@ -103,6 +104,7 @@ static void usage()
 	fprintf(stderr, "Usage: ngp [options]... pattern [directory]\n\n");
 	fprintf(stderr, "options:\n");
 	fprintf(stderr, " -i : Ignore case distinctions in pattern\n");
+	fprintf(stderr, " -t type : Look for a file extension only\n");
 	exit(-1);
 }
 
@@ -249,7 +251,7 @@ static void lookup_file(const char *file, const char *pattern, char *options)
 	pthread_mutex_t *mutex;
 
 	nb_regex = sizeof(regex_langages) / sizeof(*regex_langages);
-	for (i = 0;i < nb_regex; i++) {
+	for (i = 0; i < nb_regex; i++) {
 		if (regcomp(&preg, regex_langages[i], REG_NOSUB|REG_EXTENDED)) {
 			fprintf(stderr, "regcomp : %s\n", strerror(errno));
 		}
@@ -270,7 +272,7 @@ static char * extract_line_number(char *line)
 }
 
 static void lookup_directory(const char *dir, const char *pattern, 
-	char *options)
+	char *options, char *file_type)
 {
 	DIR *dp;
 	struct stat filestat;
@@ -294,10 +296,17 @@ static void lookup_directory(const char *dir, const char *pattern,
 			snprintf(file_path, PATH_MAX, "%s/%s", dir, 
 				ep->d_name);
 
-			if (strchr(file_path, ' ') != NULL) sanitize_filename(file_path);
+			if (strchr(file_path, ' ') != NULL) 
+				sanitize_filename(file_path);
+
 			lstat(file_path, &filestat);
 			if (!S_ISLNK(filestat.st_mode)) {
-				lookup_file(file_path, pattern, options);
+				if (file_type != NULL) {
+					if (!strcmp(file_type, ep->d_name + strlen(ep->d_name) - strlen(file_type) ))
+						lookup_file(file_path, pattern, options);
+				} else {
+					lookup_file(file_path, pattern, options);
+				}
 			}
 		}
 
@@ -308,7 +317,7 @@ static void lookup_directory(const char *dir, const char *pattern,
 				char path_dir[PATH_MAX] = ""; 
 				snprintf(path_dir, PATH_MAX, "%s/%s", dir, 
 					ep->d_name);
-				lookup_directory(path_dir, pattern, options);
+				lookup_directory(path_dir, pattern, options, file_type);
 			}
 		}
 	}
@@ -459,7 +468,7 @@ void * lookup_thread(void *arg)
 {
 	data_t *d = (data_t *) arg;
 
-	lookup_directory(d->directory, d->pattern, d->options);
+	lookup_directory(d->directory, d->pattern, d->options, d->file_type);
 	d->status = 0;
 }
 
@@ -482,13 +491,18 @@ void main(int argc, char *argv[])
 	data.status = 1;
 	strcpy(data.directory, "./");
 
-	while ((opt = getopt(argc, argv, "hi")) != -1) {
+	pthread_mutex_init(&data.data_mutex, NULL);
+
+	while ((opt = getopt(argc, argv, "hit:")) != -1) {
 		switch (opt) {
 		case 'h':
 			usage();
 			break;
 		case 'i':
 			strcpy(data.options, "-i");	
+			break;
+		case 't':
+			strncpy(data.file_type, optarg, 3);
 			break;
 		default:
 			exit(-1);
