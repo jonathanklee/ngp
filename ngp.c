@@ -29,6 +29,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <menu.h>
 #include <signal.h>
 #include <libconfig.h>
+#include <sys/stat.h>
 
 #define CURSOR_UP 	'k'
 #define CURSOR_DOWN 	'j'
@@ -252,6 +253,7 @@ static void lookup_directory(const char *dir, const char *pattern,
 	char *options)
 {
 	DIR *dp;
+	struct stat filestat;
 
 	dp = opendir(dir);
 	if (!dp) {
@@ -271,10 +273,14 @@ static void lookup_directory(const char *dir, const char *pattern,
 			char file_path[PATH_MAX];
 			snprintf(file_path, PATH_MAX, "%s/%s", dir, 
 				ep->d_name);
-			lookup_file(file_path, pattern, options);
+
+			lstat(file_path, &filestat);
+			if (!S_ISLNK(filestat.st_mode)) {
+				lookup_file(file_path, pattern, options);
+			}
 		}
 
-		if (ep->d_type & DT_DIR) { 
+		if (ep->d_type & DT_DIR) {
 			if (strcmp(ep->d_name, "..") != 0 && 
 			strcmp(ep->d_name, ".") != 0 && 
 			strcmp(ep->d_name, ".git") != 0) {
@@ -283,7 +289,7 @@ static void lookup_directory(const char *dir, const char *pattern,
 					ep->d_name);
 				lookup_directory(path_dir, pattern, options);
 			}
-		} 
+		}
 	}
 	closedir(dp);
 }
