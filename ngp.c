@@ -112,7 +112,8 @@ static void check_alloc()
 {
 	if (data.nbentry >= data.size) {
 		data.size = data.size + 500;
-		data.entry = (entry_t*) realloc(data.entry, data.size * sizeof(entry_t)); 
+		data.entry = (entry_t*) realloc(data.entry,
+						data.size * sizeof(entry_t));
 	}
 }
 
@@ -142,7 +143,8 @@ static void printl(int *y, char *line)
 		mvprintw(*y, length, "%s", cropped_line + length);
 	} else {
 		attron(COLOR_PAIR(4));
-		mvprintw(*y, 0, "%s", cropped_line, remove_double_appearance(cropped_line, '/', filtered_line));
+		mvprintw(*y, 0, "%s", cropped_line,
+		remove_double_appearance(cropped_line, '/', filtered_line));
 		attron(COLOR_PAIR(1));
 	}
 }
@@ -160,7 +162,8 @@ static int display_entry(int *y, int *index, int color)
 			}
 		} else {
 			attron(A_BOLD);
-			strcmp(data.directory, "./") == 0 ? printl(y, data.entry[*index].file + 3) :
+			strcmp(data.directory, "./") == 0 ?
+				printl(y, data.entry[*index].file + 3) :
 				printl(y, data.entry[*index].file);	
 			attroff(A_BOLD);
 		}
@@ -175,7 +178,6 @@ static int parse_file(const char *file, const char *pattern, char *options)
 	int first;
 	errno = 0;
 
-	nb_of_files++;
 	snprintf(command, sizeof(command), "grep -n %s \'%s\' %s", options, 
 							pattern,  file);
 	f = popen(command, "r");
@@ -208,6 +210,7 @@ static void lookup_file(const char *file, const char *pattern, char *options)
 	int nb_regex;
 	errno = 0;
 
+	nb_of_files++;
 	nb_regex = sizeof(regex_langages) / sizeof(*regex_langages);
 	for (i = 0; i < nb_regex; i++) {
 		if (regcomp(&preg, regex_langages[i], REG_NOSUB|REG_EXTENDED)) {
@@ -249,7 +252,7 @@ static void lookup_directory(const char *dir, const char *pattern,
 			break;
 		}
 
-		if (!(ep->d_type & DT_DIR) && strcmp(ep->d_name, ".") != 0 && 
+		if (!(ep->d_type & DT_DIR) && strcmp(ep->d_name, ".") != 0 &&
 			strcmp(ep->d_name, "..") != 0) {
 			char file_path[PATH_MAX];
 			snprintf(file_path, PATH_MAX, "%s/%s", dir, 
@@ -273,7 +276,8 @@ static void lookup_directory(const char *dir, const char *pattern,
 				char path_dir[PATH_MAX] = ""; 
 				snprintf(path_dir, PATH_MAX, "%s/%s", dir, 
 					ep->d_name);
-				lookup_directory(path_dir, pattern, options, file_type);
+				lookup_directory(path_dir, pattern, options,
+					file_type);
 			}
 		}
 	}
@@ -438,7 +442,8 @@ static void configuration_init(config_t *cfg)
 		if (!config_read_file(cfg, "ngprc")) {
 			fprintf(stderr, "%s:%d - %s\n", config_error_file(cfg),
 				config_error_line(cfg), config_error_text(cfg));
-			fprintf(stderr, "Could be that the configuration file has not been found in /etc nor in current directory\n");
+			fprintf(stderr, "Could be that the configuration file \
+				has not been found in /etc nor in current dir\n");
 			config_destroy(cfg);
 			exit(1);
 		}
@@ -550,13 +555,13 @@ void main(int argc, char *argv[])
 				break;
 			case ENTER:
 				ncurses_stop();
-				open_entry(data.cursor + data.index, editor, 
+				open_entry(data.cursor + data.index, editor,
 					data.pattern);
 				ncurses_init();
 				resize(&data.index, &data.cursor);
 				break;
 			case '\n':
-				open_entry(data.cursor + data.index, editor, 
+				open_entry(data.cursor + data.index, editor,
 					data.pattern);
 				goto quit;
 			case QUIT:
@@ -567,9 +572,13 @@ void main(int argc, char *argv[])
 		}
 		if (time == 0) {
 			attron(A_BOLD);
-			mvaddch(0, COLS - 10, (data.status == 1) ? ACS_LTEE+i++%4 : ACS_BULLET);
+			mvaddch(0, COLS - 10, (data.status == 1) ?
+				ACS_LTEE+i++%4 : ACS_BULLET);
+
 			if (!data.status)
-				mvprintw(1, COLS - 10, "%d/%d", nb_of_hits, nb_of_files);
+				mvprintw(1, COLS - 10, "%d/%d",
+					nb_of_hits, nb_of_files);
+
 			attroff(A_BOLD);
 		}
 		usleep(10000);
