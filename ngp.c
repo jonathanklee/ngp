@@ -82,7 +82,7 @@ static int is_file(int index)
 	return strcmp(data.entry[index].line, "") == 0 ? 1 : 0;
 }
 
-static int is_dir_good(char *dir) 
+static int is_dir_good(char *dir)
 {
 	return  strcmp(dir, ".") != 0 &&
 		strcmp(dir, "..") != 0 &&
@@ -96,7 +96,7 @@ static char * remove_double_appearance(char *initial, char c, char *final)
 
 	for (i = 0, j = 0; i < len; j++ ) {
 		if (initial[i] != c) {
-			final[j] = initial[i]; 
+			final[j] = initial[i];
 			i++;
 		} else {
 			final[j] = initial[i];
@@ -112,7 +112,7 @@ static char * remove_double_appearance(char *initial, char c, char *final)
 	return final;
 }
 
-static void usage() 
+static void usage()
 {
 	fprintf(stderr, "Usage: ngp [options]... pattern [directory]\n\n");
 	fprintf(stderr, "options:\n");
@@ -147,11 +147,11 @@ static void check_alloc()
 {
 	if (data.nbentry >= data.size) {
 		data.size = data.size + 500;
-		data.entry = (entry_t*) realloc(data.entry, data.size * sizeof(entry_t)); 
+		data.entry = (entry_t*) realloc(data.entry, data.size * sizeof(entry_t));
 	}
 }
 
-static void printl(int *y, char *line) 
+static void printl(int *y, char *line)
 {
 	int size;
 	int crop = COLS;
@@ -176,10 +176,10 @@ static void printl(int *y, char *line)
 	}
 }
 
-static int display_entry(int *y, int *index, int color) 
+static int display_entry(int *y, int *index, int color)
 {
 	char filtered_line[PATH_MAX];
-	
+
 	if (*index <= data.nbentry) {
 		if (!is_file(*index)) {
 			if (color == 1) {
@@ -193,12 +193,12 @@ static int display_entry(int *y, int *index, int color)
 			attron(A_BOLD);
 			if (strcmp(data.directory, "./") == 0)
 				printl(y, remove_double_appearance(
-					data.entry[*index].file + 3, '/', 
+					data.entry[*index].file + 3, '/',
 					filtered_line));
 			else
 				printl(y, remove_double_appearance(
 					data.entry[*index].file, '/',
-					filtered_line));	
+					filtered_line));
 			attroff(A_BOLD);
 		}
 	}
@@ -232,12 +232,12 @@ static int parse_file(const char *file, const char *pattern, char *options)
 	int first;
 	errno = 0;
 
-	snprintf(command, sizeof(command), "grep -n %s \'%s\' %s", options, 
+	snprintf(command, sizeof(command), "grep -n %s \'%s\' %s", options,
 							pattern,  file);
 	f = popen(command, "r");
 	if (f == NULL) {
 		fprintf(stderr, "popen : %d %s\n", errno, strerror(errno));
-		return -1;       
+		return -1;
 	}
 
 	first = 1;
@@ -276,7 +276,7 @@ static void lookup_file(const char *file, const char *pattern, char *options)
 			fprintf(stderr, "regcomp : %s\n", strerror(errno));
 		}
 		if (regexec(&preg, file, 0, NULL, 0) == 0) {
-			synchronized(data.data_mutex) 
+			synchronized(data.data_mutex)
 				parse_file(file, pattern, options);
 		}
 		regfree(&preg);
@@ -291,7 +291,7 @@ static char * extract_line_number(char *line)
 	return token;
 }
 
-static void lookup_directory(const char *dir, const char *pattern, 
+static void lookup_directory(const char *dir, const char *pattern,
 	char *options, char *file_type)
 {
 	DIR *dp;
@@ -312,10 +312,10 @@ static void lookup_directory(const char *dir, const char *pattern,
 
 		if (!(ep->d_type & DT_DIR) && is_dir_good(ep->d_name)) {
 			char file_path[PATH_MAX];
-			snprintf(file_path, PATH_MAX, "%s/%s", dir, 
+			snprintf(file_path, PATH_MAX, "%s/%s", dir,
 				ep->d_name);
 
-			if (strchr(file_path, ' ') != NULL) 
+			if (strchr(file_path, ' ') != NULL)
 				sanitize_filename(file_path);
 
 			lstat(file_path, &filestat);
@@ -330,8 +330,8 @@ static void lookup_directory(const char *dir, const char *pattern,
 		}
 
 		if (ep->d_type & DT_DIR && is_dir_good(ep->d_name)) {
-			char path_dir[PATH_MAX] = ""; 
-			snprintf(path_dir, PATH_MAX, "%s/%s", dir, 
+			char path_dir[PATH_MAX] = "";
+			snprintf(path_dir, PATH_MAX, "%s/%s", dir,
 				ep->d_name);
 			lookup_directory(path_dir, pattern, options, file_type);
 		}
@@ -451,12 +451,12 @@ static void open_entry(int index, const char *editor, const char *pattern)
 
 	synchronized(data.data_mutex) {
 		strcpy(line_copy, data.entry[index].line);
-		snprintf(command, sizeof(command), editor, 
+		snprintf(command, sizeof(command), editor,
 			extract_line_number(line_copy),
 			remove_double_appearance(data.entry[index].file, '/',
 			filtered_file_name), pattern);
 	}
-	system(command);              
+	system(command);
 }
 
 static void sig_handler(int signo)
@@ -476,12 +476,12 @@ static void configuration_init(config_t *cfg)
 	config_init(cfg);
 
 	user_name = getenv("USER");
-	snprintf(user_ngprc, PATH_MAX, "/home/%s/%s", 
+	snprintf(user_ngprc, PATH_MAX, "/home/%s/%s",
 		user_name, ".ngprc");
-		
+
 	if (config_read_file(cfg, user_ngprc))
 		return;
-	
+
 	if (!config_read_file(cfg, "/etc/ngprc")) {
 		fprintf(stderr, "%s:%d - %s\n", config_error_file(cfg),
 			config_error_line(cfg), config_error_text(cfg));
@@ -526,14 +526,14 @@ void main(int argc, char *argv[])
 			usage();
 			break;
 		case 'i':
-			strcpy(data.options, "-i");	
+			strcpy(data.options, "-i");
 			break;
 		case 't':
 			strncpy(data.file_type, optarg, 3);
 			break;
 		case 'r':
 			data.raw = 1;
-			break;	
+			break;
 		default:
 			exit(-1);
 			break;
@@ -546,10 +546,10 @@ void main(int argc, char *argv[])
 
 	for ( ; optind < argc; optind++) {
 		if (!first) {
-			strcpy(data.pattern, argv[optind]);	
+			strcpy(data.pattern, argv[optind]);
 			first = 1;
 		} else {
-			strcpy(data.directory, argv[optind]);	
+			strcpy(data.directory, argv[optind]);
 		}
 	}
 
@@ -557,7 +557,7 @@ void main(int argc, char *argv[])
 
 	configuration_init(&cfg);
 	if (!config_lookup_string(&cfg, "editor", &editor)) {
-		fprintf(stderr, "ngprc: no editor string found!\n");	
+		fprintf(stderr, "ngprc: no editor string found!\n");
 		exit(-1);
 	}
 
@@ -566,7 +566,7 @@ void main(int argc, char *argv[])
 	data.entry = (entry_t *) calloc(data.size, sizeof(entry_t));
 
 	if (pthread_create(&pid, NULL, &lookup_thread, &data)) {
-		fprintf(stderr, "ngp: cannot create thread");		
+		fprintf(stderr, "ngp: cannot create thread");
 		free(data.entry);
 		exit(-1);
 	}
@@ -587,7 +587,7 @@ void main(int argc, char *argv[])
 			synchronized(data.data_mutex)
 				cursor_down(&data.index, &data.cursor);
 			break;
-		case CURSOR_UP: 
+		case CURSOR_UP:
 		case KEY_UP:
 			synchronized(data.data_mutex)
 				cursor_up(&data.index, &data.cursor);
@@ -605,7 +605,7 @@ void main(int argc, char *argv[])
 		case ENTER:
 		case '\n':
 			ncurses_stop();
-			open_entry(data.cursor + data.index, editor, 
+			open_entry(data.cursor + data.index, editor,
 				data.pattern);
 			ncurses_init();
 			resize(&data.index, &data.cursor);
