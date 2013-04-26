@@ -76,6 +76,11 @@ static pid_t pid;
 static void ncurses_add_file(const char *file);
 static void ncurses_add_line(const char *line, const char* file);
 
+static int is_file(int index)
+{
+	return strcmp(data.entry[index].line, "") == 0 ? 1 : 0;
+}
+
 static char * remove_double_appearance(char *initial, char c, char *final)
 {
 	int i, j;
@@ -167,7 +172,7 @@ static int display_entry(int *y, int *index, int color)
 	char filtered_line[PATH_MAX];
 	
 	if (*index <= data.nbentry) {
-		if (strcmp(data.entry[*index].line, "")) {
+		if (!is_file(*index)) {
 			if (color == 1) {
 				attron(A_REVERSE);
 				printl(y, data.entry[*index].line);
