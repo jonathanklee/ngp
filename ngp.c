@@ -627,4 +627,6 @@ void main(int argc, char *argv[])
 quit:
 	free(data.entry);
 	ncurses_stop();
+	if (!nb_of_hits)
+		printf("No results found!\n");
 }
