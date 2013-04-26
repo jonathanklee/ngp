@@ -61,6 +61,7 @@ typedef struct s_data_t {
 	int cursor;
 	int nbentry;
 	int size;
+	int raw;
 	entry_t *entry;
 	char directory[PATH_MAX];
 	char pattern[NAME_MAX];
@@ -116,6 +117,7 @@ static void usage()
 	fprintf(stderr, "Usage: ngp [options]... pattern [directory]\n\n");
 	fprintf(stderr, "options:\n");
 	fprintf(stderr, " -i : Ignore case distinctions in pattern\n");
+	fprintf(stderr, " -r : Raw mode\n");
 	fprintf(stderr, " -t type : Look for a file extension only\n");
 	exit(-1);
 }
@@ -261,6 +263,12 @@ static void lookup_file(const char *file, const char *pattern, char *options)
 	int nb_regex;
 	errno = 0;
 	pthread_mutex_t *mutex;
+
+	if (data.raw) {
+		synchronized(data.data_mutex)
+			parse_file(file, pattern, options);
+			return;
+	}
 
 	nb_regex = sizeof(regex_langages) / sizeof(*regex_langages);
 	for (i = 0; i < nb_regex; i++) {
@@ -507,11 +515,12 @@ void main(int argc, char *argv[])
 	data.size = 100;
 	data.nbentry = 0;
 	data.status = 1;
+	data.raw = 0;
 	strcpy(data.directory, "./");
 
 	pthread_mutex_init(&data.data_mutex, NULL);
 
-	while ((opt = getopt(argc, argv, "hit:")) != -1) {
+	while ((opt = getopt(argc, argv, "hit:r")) != -1) {
 		switch (opt) {
 		case 'h':
 			usage();
@@ -522,6 +531,9 @@ void main(int argc, char *argv[])
 		case 't':
 			strncpy(data.file_type, optarg, 3);
 			break;
+		case 'r':
+			data.raw = 1;
+			break;	
 		default:
 			exit(-1);
 			break;
