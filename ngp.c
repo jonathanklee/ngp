@@ -128,6 +128,10 @@ static void ncurses_init()
 	keypad(stdscr, TRUE);
 	nodelay(stdscr, TRUE);
 	start_color();
+	init_pair(1, COLOR_WHITE, COLOR_BLACK);
+	init_pair(2, COLOR_YELLOW, COLOR_BLACK);
+	init_pair(3, COLOR_RED, COLOR_BLACK);
+	init_pair(4, COLOR_MAGENTA, COLOR_BLACK);
 	curs_set(0);
 }
 
@@ -152,11 +156,6 @@ static void printl(int *y, char *line)
 	char filtered_line[PATH_MAX];
 	char *pos;
 	int length=0;
-
-	init_pair(1, COLOR_WHITE, COLOR_BLACK);
-	init_pair(2, COLOR_YELLOW, COLOR_BLACK);
-	init_pair(3, COLOR_RED, COLOR_BLACK);
-	init_pair(4, COLOR_MAGENTA, COLOR_BLACK);
 
 	strncpy(cropped_line, line, crop);
 	cropped_line[COLS] = '\0';
