@@ -462,7 +462,18 @@ static void sig_handler(int signo)
 
 static void configuration_init(config_t *cfg)
 {
+	char *user_name;
+	char user_ngprc[PATH_MAX];
+
 	config_init(cfg);
+
+	user_name = getenv("USER");
+	snprintf(user_ngprc, PATH_MAX, "/home/%s/%s", 
+		user_name, ".ngprc");
+		
+	if (config_read_file(cfg, user_ngprc))
+		return;
+	
 	if (!config_read_file(cfg, "/etc/ngprc")) {
 		fprintf(stderr, "%s:%d - %s\n", config_error_file(cfg),
 			config_error_line(cfg), config_error_text(cfg));
