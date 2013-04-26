@@ -81,6 +81,13 @@ static int is_file(int index)
 	return strcmp(data.entry[index].line, "") == 0 ? 1 : 0;
 }
 
+static int is_dir_good(char *dir) 
+{
+	return  strcmp(dir, ".") != 0 &&
+		strcmp(dir, "..") != 0 &&
+		strcmp(dir, ".git") != 0 ? 1 : 0;
+}
+
 static char * remove_double_appearance(char *initial, char c, char *final)
 {
 	int i, j;
@@ -295,8 +302,7 @@ static void lookup_directory(const char *dir, const char *pattern,
 			break;
 		}
 
-		if (!(ep->d_type & DT_DIR) && strcmp(ep->d_name, ".") != 0 && 
-			strcmp(ep->d_name, "..") != 0) {
+		if (!(ep->d_type & DT_DIR) && is_dir_good(ep->d_name)) {
 			char file_path[PATH_MAX];
 			snprintf(file_path, PATH_MAX, "%s/%s", dir, 
 				ep->d_name);
@@ -315,15 +321,11 @@ static void lookup_directory(const char *dir, const char *pattern,
 			}
 		}
 
-		if (ep->d_type & DT_DIR) {
-			if (strcmp(ep->d_name, "..") != 0 && 
-			strcmp(ep->d_name, ".") != 0 && 
-			strcmp(ep->d_name, ".git") != 0) {
-				char path_dir[PATH_MAX] = ""; 
-				snprintf(path_dir, PATH_MAX, "%s/%s", dir, 
-					ep->d_name);
-				lookup_directory(path_dir, pattern, options, file_type);
-			}
+		if (ep->d_type & DT_DIR && is_dir_good(ep->d_name)) {
+			char path_dir[PATH_MAX] = ""; 
+			snprintf(path_dir, PATH_MAX, "%s/%s", dir, 
+				ep->d_name);
+			lookup_directory(path_dir, pattern, options, file_type);
 		}
 	}
 	closedir(dp);
