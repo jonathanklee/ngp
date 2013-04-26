@@ -132,6 +132,7 @@ static void ncurses_init()
 	init_pair(2, COLOR_YELLOW, COLOR_BLACK);
 	init_pair(3, COLOR_RED, COLOR_BLACK);
 	init_pair(4, COLOR_MAGENTA, COLOR_BLACK);
+	init_pair(5, COLOR_GREEN, COLOR_BLACK);
 	curs_set(0);
 }
 
@@ -168,7 +169,7 @@ static void printl(int *y, char *line)
 		attron(COLOR_PAIR(1));
 		mvprintw(*y, length, "%s", cropped_line + length);
 	} else {
-		attron(COLOR_PAIR(4));
+		attron(COLOR_PAIR(5));
 		mvprintw(*y, 0, "%s", cropped_line, remove_double_appearance(cropped_line, '/', filtered_line));
 	}
 }
