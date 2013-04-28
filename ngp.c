@@ -397,6 +397,10 @@ static void page_up(int *index, int *cursor)
 		*cursor = LINES - 1;
 	*index -= LINES;
 	*index = (*index < 0 ? 0 : *index);
+
+	if (is_file(*index + *cursor) && *index != 0)
+		*cursor -= 1;
+
 	display_entries(index, cursor);
 }
 
@@ -417,6 +421,9 @@ static void page_down(int *index, int *cursor)
 	refresh();
 	*index += LINES;
 	*index = (*index > max_index ? max_index : *index);
+
+	if (is_file(*index + *cursor))
+		*cursor += 1;
 	display_entries(index, cursor);
 }
 
@@ -431,6 +438,14 @@ static void cursor_up(int *index, int *cursor)
 		*cursor = *cursor - 1;
 	}
 
+	if (is_file(*index + *cursor))
+		*cursor = *cursor - 1;
+
+	if (*cursor < 0) {
+		page_up(index, cursor);
+		return;
+	}
+
 	display_entries(index, cursor);
 }
 
@@ -443,6 +458,14 @@ static void cursor_down(int *index, int *cursor)
 
 	if (*cursor + *index < data.nbentry - 1) {
 		*cursor = *cursor + 1;
+	}
+
+	if (is_file(*index + *cursor))
+		*cursor = *cursor + 1;
+
+	if (*cursor > (LINES - 1)) {
+		page_down(index, cursor);
+		return;
 	}
 
 	display_entries(index, cursor);
