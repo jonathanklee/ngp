@@ -291,11 +291,18 @@ static char * extract_line_number(char *line)
 	return token;
 }
 
+static int is_simlink(char *file_path)
+{
+	struct stat filestat;
+
+	lstat(file_path, &filestat);
+	return S_ISLNK(filestat.st_mode);
+}
+
 static void lookup_directory(const char *dir, const char *pattern,
 	char *options, char *file_type)
 {
 	DIR *dp;
-	struct stat filestat;
 
 	dp = opendir(dir);
 	if (!dp) {
@@ -318,8 +325,7 @@ static void lookup_directory(const char *dir, const char *pattern,
 			if (strchr(file_path, ' ') != NULL)
 				sanitize_filename(file_path);
 
-			lstat(file_path, &filestat);
-			if (!S_ISLNK(filestat.st_mode)) {
+			if (!is_simlink(file_path)) {
 				if (file_type != NULL) {
 					if (!strcmp(file_type, ep->d_name + strlen(ep->d_name) - strlen(file_type) ))
 						lookup_file(file_path, pattern, options);
