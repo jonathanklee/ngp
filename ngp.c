@@ -491,6 +491,7 @@ static void configuration_init(config_t *cfg)
 	if (!config_read_file(cfg, "/etc/ngprc")) {
 		fprintf(stderr, "%s:%d - %s\n", config_error_file(cfg),
 			config_error_line(cfg), config_error_text(cfg));
+		fprintf(stderr, "Could be that the configuration file has not been found\n");
 		config_destroy(cfg);
 		exit(1);
 	}
