@@ -278,6 +278,8 @@ static void lookup_file(const char *file, const char *pattern, char *options)
 		if (regexec(&preg, file, 0, NULL, 0) == 0) {
 			synchronized(data.data_mutex)
 				parse_file(file, pattern, options);
+			regfree(&preg);
+			break;
 		}
 		regfree(&preg);
 	}
