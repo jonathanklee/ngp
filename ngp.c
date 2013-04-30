@@ -229,30 +229,31 @@ static int parse_file(const char *file, const char *pattern, char *options)
 	FILE *f;
 	char line[256];
 	char command[256];
+	char full_line[256];
 	int first;
+	int line_number;
 	errno = 0;
 
-	snprintf(command, sizeof(command), "grep -n %s \'%s\' %s", options,
-							pattern,  file);
-	f = popen(command, "r");
+	f = fopen(file, "r");
 	if (f == NULL) {
-		fprintf(stderr, "popen : %d %s\n", errno, strerror(errno));
+		fprintf(stderr, "fopen : %d %s\n", errno, strerror(errno));
 		return -1;
 	}
 
 	first = 1;
+	line_number = 1;
 	while (fgets(line, sizeof(line), f)) {
-		if (first) {
-			ncurses_add_file(file);
-			first = 0;
+		if (strstr(line, pattern) != NULL) {
+			if (first) {
+				ncurses_add_file(file);
+				first = 0;
+			}
+			sprintf(full_line, "%d:%s", line_number, line);
+			ncurses_add_line(full_line, file);
 		}
-
-		/* cleanup bad files that have a \r at the end of lines */
-		if (line[strlen(line) - 2] == '\r')
-			line[strlen(line) - 2] = '\0';
-		ncurses_add_line(line, file);
+		line_number++;
 	}
-	pclose(f);
+	fclose(f);
 	return 0;
 }
 
