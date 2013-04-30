@@ -15,6 +15,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#define _GNU_SOURCE
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -232,6 +234,7 @@ static int parse_file(const char *file, const char *pattern, char *options)
 	char full_line[256];
 	int first;
 	int line_number;
+	char * (*parser)(const char *, const char*);
 	errno = 0;
 
 	f = fopen(file, "r");
@@ -240,10 +243,15 @@ static int parse_file(const char *file, const char *pattern, char *options)
 		return -1;
 	}
 
+	if (strstr(options, "-i") == NULL) 
+		parser = strstr;
+	else
+		parser = strcasestr;
+
 	first = 1;
 	line_number = 1;
 	while (fgets(line, sizeof(line), f)) {
-		if (strstr(line, pattern) != NULL) {
+		if (parser(line, pattern) != NULL) {
 			if (first) {
 				ncurses_add_file(file);
 				first = 0;
