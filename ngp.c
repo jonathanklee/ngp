@@ -256,6 +256,8 @@ static int parse_file(const char *file, const char *pattern, char *options)
 				ncurses_add_file(file);
 				first = 0;
 			}
+			if (line[strlen(line) - 2] == '\r')
+				line[strlen(line) - 2] = '\0';
 			sprintf(full_line, "%d:%s", line_number, line);
 			ncurses_add_line(full_line, file);
 		}
