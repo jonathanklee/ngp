@@ -46,11 +46,11 @@ mutex && !pthread_mutex_lock(mutex); \
 pthread_mutex_unlock(mutex), mutex = 0)
 
 char *regex_langages[] = {
-	"([/[:alnum:]]+\\.c$)",
-	"([/[:alnum:]]+\\.h$)",
-	"([/[:alnum:]]+\\.cpp)$",
-	"([/[:alnum:]]+\\.py$)",
-	"([/[:alnum:]]+\\.sh$)"
+	"[[:alnum:]]+\\.c$",
+	"[[:alnum:]]+\\.h$",
+	"[[:alnum:]]+\\.cpp$",
+	"[[:alnum:]]+\\.py$",
+	"[[:alnum:]]+\\.sh$"
 };
 
 typedef struct s_entry_t {
