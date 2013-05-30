@@ -4019,6 +4019,8 @@ _ACEOF
 
   LIBS="-lpthread $LIBS"
 
+else
+  as_fn_error $? "oops no lib pthread ?" "$LINENO" 5
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for initscr in -lncurses" >&5
@@ -4064,6 +4066,8 @@ _ACEOF
 
   LIBS="-lncurses $LIBS"
 
+else
+  as_fn_error $? "oops no lib ncurses ?" "$LINENO" 5
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for config_read_file in -lconfig" >&5
@@ -4109,6 +4113,8 @@ _ACEOF
 
   LIBS="-lconfig $LIBS"
 
+else
+  as_fn_error $? "oops no lib config ?" "$LINENO" 5
 fi
 
 ac_config_files="$ac_config_files Makefile"
