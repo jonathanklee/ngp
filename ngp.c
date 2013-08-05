@@ -212,16 +212,16 @@ static int sanitize_filename(char *file)
 	char *tok;
 
 	if ((tok = strtok(file, " ")) != NULL) {
-		strncpy(out, tok, 256);
+		strncpy(out, tok, 255);
 	}
 
 	while((tok = strtok(NULL, " ")) != NULL) {
-		strncat(out, "\\ ", 256);
-		strncat(out, tok, 256);
+		strncat(out, "\\ ", 255);
+		strncat(out, tok, 255);
 	}
 
 	//FIXME: use reentrant
-	strncpy(file, out, 256);
+	strncpy(file, out, 255);
 
 	return 0;
 }
