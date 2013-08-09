@@ -71,6 +71,8 @@ typedef struct s_data_t {
 	char file_type[4];
 	pthread_mutex_t data_mutex;
 	int status;
+	char specific_files_list[256][NAME_MAX];
+	int specific_files_number;
 } data_t;
 
 static data_t data;
@@ -89,6 +91,17 @@ static int is_dir_good(char *dir)
 	return  strcmp(dir, ".") != 0 &&
 		strcmp(dir, "..") != 0 &&
 		strcmp(dir, ".git") != 0 ? 1 : 0;
+}
+
+static int is_specific_file(const char *name)
+{
+	int i;	
+	for (i = 0; i < data.specific_files_number; i++) {
+		if (!strcmp(name + 3, data.specific_files_list[i])) {
+			return 1;
+		}
+	}
+	return 0;
 }
 
 static char * remove_double_appearance(char *initial, char c, char *final)
@@ -280,7 +293,13 @@ static void lookup_file(const char *file, const char *pattern, char *options)
 	if (data.raw) {
 		synchronized(data.data_mutex)
 			parse_file(file, pattern, options);
-			return;
+		return;
+	}
+
+	if (is_specific_file(file)) {
+		synchronized(data.data_mutex)
+			parse_file(file, pattern, options);
+		return;
 	}
 
 	nb_regex = sizeof(regex_langages) / sizeof(*regex_langages);
@@ -542,7 +561,7 @@ void * lookup_thread(void *arg)
 	d->status = 0;
 }
 
-void main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	DIR *dp;
 	int opt;
@@ -551,6 +570,9 @@ void main(int argc, char *argv[])
 	int first = 0;
 	char command[128];
 	const char *editor;
+	const char *specific_files;
+	char *ptr;
+	char *buf;
 	config_t cfg;
 	pthread_mutex_t *mutex;
 
@@ -603,6 +625,20 @@ void main(int argc, char *argv[])
 	if (!config_lookup_string(&cfg, "editor", &editor)) {
 		fprintf(stderr, "ngprc: no editor string found!\n");
 		exit(-1);
+	}
+
+	if (!config_lookup_string(&cfg, "files", &specific_files)) {
+		fprintf(stderr, "ngprc: no specific_files string found!\n");
+		exit(-1);
+	}
+	
+	data.specific_files_number = 0;
+	ptr = strtok_r((char *) specific_files, " ", &buf);
+	while (ptr != NULL) {
+		strcpy(data.specific_files_list[data.specific_files_number],
+			ptr);
+		data.specific_files_number++;
+		ptr = strtok_r(NULL, " ", &buf);
 	}
 
 	signal(SIGINT, sig_handler);

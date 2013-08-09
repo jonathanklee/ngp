@@ -5,3 +5,4 @@ arg #2 = file path
 arg #3 = pattern to search */
 
 editor = "vim -c '/%3$s' -c '%1$s' '%2$s'";
+files = "Makefile rules control";
