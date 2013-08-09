@@ -160,13 +160,14 @@ static void printl(int *y, char *line)
 	char cropped_line[PATH_MAX];
 	char filtered_line[PATH_MAX];
 	char *pos;
+	char *buf;
 	int length=0;
 
 	strncpy(cropped_line, line, crop);
 	cropped_line[COLS] = '\0';
 
 	if (isdigit(cropped_line[0])) {
-		pos = strtok(cropped_line, ":");
+		pos = strtok_r(cropped_line, ":", &buf);
 		attron(COLOR_PAIR(2));
 		mvprintw(*y, 0, "%s:", pos);
 		length = strlen(pos) + 1;
@@ -210,12 +211,13 @@ static int sanitize_filename(char *file)
 {
 	char out[256];
 	char *tok;
+	char *buf;
 
-	if ((tok = strtok(file, " ")) != NULL) {
+	if ((tok = strtok_r(file, " ", &buf)) != NULL) {
 		strncpy(out, tok, 255);
 	}
 
-	while((tok = strtok(NULL, " ")) != NULL) {
+	while((tok = strtok_r(NULL, " ", &buf)) != NULL) {
 		strncat(out, "\\ ", 255);
 		strncat(out, tok, 255);
 	}
