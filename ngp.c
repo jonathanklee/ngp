@@ -129,11 +129,11 @@ static char * remove_double_appearance(char *initial, char c, char *final)
 
 static void usage()
 {
-	fprintf(stderr, "Usage: ngp [options]... pattern [directory]\n\n");
+	fprintf(stderr, "usage: ngp [options]... pattern [directory]\n\n");
 	fprintf(stderr, "options:\n");
-	fprintf(stderr, " -i : Ignore case distinctions in pattern\n");
-	fprintf(stderr, " -r : Raw mode\n");
-	fprintf(stderr, " -t type : Look for a file extension only\n");
+	fprintf(stderr, " -i : ignore case distinctions in pattern\n");
+	fprintf(stderr, " -r : raw mode\n");
+	fprintf(stderr, " -t type : look for a file extension only\n");
 	exit(-1);
 }
 
