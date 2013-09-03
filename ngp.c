@@ -44,14 +44,6 @@ for(mutex = &MUTEX; \
 mutex && !pthread_mutex_lock(mutex); \
 pthread_mutex_unlock(mutex), mutex = 0)
 
-char *regex_langages[] = {
-	".c",
-	".h",
-	".cpp",
-	".py",
-	".sh"
-};
-
 typedef struct s_entry_t {
 	char file[PATH_MAX];
 	char line[NAME_MAX];
@@ -72,6 +64,8 @@ typedef struct s_data_t {
 	int status;
 	char specific_files_list[256][NAME_MAX];
 	int specific_files_number;
+	char extensions_list[64][NAME_MAX];
+	int extensions_number;
 } data_t;
 
 static data_t data;
@@ -300,9 +294,8 @@ static void lookup_file(const char *file, const char *pattern, char *options)
 		return;
 	}
 
-	nb_regex = sizeof(regex_langages) / sizeof(*regex_langages);
-	for (i = 0; i < nb_regex; i++) {
-		if (!strcmp(regex_langages[i], file + strlen(file) - strlen(regex_langages[i]))) {
+	for (i = 0; i < data.extensions_number; i++) {
+		if (!strcmp(data.extensions_list[i], file + strlen(file) - strlen(data.extensions_list[i]))) {
 			synchronized(data.data_mutex)
 				parse_file(file, pattern, options);
 			break;
@@ -564,6 +557,7 @@ int main(int argc, char *argv[])
 	char command[128];
 	const char *editor;
 	const char *specific_files;
+	const char *extensions;
 	char *ptr;
 	char *buf;
 	config_t cfg;
@@ -621,7 +615,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (!config_lookup_string(&cfg, "files", &specific_files)) {
-		fprintf(stderr, "ngprc: no specific_files string found!\n");
+		fprintf(stderr, "ngprc: no files string found!\n");
 		exit(-1);
 	}
 	
@@ -631,6 +625,21 @@ int main(int argc, char *argv[])
 		strcpy(data.specific_files_list[data.specific_files_number],
 			ptr);
 		data.specific_files_number++;
+		ptr = strtok_r(NULL, " ", &buf);
+	}
+
+	/* getting files extensions from configuration */
+	if (!config_lookup_string(&cfg, "extensions", &extensions)) {
+		fprintf(stderr, "ngprc: no extensions string found!\n");
+		exit(-1);
+	}
+
+	data.extensions_number = 0;
+	ptr = strtok_r((char *) extensions, " ", &buf);
+	while (ptr != NULL) {
+		strcpy(data.extensions_list[data.extensions_number],
+			ptr);
+		data.extensions_number++;
 		ptr = strtok_r(NULL, " ", &buf);
 	}
 
