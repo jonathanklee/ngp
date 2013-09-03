@@ -24,7 +24,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <dirent.h>
 #include <unistd.h>
 #include <string.h>
-#include <regex.h>
 #include <errno.h>
 #include <sys/wait.h>
 #include <ncurses.h>
@@ -46,11 +45,11 @@ mutex && !pthread_mutex_lock(mutex); \
 pthread_mutex_unlock(mutex), mutex = 0)
 
 char *regex_langages[] = {
-	"[[:alnum:]]+\\.c$",
-	"[[:alnum:]]+\\.h$",
-	"[[:alnum:]]+\\.cpp$",
-	"[[:alnum:]]+\\.py$",
-	"[[:alnum:]]+\\.sh$"
+	".c",
+	".h",
+	".cpp",
+	".py",
+	".sh"
 };
 
 typedef struct s_entry_t {
@@ -285,7 +284,6 @@ static int parse_file(const char *file, const char *pattern, char *options)
 static void lookup_file(const char *file, const char *pattern, char *options)
 {
 	int i;
-	regex_t preg;
 	int nb_regex;
 	errno = 0;
 	pthread_mutex_t *mutex;
@@ -304,16 +302,11 @@ static void lookup_file(const char *file, const char *pattern, char *options)
 
 	nb_regex = sizeof(regex_langages) / sizeof(*regex_langages);
 	for (i = 0; i < nb_regex; i++) {
-		if (regcomp(&preg, regex_langages[i], REG_NOSUB|REG_EXTENDED)) {
-			fprintf(stderr, "regcomp : %s\n", strerror(errno));
-		}
-		if (regexec(&preg, file, 0, NULL, 0) == 0) {
+		if (!strcmp(regex_langages[i], file + strlen(file) - strlen(regex_langages[i]))) {
 			synchronized(data.data_mutex)
 				parse_file(file, pattern, options);
-			regfree(&preg);
 			break;
 		}
-		regfree(&preg);
 	}
 }
 
