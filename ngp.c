@@ -525,8 +525,8 @@ static void open_entry(int index, const char *editor, const char *pattern)
 static void sig_handler(int signo)
 {
 	if (signo == SIGINT) {
-		free(data.entry);
 		ncurses_stop();
+		free(data.entry);
 		exit(-1);
 	}
 }
@@ -707,6 +707,6 @@ int main(int argc, char *argv[])
 	}
 
 quit:
-	free(data.entry);
 	ncurses_stop();
+	free(data.entry);
 }
