@@ -16,3 +16,8 @@ Installation
 - make
 - make install
 - enjoy !
+
+Looking for "boot_param" pattern in kernel
+
+![Looking for "boot_param" pattern] (/search.png)
+
