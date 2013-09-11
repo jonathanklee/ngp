@@ -246,10 +246,8 @@ static int parse_file(const char *file, const char *pattern, char *options)
 	errno = 0;
 
 	f = fopen(file, "r");
-	if (f == NULL) {
-		fprintf(stderr, "fopen : %d %s\n", errno, strerror(errno));
+	if (f == NULL) 
 		return -1;
-	}
 
 	if (strstr(options, "-i") == NULL) 
 		parser = strstr;
