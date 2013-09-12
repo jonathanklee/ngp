@@ -31,6 +31,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <signal.h>
 #include <libconfig.h>
 #include <sys/stat.h>
+#include <pthread.h>
+#include <ctype.h>
 
 #define CURSOR_UP 	'k'
 #define CURSOR_DOWN 	'j'
