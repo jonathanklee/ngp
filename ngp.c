@@ -190,7 +190,7 @@ static int display_entry(int *y, int *index, int color)
 {
 	char filtered_line[PATH_MAX];
 
-	if (*index <= data.nbentry) {
+	if (*index < data.nbentry) {
 		if (!is_file(*index)) {
 			if (color == 1) {
 				attron(A_REVERSE);
