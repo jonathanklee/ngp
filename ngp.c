@@ -39,6 +39,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define ENTER	 	'p'
 #define QUIT	 	'q'
 
+#ifdef LINE_MAX
+	#undef LINE_MAX
+#endif
+#define LINE_MAX	256
+
 #define synchronized(MUTEX) \
 for(mutex = &MUTEX; \
 mutex && !pthread_mutex_lock(mutex); \
@@ -65,12 +70,12 @@ typedef struct s_search_t {
 
 	/* search */
 	char directory[PATH_MAX];
-	char pattern[NAME_MAX];
-	char options[NAME_MAX];
+	char pattern[LINE_MAX];
+	char options[LINE_MAX];
 	char file_type[4];
-	char specific_files_list[256][NAME_MAX];
+	char specific_files_list[256][LINE_MAX];
 	int specific_files_number;
-	char extensions_list[64][NAME_MAX];
+	char extensions_list[64][LINE_MAX];
 	int extensions_number;
 	int raw;	
 } search_t;
@@ -245,9 +250,9 @@ static int sanitize_filename(char *file)
 static int parse_file(const char *file, const char *pattern, char *options)
 {
 	FILE *f;
-	char line[256];
-	char command[256];
-	char full_line[256];
+	char line[LINE_MAX];
+	char command[LINE_MAX];
+	char full_line[LINE_MAX];
 	int first;
 	int line_number;
 	char * (*parser)(const char *, const char*);
@@ -272,7 +277,7 @@ static int parse_file(const char *file, const char *pattern, char *options)
 			}
 			if (line[strlen(line) - 2] == '\r')
 				line[strlen(line) - 2] = '\0';
-			snprintf(full_line, 256, "%d:%s", line_number, line);
+			snprintf(full_line, LINE_MAX, "%d:%s", line_number, line);
 			ncurses_add_line(full_line, file);
 		}
 		line_number++;
@@ -403,8 +408,8 @@ static void ncurses_add_line(const char *line, const char* file)
 	char	*new_line;
 
 	check_alloc();
-	new_line = malloc(NAME_MAX * sizeof(char));
-	strncpy(new_line, line, NAME_MAX);
+	new_line = malloc(LINE_MAX * sizeof(char));
+	strncpy(new_line, line, LINE_MAX);
 	search.entries[search.nbentry].data = new_line;
 	search.entries[search.nbentry].isfile = 0;
 	search.nbentry++;
