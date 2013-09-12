@@ -272,7 +272,7 @@ static int parse_file(const char *file, const char *pattern, char *options)
 			}
 			if (line[strlen(line) - 2] == '\r')
 				line[strlen(line) - 2] = '\0';
-			sprintf(full_line, "%d:%s", line_number, line);
+			snprintf(full_line, 256, "%d:%s", line_number, line);
 			ncurses_add_line(full_line, file);
 		}
 		line_number++;
