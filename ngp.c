@@ -138,11 +138,12 @@ static void ncurses_init()
 	keypad(stdscr, TRUE);
 	nodelay(stdscr, TRUE);
 	start_color();
-	init_pair(1, COLOR_WHITE, COLOR_BLACK);
-	init_pair(2, COLOR_YELLOW, COLOR_BLACK);
-	init_pair(3, COLOR_RED, COLOR_BLACK);
-	init_pair(4, COLOR_MAGENTA, COLOR_BLACK);
-	init_pair(5, COLOR_GREEN, COLOR_BLACK);
+	use_default_colors();
+	init_pair(1, -1, -1);
+	init_pair(2, COLOR_YELLOW, -1);
+	init_pair(3, COLOR_RED, -1);
+	init_pair(4, COLOR_MAGENTA, -1);
+	init_pair(5, COLOR_GREEN, -1);
 	curs_set(0);
 }
 
