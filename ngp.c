@@ -80,7 +80,8 @@ typedef struct s_search_t {
 	int raw;	
 } search_t;
 
-static search_t	search;
+static search_t	mainsearch;
+static search_t	*current;
 static pid_t	pid;
 
 static void ncurses_add_file(const char *file);
@@ -88,7 +89,7 @@ static void ncurses_add_line(const char *line, const char* file);
 
 static int is_file(int index)
 {
-	return search.entries[index].isfile;
+	return current->entries[index].isfile;
 }
 
 static int is_dir_good(char *dir)
@@ -101,8 +102,8 @@ static int is_dir_good(char *dir)
 static int is_specific_file(const char *name)
 {
 	int i;	
-	for (i = 0; i < search.specific_files_number; i++) {
-		if (!strcmp(name + 3, search.specific_files_list[i])) {
+	for (i = 0; i < current->specific_files_number; i++) {
+		if (!strcmp(name + 3, current->specific_files_list[i])) {
 			return 1;
 		}
 	}
@@ -166,9 +167,9 @@ static void ncurses_stop()
 
 static void check_alloc()
 {
-	if (search.nbentry >= search.size) {
-		search.size += 500;
-		search.entries = realloc(search.entries, search.size * sizeof(entry_t));
+	if (mainsearch.nbentry >= mainsearch.size) {
+		mainsearch.size += 500;
+		mainsearch.entries = realloc(mainsearch.entries, mainsearch.size * sizeof(entry_t));
 	}
 }
 
@@ -202,24 +203,24 @@ static int display_entry(int *y, int *index, int color)
 {
 	char filtered_line[PATH_MAX];
 
-	if (*index < search.nbentry) {
+	if (*index < current->nbentry) {
 		if (!is_file(*index)) {
 			if (color == 1) {
 				attron(A_REVERSE);
-				printl(y, search.entries[*index].data);
+				printl(y, current->entries[*index].data);
 				attroff(A_REVERSE);
 			} else {
-				printl(y, search.entries[*index].data);
+				printl(y, current->entries[*index].data);
 			}
 		} else {
 			attron(A_BOLD);
-			if (strcmp(search.directory, "./") == 0)
+			if (strcmp(current->directory, "./") == 0)
 				printl(y, remove_double_appearance(
-					search.entries[*index].data + 3, '/',
+					current->entries[*index].data + 3, '/',
 					filtered_line));
 			else
 				printl(y, remove_double_appearance(
-					search.entries[*index].data, '/',
+					current->entries[*index].data, '/',
 					filtered_line));
 			attroff(A_BOLD);
 		}
@@ -271,21 +272,21 @@ static void lookup_file(const char *file, const char *pattern, char *options)
 	errno = 0;
 	pthread_mutex_t *mutex;
 
-	if (search.raw) {
-		synchronized(search.data_mutex)
+	if (mainsearch.raw) {
+		synchronized(mainsearch.data_mutex)
 			parse_file(file, pattern, options);
 		return;
 	}
 
 	if (is_specific_file(file)) {
-		synchronized(search.data_mutex)
+		synchronized(mainsearch.data_mutex)
 			parse_file(file, pattern, options);
 		return;
 	}
 
-	for (i = 0; i < search.extensions_number; i++) {
-		if (!strcmp(search.extensions_list[i], file + strlen(file) - strlen(search.extensions_list[i]))) {
-			synchronized(search.data_mutex)
+	for (i = 0; i < mainsearch.extensions_number; i++) {
+		if (!strcmp(mainsearch.extensions_list[i], file + strlen(file) - strlen(mainsearch.extensions_list[i]))) {
+			synchronized(mainsearch.data_mutex)
 				parse_file(file, pattern, options);
 			break;
 		}
@@ -373,9 +374,9 @@ static void ncurses_add_file(const char *file)
 	check_alloc();
 	new_file = malloc(PATH_MAX * sizeof(char));
 	strncpy(new_file, file, PATH_MAX);
-	search.entries[search.nbentry].data = new_file;
-	search.entries[search.nbentry].isfile = 1;
-	search.nbentry++;
+	current->entries[current->nbentry].data = new_file;
+	current->entries[current->nbentry].isfile = 1;
+	current->nbentry++;
 }
 
 static void ncurses_add_line(const char *line, const char* file)
@@ -385,11 +386,11 @@ static void ncurses_add_line(const char *line, const char* file)
 	check_alloc();
 	new_line = malloc(LINE_MAX * sizeof(char));
 	strncpy(new_line, line, LINE_MAX);
-	search.entries[search.nbentry].data = new_line;
-	search.entries[search.nbentry].isfile = 0;
-	search.nbentry++;
-	if (search.nbentry < LINES)
-		display_entries(&search.index, &search.cursor);
+	current->entries[current->nbentry].data = new_line;
+	current->entries[current->nbentry].isfile = 0;
+	current->nbentry++;
+	if (current->nbentry < LINES)
+		display_entries(&current->index, &current->cursor);
 }
 
 static void resize(int *index, int *cursor)
@@ -422,13 +423,13 @@ static void page_up(int *index, int *cursor)
 static void page_down(int *index, int *cursor)
 {
 	int max_index;
-	if (search.nbentry % LINES == 0)
-		max_index = (search.nbentry - LINES);
+	if (current->nbentry % LINES == 0)
+		max_index = (current->nbentry - LINES);
 	else
-		max_index = (search.nbentry - (search.nbentry % LINES));
+		max_index = (current->nbentry - (current->nbentry % LINES));
 
 	if (*index == max_index)
-		*cursor = (search.nbentry - 1) % LINES;
+		*cursor = (current->nbentry - 1) % LINES;
 	else
 		*cursor = 0;
 
@@ -471,7 +472,7 @@ static void cursor_down(int *index, int *cursor)
 		return;
 	}
 
-	if (*cursor + *index < search.nbentry - 1) {
+	if (*cursor + *index < current->nbentry - 1) {
 		*cursor = *cursor + 1;
 	}
 
@@ -503,12 +504,12 @@ static void open_entry(int index, const char *editor, const char *pattern)
 	pthread_mutex_t *mutex;
 
 	file_index = find_file(index);
-	synchronized(search.data_mutex) {
-		strcpy(line_copy, search.entries[index].data);
+	synchronized(mainsearch.data_mutex) {
+		strcpy(line_copy, current->entries[index].data);
 		snprintf(command, sizeof(command), editor,
 			extract_line_number(line_copy),
 			remove_double_appearance(
-				search.entries[file_index].data, '/',
+				current->entries[file_index].data, '/',
 				filtered_file_name),
 			pattern);
 	}
@@ -529,7 +530,7 @@ static void sig_handler(int signo)
 {
 	if (signo == SIGINT) {
 		ncurses_stop();
-		clean_search(&search);
+		clean_search(&mainsearch);
 		exit(-1);
 	}
 }
@@ -564,6 +565,17 @@ void * lookup_thread(void *arg)
 	d->status = 0;
 }
 
+void init_searchstruct(search_t *searchstruct)
+{
+	searchstruct->index = 0;
+	searchstruct->cursor = 0;
+	searchstruct->size = 100;
+	searchstruct->nbentry = 0;
+	searchstruct->status = 1;
+	searchstruct->raw = 0;
+	strcpy(searchstruct->directory, "./");
+}
+
 int main(int argc, char *argv[])
 {
 	DIR *dp;
@@ -579,15 +591,9 @@ int main(int argc, char *argv[])
 	config_t cfg;
 	pthread_mutex_t *mutex;
 
-	search.index = 0;
-	search.cursor = 0;
-	search.size = 100;
-	search.nbentry = 0;
-	search.status = 1;
-	search.raw = 0;
-	strcpy(search.directory, "./");
-
-	pthread_mutex_init(&search.data_mutex, NULL);
+	current = &mainsearch;
+	init_searchstruct(&mainsearch);
+	pthread_mutex_init(&mainsearch.data_mutex, NULL);
 
 	while ((opt = getopt(argc, argv, "hit:r")) != -1) {
 		switch (opt) {
@@ -595,13 +601,13 @@ int main(int argc, char *argv[])
 			usage();
 			break;
 		case 'i':
-			strcpy(search.options, "-i");
+			strcpy(mainsearch.options, "-i");
 			break;
 		case 't':
-			strncpy(search.file_type, optarg, 3);
+			strncpy(mainsearch.file_type, optarg, 3);
 			break;
 		case 'r':
-			search.raw = 1;
+			mainsearch.raw = 1;
 			break;
 		default:
 			exit(-1);
@@ -615,10 +621,10 @@ int main(int argc, char *argv[])
 
 	for ( ; optind < argc; optind++) {
 		if (!first) {
-			strcpy(search.pattern, argv[optind]);
+			strcpy(mainsearch.pattern, argv[optind]);
 			first = 1;
 		} else {
-			strcpy(search.directory, argv[optind]);
+			strcpy(mainsearch.directory, argv[optind]);
 		}
 	}
 
@@ -633,12 +639,12 @@ int main(int argc, char *argv[])
 		exit(-1);
 	}
 	
-	search.specific_files_number = 0;
+	mainsearch.specific_files_number = 0;
 	ptr = strtok_r((char *) specific_files, " ", &buf);
 	while (ptr != NULL) {
-		strcpy(search.specific_files_list[search.specific_files_number],
+		strcpy(mainsearch.specific_files_list[mainsearch.specific_files_number],
 			ptr);
-		search.specific_files_number++;
+		mainsearch.specific_files_number++;
 		ptr = strtok_r(NULL, " ", &buf);
 	}
 
@@ -648,63 +654,63 @@ int main(int argc, char *argv[])
 		exit(-1);
 	}
 
-	search.extensions_number = 0;
+	mainsearch.extensions_number = 0;
 	ptr = strtok_r((char *) extensions, " ", &buf);
 	while (ptr != NULL) {
-		strcpy(search.extensions_list[search.extensions_number],
+		strcpy(mainsearch.extensions_list[mainsearch.extensions_number],
 			ptr);
-		search.extensions_number++;
+		mainsearch.extensions_number++;
 		ptr = strtok_r(NULL, " ", &buf);
 	}
 
 	signal(SIGINT, sig_handler);
 
-	search.entries = (entry_t *) calloc(search.size, sizeof(entry_t));
+	mainsearch.entries = (entry_t *) calloc(mainsearch.size, sizeof(entry_t));
 
-	if (pthread_create(&pid, NULL, &lookup_thread, &search)) {
+	if (pthread_create(&pid, NULL, &lookup_thread, &mainsearch)) {
 		fprintf(stderr, "ngp: cannot create thread");
-		clean_search(&search);
+		clean_search(&mainsearch);
 		exit(-1);
 	}
 
 	ncurses_init();
 
-	synchronized(search.data_mutex)
-		display_entries(&search.index, &search.cursor);
+	synchronized(mainsearch.data_mutex)
+		display_entries(&mainsearch.index, &mainsearch.cursor);
 
 	while (ch = getch()) {
 		switch(ch) {
 		case KEY_RESIZE:
-			synchronized(search.data_mutex)
-				resize(&search.index, &search.cursor);
+			synchronized(mainsearch.data_mutex)
+				resize(&current->index, &current->cursor);
 			break;
 		case CURSOR_DOWN:
 		case KEY_DOWN:
-			synchronized(search.data_mutex)
-				cursor_down(&search.index, &search.cursor);
+			synchronized(mainsearch.data_mutex)
+				cursor_down(&current->index, &current->cursor);
 			break;
 		case CURSOR_UP:
 		case KEY_UP:
-			synchronized(search.data_mutex)
-				cursor_up(&search.index, &search.cursor);
+			synchronized(mainsearch.data_mutex)
+				cursor_up(&current->index, &current->cursor);
 			break;
 		case KEY_PPAGE:
 		case PAGE_UP:
-			synchronized(search.data_mutex)
-				page_up(&search.index, &search.cursor);
+			synchronized(mainsearch.data_mutex)
+				page_up(&current->index, &current->cursor);
 			break;
 		case KEY_NPAGE:
 		case PAGE_DOWN:
-			synchronized(search.data_mutex)
-				page_down(&search.index, &search.cursor);
+			synchronized(mainsearch.data_mutex)
+				page_down(&current->index, &current->cursor);
 			break;
 		case ENTER:
 		case '\n':
 			ncurses_stop();
-			open_entry(search.cursor + search.index, editor,
-				search.pattern);
+			open_entry(current->cursor + current->index, editor,
+				current->pattern);
 			ncurses_init();
-			resize(&search.index, &search.cursor);
+			resize(&current->index, &current->cursor);
 			break;
 		case QUIT:
 			goto quit;
@@ -715,8 +721,8 @@ int main(int argc, char *argv[])
 		usleep(10000);
 		refresh();
 
-		synchronized(search.data_mutex) {
-			if (search.status == 0 && search.nbentry == 0) {
+		synchronized(mainsearch.data_mutex) {
+			if (mainsearch.status == 0 && mainsearch.nbentry == 0) {
 				goto quit;
 			}
 		}
@@ -724,6 +730,6 @@ int main(int argc, char *argv[])
 
 quit:
 	ncurses_stop();
-	clean_search(&search);
+	clean_search(&mainsearch);
 }
 
