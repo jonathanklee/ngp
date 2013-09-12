@@ -643,8 +643,6 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	pthread_mutex_init(&search.data_mutex, NULL);
-
 	configuration_init(&cfg);
 	if (!config_lookup_string(&cfg, "editor", &editor)) {
 		fprintf(stderr, "ngprc: no editor string found!\n");
