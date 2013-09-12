@@ -251,7 +251,6 @@ static int parse_file(const char *file, const char *pattern, char *options)
 {
 	FILE *f;
 	char line[LINE_MAX];
-	char command[LINE_MAX];
 	char full_line[LINE_MAX];
 	int first;
 	int line_number;
@@ -596,7 +595,6 @@ int main(int argc, char *argv[])
 	struct dirent *ep;
 	int ch;
 	int first = 0;
-	char command[128];
 	const char *editor;
 	const char *specific_files;
 	const char *extensions;
