@@ -226,27 +226,6 @@ static int display_entry(int *y, int *index, int color)
 	}
 }
 
-static int sanitize_filename(char *file)
-{
-	char out[256];
-	char *tok;
-	char *buf;
-
-	if ((tok = strtok_r(file, " ", &buf)) != NULL) {
-		strncpy(out, tok, 255);
-	}
-
-	while((tok = strtok_r(NULL, " ", &buf)) != NULL) {
-		strncat(out, "\\ ", 255);
-		strncat(out, tok, 255);
-	}
-
-	//FIXME: use reentrant
-	strncpy(file, out, 255);
-
-	return 0;
-}
-
 static int parse_file(const char *file, const char *pattern, char *options)
 {
 	FILE *f;
@@ -351,9 +330,6 @@ static void lookup_directory(const char *dir, const char *pattern,
 			char file_path[PATH_MAX];
 			snprintf(file_path, PATH_MAX, "%s/%s", dir,
 				ep->d_name);
-
-			if (strchr(file_path, ' ') != NULL)
-				sanitize_filename(file_path);
 
 			if (!is_simlink(file_path)) {
 				if (file_type != NULL) {
