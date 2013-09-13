@@ -389,7 +389,7 @@ static void ncurses_add_line(const char *line, const char* file)
 	current->entries[current->nbentry].data = new_line;
 	current->entries[current->nbentry].isfile = 0;
 	current->nbentry++;
-	if (current->nbentry < LINES)
+	if (current->nbentry <= LINES)
 		display_entries(&current->index, &current->cursor);
 }
 
