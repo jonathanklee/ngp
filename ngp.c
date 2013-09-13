@@ -79,12 +79,16 @@ typedef struct s_search_t {
 	int specific_files_number;
 	char extensions_list[64][LINE_MAX];
 	int extensions_number;
-	int raw;	
+	int raw;
+
+	/* search in search */
+	struct s_search_t *father;
+	struct s_search_t *child;
 } search_t;
 
 static search_t	mainsearch;
 static search_t	*current;
-static pid_t	pid;
+static pthread_t pid;
 
 static void ncurses_add_file(const char *file);
 static void ncurses_add_line(const char *line, const char* file);
@@ -103,7 +107,7 @@ static int is_dir_good(char *dir)
 
 static int is_specific_file(const char *name)
 {
-	int i;	
+	int i;
 	for (i = 0; i < current->specific_files_number; i++) {
 		if (!strcmp(name + 3, current->specific_files_list[i])) {
 			return 1;
@@ -167,11 +171,11 @@ static void ncurses_stop()
 	endwin();
 }
 
-static void check_alloc()
+static void check_alloc(search_t *toinc, int size)
 {
-	if (mainsearch.nbentry >= mainsearch.size) {
-		mainsearch.size += 500;
-		mainsearch.entries = realloc(mainsearch.entries, mainsearch.size * sizeof(entry_t));
+	if (toinc->nbentry >= toinc->size) {
+		toinc->size += size;
+		toinc->entries = realloc(toinc->entries, toinc->size * sizeof(entry_t));
 	}
 }
 
@@ -197,7 +201,8 @@ static void printl(int *y, char *line)
 		mvprintw(*y, length, "%s", cropped_line + length);
 	} else {
 		attron(COLOR_PAIR(5));
-		mvprintw(*y, 0, "%s", cropped_line, remove_double_appearance(cropped_line, '/', filtered_line));
+		mvprintw(*y, 0, "%s", cropped_line,
+			remove_double_appearance(cropped_line, '/', filtered_line));
 	}
 }
 
@@ -240,10 +245,10 @@ static int parse_file(const char *file, const char *pattern, char *options)
 	errno = 0;
 
 	f = fopen(file, "r");
-	if (f == NULL) 
+	if (f == NULL)
 		return -1;
 
-	if (strstr(options, "-i") == NULL) 
+	if (strstr(options, "-i") == NULL)
 		parser = strstr;
 	else
 		parser = strcasestr;
@@ -287,7 +292,8 @@ static void lookup_file(const char *file, const char *pattern, char *options)
 	}
 
 	for (i = 0; i < mainsearch.extensions_number; i++) {
-		if (!strcmp(mainsearch.extensions_list[i], file + strlen(file) - strlen(mainsearch.extensions_list[i]))) {
+		if (!strcmp(mainsearch.extensions_list[i],
+			file + strlen(file) - strlen(mainsearch.extensions_list[i]))) {
 			synchronized(mainsearch.data_mutex)
 				parse_file(file, pattern, options);
 			break;
@@ -373,26 +379,26 @@ static void ncurses_add_file(const char *file)
 {
 	char	*new_file;
 
-	check_alloc();
+	check_alloc(&mainsearch, 500);
 	new_file = malloc(PATH_MAX * sizeof(char));
 	strncpy(new_file, file, PATH_MAX);
-	current->entries[current->nbentry].data = new_file;
-	current->entries[current->nbentry].isfile = 1;
-	current->nbentry++;
+	mainsearch.entries[mainsearch.nbentry].data = new_file;
+	mainsearch.entries[mainsearch.nbentry].isfile = 1;
+	mainsearch.nbentry++;
 }
 
 static void ncurses_add_line(const char *line, const char* file)
 {
 	char	*new_line;
 
-	check_alloc();
+	check_alloc(&mainsearch, 500);
 	new_line = malloc(LINE_MAX * sizeof(char));
 	strncpy(new_line, line, LINE_MAX);
-	current->entries[current->nbentry].data = new_line;
-	current->entries[current->nbentry].isfile = 0;
-	current->nbentry++;
-	if (current->nbentry < LINES)
-		display_entries(&current->index, &current->cursor);
+	mainsearch.entries[mainsearch.nbentry].data = new_line;
+	mainsearch.entries[mainsearch.nbentry].isfile = 0;
+	mainsearch.nbentry++;
+	if (mainsearch.nbentry < LINES && current == &mainsearch)
+		display_entries(&mainsearch.index, &mainsearch.cursor);
 }
 
 static void resize(int *index, int *cursor)
@@ -526,13 +532,25 @@ void clean_search(search_t *search)
 		free(search->entries[i].data);
 	}
 	free(search->entries);
+//	free(search); //wont work cuz mainsearch ain't no pointer yo
+}
+
+void clean_all(void)
+{
+	search_t *next;
+
+	do {
+		next = current->father;
+		clean_search(current);
+		current = next;
+	} while(next != NULL);
 }
 
 static void sig_handler(int signo)
 {
 	if (signo == SIGINT) {
 		ncurses_stop();
-		clean_search(&mainsearch);
+		clean_all();
 		exit(-1);
 	}
 }
@@ -553,7 +571,7 @@ static void configuration_init(config_t *cfg)
 
 	if (!config_read_file(cfg, "/etc/ngprc")) {
 		fprintf(stderr, "error in /etc/ngprc\n");
-		fprintf(stderr, "Could be that the configuration file has not been found\n");
+		fprintf(stderr, "Configuration file has not been found\n");
 		config_destroy(cfg);
 		exit(1);
 	}
@@ -576,6 +594,81 @@ void init_searchstruct(search_t *searchstruct)
 	searchstruct->status = 1;
 	searchstruct->raw = 0;
 	strcpy(searchstruct->directory, "./");
+	searchstruct->father = NULL;
+	searchstruct->child = NULL;
+}
+
+void subsearch_window(char *search)
+{
+	WINDOW	*searchw;
+	int	j = 0, car;
+
+	searchw = newwin(3, 50, (LINES-3)/2 , (COLS-50)/2);
+	box(searchw, 0,0);
+	wrefresh(searchw);
+	refresh();
+
+	mvwprintw(searchw, 1, 1, "To search:");
+	while ((car = wgetch(searchw)) != '\n' && j < LINE_MAX) {
+		if (car == 8 || car == 127) { //backspace
+			if (j > 0)
+				search[--j] = 0;
+			mvwprintw(searchw, 1, 1, "To search: %s ", search);
+			continue;
+		}
+		search[j++] = car;
+		mvwprintw(searchw, 1, 1, "To search: %s", search);
+	}
+	search[j] = 0;
+	delwin(searchw);
+}
+
+search_t * subsearch(search_t *father)
+{
+	search_t	*child;
+	int		i;
+	char		*search;
+
+	search = malloc(LINE_MAX * sizeof(char));
+	memset(search, '\0', LINE_MAX);
+	subsearch_window(search);
+
+	/*Verify search is not empty*/
+	if (search[0] == 0)
+		return NULL;
+
+	if ((child = malloc(sizeof(search_t))) == NULL) {
+		exit(1);
+	}
+	init_searchstruct(child);
+	child->father = father;
+	father->child = child;
+	child->entries = calloc(100, sizeof(entry_t));
+	strncpy(child->pattern, search, LINE_MAX);
+	free(search);
+
+	for (i=0; i < father->nbentry; i++) {
+		if (strstr(father->entries[i].data, child->pattern) != NULL || is_file(i)) {
+			char *new_data;
+
+			if (child->nbentry > 1 && child->entries[child->nbentry - 1].isfile
+				&& is_file(i)) {
+				free(child->entries[child->nbentry - 1].data);
+				child->nbentry--;
+			}
+			check_alloc(child, 100);
+			new_data = malloc(LINE_MAX * sizeof(char));
+			strncpy(new_data, father->entries[i].data, LINE_MAX);
+			child->entries[child->nbentry].data = new_data;
+			child->entries[child->nbentry].isfile =	father->entries[i].isfile;
+			child->nbentry++;
+		}
+	}
+
+	child->entries = realloc(child->entries, child->nbentry * sizeof(entry_t));
+	child->size = child->nbentry;
+
+	return child;
 }
 
 void display_status(void)
@@ -607,6 +700,7 @@ int main(int argc, char *argv[])
 	char *buf;
 	config_t cfg;
 	pthread_mutex_t *mutex;
+	search_t *tmp;
 
 	current = &mainsearch;
 	init_searchstruct(&mainsearch);
@@ -655,7 +749,7 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "ngprc: no files string found!\n");
 		exit(-1);
 	}
-	
+
 	mainsearch.specific_files_number = 0;
 	ptr = strtok_r((char *) specific_files, " ", &buf);
 	while (ptr != NULL) {
@@ -721,6 +815,14 @@ int main(int argc, char *argv[])
 			synchronized(mainsearch.data_mutex)
 				page_down(&current->index, &current->cursor);
 			break;
+		case '/':
+			tmp = subsearch(current);
+			if (tmp != NULL) {
+				clear();
+				current = tmp;
+				display_entries(&current->index, &current->cursor);
+			}
+			break;
 		case ENTER:
 		case '\n':
 			ncurses_stop();
@@ -730,7 +832,16 @@ int main(int argc, char *argv[])
 			resize(&current->index, &current->cursor);
 			break;
 		case QUIT:
-			goto quit;
+			if (current->father == NULL) {
+				goto quit;
+			} else {
+				tmp = current->father;
+				clean_search(current);
+				current = tmp;
+				current->child = NULL;
+				clear();
+				display_entries(&current->index, &current->cursor);
+			}
 		default:
 			break;
 		}
@@ -750,6 +861,6 @@ int main(int argc, char *argv[])
 
 quit:
 	ncurses_stop();
-	clean_search(&mainsearch);
+	clean_all();
 }
 
