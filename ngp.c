@@ -101,9 +101,12 @@ static int is_dir_good(char *dir)
 
 static int is_specific_file(const char *name)
 {
-	int i;	
+	int i;
+	char *name_begins;
+
 	for (i = 0; i < current->specific_files_number; i++) {
-		if (!strcmp(name + 3, current->specific_files_list[i])) {
+		name_begins = (strrchr(name + 3, '/') != NULL) ? strrchr(name + 3, '/') + 1 : name + 3;
+		if (!strcmp(name_begins, current->specific_files_list[i])) {
 			return 1;
 		}
 	}
