@@ -426,6 +426,10 @@ static void page_up(int *index, int *cursor)
 static void page_down(int *index, int *cursor)
 {
 	int max_index;
+
+	if (current->nbentry == 0)
+		return;
+
 	if (current->nbentry % LINES == 0)
 		max_index = (current->nbentry - LINES);
 	else
