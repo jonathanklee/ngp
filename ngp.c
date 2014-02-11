@@ -77,7 +77,7 @@ typedef struct s_search_t {
 	int specific_files_number;
 	char extensions_list[64][LINE_MAX];
 	int extensions_number;
-	int raw;	
+	int raw;
 } search_t;
 
 static search_t	mainsearch;
@@ -241,10 +241,10 @@ static int parse_file(const char *file, const char *pattern, char *options)
 	errno = 0;
 
 	f = fopen(file, "r");
-	if (f == NULL) 
+	if (f == NULL)
 		return -1;
 
-	if (strstr(options, "-i") == NULL) 
+	if (strstr(options, "-i") == NULL)
 		parser = strstr;
 	else
 		parser = strcasestr;
@@ -657,7 +657,7 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "ngprc: no files string found!\n");
 		exit(-1);
 	}
-	
+
 	mainsearch.specific_files_number = 0;
 	ptr = strtok_r((char *) specific_files, " ", &buf);
 	while (ptr != NULL) {
@@ -725,6 +725,8 @@ int main(int argc, char *argv[])
 			break;
 		case ENTER:
 		case '\n':
+			if (mainsearch.nbentry == 0)
+				break;
 			ncurses_stop();
 			open_entry(current->cursor + current->index, editor,
 				current->pattern);
