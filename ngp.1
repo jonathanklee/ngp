@@ -1,0 +1,31 @@
+.\" This page Copyright (C) 2013 Jonathan Klee <klee.jonathan@gmail.com>
+.TH NGP 1 "31 December 2013"
+.SH NAME
+ngp \- Ncurses code parsing tools
+.SH SYNOPSIS
+.ft B
+.B ngp
+.RB [ "\-i" ]
+.RB [ "\-r" ]
+.RB [ "\-t"
+.I .extension]
+.RI pattern
+.SH DESCRIPTION
+ngp lets you look for a pattern in your source code directory and display results in ncurses.
+ngp lets you browse results in a Vim-like style.
+ngp lets you open a result with your favorite editor at the right line.
+
+.SS Options
+.TP
+\fB-i\fP
+case insensitive
+.TP
+\fB-r\fP
+raw mode. Parse each file of the directory.
+.TP
+\fB-t\fP
+parse only .extension files
+
+.RE
+.SH AUTHOR
+Written by Jonathan Klee <klee.jonathan@gmail.com>
