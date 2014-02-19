@@ -31,6 +31,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <signal.h>
 #include <libconfig.h>
 #include <sys/stat.h>
+#include <regex.h>
 
 #define CURSOR_UP 	'k'
 #define CURSOR_DOWN 	'j'
@@ -78,6 +79,8 @@ typedef struct s_search_t {
 	char extensions_list[64][LINE_MAX];
 	int extensions_number;
 	int raw;
+	int regexp;
+	int regexp_is_ok;
 } search_t;
 
 static search_t	mainsearch;
@@ -142,6 +145,7 @@ static void usage()
 	fprintf(stderr, "options:\n");
 	fprintf(stderr, " -i : ignore case distinctions in pattern\n");
 	fprintf(stderr, " -r : raw mode\n");
+	fprintf(stderr, " -e : pattern is a regular expression\n");
 	fprintf(stderr, " -t type : look for a file extension only\n");
 	exit(-1);
 }
@@ -230,6 +234,28 @@ static int display_entry(int *y, int *index, int color)
 	}
 }
 
+static char * regex(const char *line, const char *pattern)
+{
+	int ret;
+	regex_t reg;
+
+	ret = regcomp(&reg, pattern, REG_NEWLINE);
+	if (ret) {
+		regfree(&reg);
+		return "1";
+	}
+
+        mainsearch.regexp_is_ok = 1;
+	ret = regexec(&reg, line, 0, NULL, 0);
+	if (!ret) {
+		regfree(&reg);
+		return "1";
+	} else {
+		regfree(&reg);
+		return NULL;
+	}
+}
+
 static int parse_file(const char *file, const char *pattern, char *options)
 {
 	FILE *f;
@@ -248,6 +274,9 @@ static int parse_file(const char *file, const char *pattern, char *options)
 		parser = strstr;
 	else
 		parser = strcasestr;
+
+	if (mainsearch.regexp)
+		parser = regex;
 
 	first = 1;
 	line_number = 1;
@@ -614,7 +643,7 @@ int main(int argc, char *argv[])
 	init_searchstruct(&mainsearch);
 	pthread_mutex_init(&mainsearch.data_mutex, NULL);
 
-	while ((opt = getopt(argc, argv, "hit:r")) != -1) {
+	while ((opt = getopt(argc, argv, "heit:r")) != -1) {
 		switch (opt) {
 		case 'h':
 			usage();
@@ -627,6 +656,9 @@ int main(int argc, char *argv[])
 			break;
 		case 'r':
 			mainsearch.raw = 1;
+			break;
+		case 'e':
+			mainsearch.regexp = 1;
 			break;
 		default:
 			exit(-1);
