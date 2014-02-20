@@ -89,6 +89,7 @@ static pid_t	pid;
 
 static void ncurses_add_file(const char *file);
 static void ncurses_add_line(const char *line, const char* file);
+static void display_entries(int *index, int *cursor);
 
 static int is_file(int index)
 {
@@ -283,6 +284,8 @@ static int parse_file(const char *file, const char *pattern, char *options)
 	while (fgets(line, sizeof(line), f)) {
 		if (parser(line, pattern) != NULL) {
 			if (first) {
+				if (current->nbentry == 0)
+					ncurses_init();
 				ncurses_add_file(file);
 				first = 0;
 			}
@@ -723,8 +726,6 @@ int main(int argc, char *argv[])
 		clean_search(&mainsearch);
 		exit(-1);
 	}
-
-	ncurses_init();
 
 	synchronized(mainsearch.data_mutex)
 		display_entries(&mainsearch.index, &mainsearch.cursor);
