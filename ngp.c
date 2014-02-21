@@ -617,12 +617,28 @@ void init_searchstruct(search_t *searchstruct)
 
 void display_status(void)
 {
-	char *rollingwheel[4] = {"/", "-", "\\", "|"};
+	char *rollingwheel[] = {
+		".  ", ".  ", ".  ", ".  ",
+		"   ", "   ", "   ", "   ",
+		"   ", "   ", "   ", "   ",
+		"   ", "   ", "   ", "   ",
+		"   ", "   ", "   ", "   ",
+		" . ", " . ", " . ", " . ",
+		"   ", "   ", "   ", "   ",
+		"   ", "   ", "   ", "   ",
+		"   ", "   ", "   ", "   ",
+		"   ", "   ", "   ", "   ",
+		"  .", "  .", "  .", "  .",
+		"   ", "   ", "   ", "   ",
+		"   ", "   ", "   ", "   ",
+		"   ", "   ", "   ", "   ",
+		"   ", "   ", "   ", "   ",
+		};
 	static int i = 0;
 
 	attron(COLOR_PAIR(1));
 	if (mainsearch.status)
-		mvaddstr(0, COLS - 1, rollingwheel[++i%4]);
+		mvaddstr(0, COLS - 3, rollingwheel[++i%60]);
 	else
 		mvaddstr(0, COLS - 5, "Done.");
 }
