@@ -73,7 +73,7 @@ typedef struct s_search_t {
 	char directory[PATH_MAX];
 	char pattern[LINE_MAX];
 	char options[LINE_MAX];
-	char file_type[4];
+	char file_type[8];
 	char specific_files_list[256][LINE_MAX];
 	int specific_files_number;
 	char extensions_list[64][LINE_MAX];
@@ -671,7 +671,7 @@ int main(int argc, char *argv[])
 			strcpy(mainsearch.options, "-i");
 			break;
 		case 't':
-			strncpy(mainsearch.file_type, optarg, 3);
+			strncpy(mainsearch.file_type, optarg, 8);
 			break;
 		case 'r':
 			mainsearch.raw = 1;
