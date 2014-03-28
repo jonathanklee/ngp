@@ -32,6 +32,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <libconfig.h>
 #include <sys/stat.h>
 #include <regex.h>
+#include <fcntl.h>
+#include <sys/mman.h>
 
 #define CURSOR_UP 	'k'
 #define CURSOR_DOWN 	'j'
@@ -259,17 +261,32 @@ static char * regex(const char *line, const char *pattern)
 
 static int parse_file(const char *file, const char *pattern, char *options)
 {
-	FILE *f;
+	int f;
 	char line[LINE_MAX];
 	char full_line[LINE_MAX];
+	char *p;
+	char *start;
+	char *endline;
+	int i;
 	int first;
+	struct stat sb;
 	int line_number;
 	char * (*parser)(const char *, const char*);
 	errno = 0;
 
-	f = fopen(file, "r");
+	f = open(file, O_RDONLY);
 	if (f == NULL)
 		return -1;
+
+	if (fstat(f, &sb) < 0)
+		return -1;
+
+	p = mmap(0, sb.st_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, f, 0);
+	if (p == MAP_FAILED)
+		return -1;
+
+	close(f);
+
 
 	if (strstr(options, "-i") == NULL)
 		parser = strstr;
@@ -281,22 +298,37 @@ static int parse_file(const char *file, const char *pattern, char *options)
 
 	first = 1;
 	line_number = 1;
-	while (fgets(line, sizeof(line), f)) {
-		if (parser(line, pattern) != NULL) {
+	start = p;
+	while (1) {
+		endline = strchr(p, '\n');
+		if (endline == NULL)
+			break;
+
+		/* replace \n with \0 */
+		*endline = '\0';
+
+		if (parser(p, pattern) != NULL) {
 			if (first) {
 				if (current->nbentry == 0)
 					ncurses_init();
 				ncurses_add_file(file);
 				first = 0;
 			}
-			if (line[strlen(line) - 2] == '\r')
-				line[strlen(line) - 2] = '\0';
-			snprintf(full_line, LINE_MAX, "%d:%s", line_number, line);
-			ncurses_add_line(full_line, file);
+			if (p[strlen(p) - 2] == '\r')
+				p[strlen(p) - 2] = '\0';
+			snprintf(full_line, LINE_MAX, "%d:%s", line_number, p);
+			ncurses_add_line(full_line, p);
 		}
+
+		/* switch back to \n */
+		*endline = '\n';
+		p = endline + 1;
 		line_number++;
 	}
-	fclose(f);
+
+	if (munmap(start, sb.st_size) < 0)
+		return -1;
+
 	return 0;
 }
 
@@ -805,4 +837,3 @@ quit:
 	ncurses_stop();
 	clean_search(&mainsearch);
 }
-
