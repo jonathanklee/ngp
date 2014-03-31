@@ -140,7 +140,7 @@ static char * remove_double_appearance(char *initial, char c, char *final)
 	return final;
 }
 
-static void usage()
+static void usage(void)
 {
 	fprintf(stderr, "usage: ngp [options]... pattern [directory]\n\n");
 	fprintf(stderr, "options:\n");
@@ -151,7 +151,7 @@ static void usage()
 	exit(-1);
 }
 
-static void ncurses_init()
+static void ncurses_init(void)
 {
 	initscr();
 	cbreak();
@@ -168,12 +168,12 @@ static void ncurses_init()
 	curs_set(0);
 }
 
-static void ncurses_stop()
+static void ncurses_stop(void)
 {
 	endwin();
 }
 
-static void check_alloc()
+static void check_alloc(void)
 {
 	if (mainsearch.nbentry >= mainsearch.size) {
 		mainsearch.size += 500;
