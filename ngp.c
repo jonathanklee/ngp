@@ -85,7 +85,7 @@ typedef struct s_search_t {
 
 static search_t	mainsearch;
 static search_t	*current;
-static pid_t	pid;
+static pthread_t pid;
 
 static void ncurses_add_file(const char *file);
 static void ncurses_add_line(const char *line, const char* file);
