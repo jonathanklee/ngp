@@ -34,6 +34,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <regex.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <pthread.h>
+#include <ctype.h>
 
 #define CURSOR_UP 	'k'
 #define CURSOR_DOWN 	'j'
@@ -111,7 +113,7 @@ static int is_specific_file(const char *name)
 	char *name_begins;
 
 	for (i = 0; i < current->specific_files_number; i++) {
-		name_begins = (strrchr(name + 3, '/') != NULL) ? strrchr(name + 3, '/') + 1 : name + 3;
+		name_begins = (strrchr(name + 3, '/') != NULL) ? strrchr(name + 3, '/') + 1 : (char *) name + 3;
 		if (!strcmp(name_begins, current->specific_files_list[i])) {
 			return 1;
 		}
@@ -185,7 +187,6 @@ static void check_alloc(void)
 
 static void printl(int *y, char *line)
 {
-	int size;
 	int crop = COLS;
 	char cropped_line[PATH_MAX];
 	char filtered_line[PATH_MAX];
@@ -209,7 +210,7 @@ static void printl(int *y, char *line)
 	}
 }
 
-static int display_entry(int *y, int *index, int color)
+static void display_entry(int *y, int *index, int color)
 {
 	char filtered_line[PATH_MAX];
 
@@ -262,12 +263,10 @@ static char * regex(const char *line, const char *pattern)
 static int parse_file(const char *file, const char *pattern, char *options)
 {
 	int f;
-	char line[LINE_MAX];
 	char full_line[LINE_MAX];
 	char *p;
 	char *start;
 	char *endline;
-	int i;
 	int first;
 	struct stat sb;
 	int line_number;
@@ -275,7 +274,7 @@ static int parse_file(const char *file, const char *pattern, char *options)
 	errno = 0;
 
 	f = open(file, O_RDONLY);
-	if (f == NULL)
+	if (f < 0)
 		return -1;
 
 	if (fstat(f, &sb) < 0)
@@ -335,7 +334,6 @@ static int parse_file(const char *file, const char *pattern, char *options)
 static void lookup_file(const char *file, const char *pattern, char *options)
 {
 	int i;
-	int nb_regex;
 	errno = 0;
 	pthread_mutex_t *mutex;
 
@@ -634,6 +632,7 @@ void * lookup_thread(void *arg)
 
 	lookup_directory(d->directory, d->pattern, d->options, d->file_type);
 	d->status = 0;
+	return (void *) NULL;
 }
 
 void init_searchstruct(search_t *searchstruct)
@@ -677,9 +676,7 @@ void display_status(void)
 
 int main(int argc, char *argv[])
 {
-	DIR *dp;
 	int opt;
-	struct dirent *ep;
 	int ch;
 	int first = 0;
 	const char *editor;
@@ -778,7 +775,7 @@ int main(int argc, char *argv[])
 	synchronized(mainsearch.data_mutex)
 		display_entries(&mainsearch.index, &mainsearch.cursor);
 
-	while (ch = getch()) {
+	while ((ch = getch())) {
 		switch(ch) {
 		case KEY_RESIZE:
 			synchronized(mainsearch.data_mutex)
@@ -836,4 +833,5 @@ int main(int argc, char *argv[])
 quit:
 	ncurses_stop();
 	clean_search(&mainsearch);
+	return 0;
 }
