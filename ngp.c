@@ -582,7 +582,9 @@ static void open_entry(int index, const char *editor, const char *pattern)
 				filtered_file_name),
 			pattern);
 	}
-	system(command);
+
+	if (system(command) < 0)
+		return;
 }
 
 void clean_search(search_t *search)
