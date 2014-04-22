@@ -185,29 +185,39 @@ static void check_alloc(void)
 	}
 }
 
-static void printl(int *y, char *line)
+static void print_line(int *y, char *line)
 {
 	int crop = COLS;
 	char cropped_line[PATH_MAX];
-	char filtered_line[PATH_MAX];
 	char *pos;
 	char *buf;
-	int length=0;
+	int length = 0;
 
 	strncpy(cropped_line, line, crop);
 	cropped_line[COLS] = '\0';
 
-	if (isdigit(cropped_line[0])) {
-		pos = strtok_r(cropped_line, ":", &buf);
-		attron(COLOR_PAIR(2));
-		mvprintw(*y, 0, "%s:", pos);
-		length = strlen(pos) + 1;
-		attron(COLOR_PAIR(1));
-		mvprintw(*y, length, "%s", cropped_line + length);
-	} else {
-		attron(COLOR_PAIR(5));
-		mvprintw(*y, 0, "%s", cropped_line, remove_double_appearance(cropped_line, '/', filtered_line));
-	}
+	/* display line number */
+	pos = strtok_r(cropped_line, ":", &buf);
+	attron(COLOR_PAIR(2));
+	mvprintw(*y, 0, "%s:", pos);
+
+	/* display rest of line */
+	length = strlen(pos) + 1;
+	attron(COLOR_PAIR(1));
+	mvprintw(*y, length, "%s", cropped_line + length);
+}
+
+static void print_file(int *y, char *line)
+{
+	int crop = COLS;
+	char cropped_line[PATH_MAX];
+	char filtered_line[PATH_MAX];
+
+	strncpy(cropped_line, line, crop);
+	cropped_line[COLS] = '\0';
+
+	attron(COLOR_PAIR(5));
+	mvprintw(*y, 0, "%s", cropped_line, remove_double_appearance(cropped_line, '/', filtered_line));
 }
 
 static void display_entry(int *y, int *index, int color)
@@ -218,19 +228,19 @@ static void display_entry(int *y, int *index, int color)
 		if (!is_file(*index)) {
 			if (color == 1) {
 				attron(A_REVERSE);
-				printl(y, current->entries[*index].data);
+				print_line(y, current->entries[*index].data);
 				attroff(A_REVERSE);
 			} else {
-				printl(y, current->entries[*index].data);
+				print_line(y, current->entries[*index].data);
 			}
 		} else {
 			attron(A_BOLD);
 			if (strcmp(current->directory, "./") == 0)
-				printl(y, remove_double_appearance(
+				print_file(y, remove_double_appearance(
 					current->entries[*index].data + 3, '/',
 					filtered_line));
 			else
-				printl(y, remove_double_appearance(
+				print_file(y, remove_double_appearance(
 					current->entries[*index].data, '/',
 					filtered_line));
 			attroff(A_BOLD);
