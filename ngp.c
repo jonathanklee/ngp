@@ -220,13 +220,16 @@ static void print_line(int *y, char *line)
 	move(*y, length);
 	while (ptr != pattern) {
 		addch(*ptr);
-		counter++;
 		ptr++;
 	}
 
 	attron(A_REVERSE);
 	attron(COLOR_PAIR(4));
-	printw("%s", current->pattern);
+	length = strlen(current->pattern);
+
+	for (counter = 0; counter < length; counter++, ptr++)
+		addch(*ptr);
+
 	attroff(A_REVERSE);
 }
 
