@@ -167,7 +167,7 @@ static void ncurses_init(void)
 	init_pair(1, -1, -1);
 	init_pair(2, COLOR_YELLOW, -1);
 	init_pair(3, COLOR_RED, -1);
-	init_pair(4, COLOR_MAGENTA, -1);
+	init_pair(4, COLOR_CYAN, -1);
 	init_pair(5, COLOR_GREEN, -1);
 	curs_set(0);
 }
@@ -191,7 +191,10 @@ static void print_line(int *y, char *line)
 	char cropped_line[PATH_MAX];
 	char *pos;
 	char *buf;
+	char *pattern;
+	char *ptr;
 	int length = 0;
+	int counter = 0;
 
 	strncpy(cropped_line, line, crop);
 	cropped_line[COLS] = '\0';
@@ -205,6 +208,22 @@ static void print_line(int *y, char *line)
 	length = strlen(pos) + 1;
 	attron(COLOR_PAIR(1));
 	mvprintw(*y, length, "%s", cropped_line + length);
+
+	/* highlight pattern */
+	pattern = strstr(cropped_line + length, current->pattern);
+	ptr = cropped_line + length;
+
+	move(*y, length);
+	while (ptr != pattern) {
+		addch(*ptr);
+		counter++;
+		ptr++;
+	}
+
+	attron(A_REVERSE);
+	attron(COLOR_PAIR(4));
+	printw("%s", current->pattern);
+	attroff(A_REVERSE);
 }
 
 static void print_file(int *y, char *line)
