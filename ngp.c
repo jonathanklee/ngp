@@ -210,7 +210,11 @@ static void print_line(int *y, char *line)
 	mvprintw(*y, length, "%s", cropped_line + length);
 
 	/* highlight pattern */
-	pattern = strstr(cropped_line + length, current->pattern);
+        if (strstr(current->options, "-i") == NULL)
+                pattern = strstr(cropped_line + length, current->pattern);
+        else
+                pattern = strcasestr(cropped_line + length, current->pattern);
+
 	ptr = cropped_line + length;
 
 	move(*y, length);
