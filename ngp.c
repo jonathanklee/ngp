@@ -215,6 +215,11 @@ static void print_line(int *y, char *line)
         else
                 pattern = strcasestr(cropped_line + length, current->pattern);
 
+        if (!pattern) {
+		clrtoeol();
+		return;
+        }
+
 	ptr = cropped_line + length;
 
 	move(*y, length);
