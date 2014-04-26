@@ -187,8 +187,6 @@ static void check_alloc(void)
 
 static void print_line(int *y, char *line)
 {
-	int crop = COLS;
-	char cropped_line[PATH_MAX];
 	char *pos;
 	char *buf;
 	char *pattern;
@@ -196,32 +194,23 @@ static void print_line(int *y, char *line)
 	int length = 0;
 	int counter = 0;
 
-	strncpy(cropped_line, line, crop);
-	cropped_line[COLS] = '\0';
-
 	/* display line number */
-	pos = strtok_r(cropped_line, ":", &buf);
+	pos = strtok_r(line, ":", &buf);
 	attron(COLOR_PAIR(2));
 	mvprintw(*y, 0, "%s:", pos);
 
 	/* display rest of line */
 	length = strlen(pos) + 1;
 	attron(COLOR_PAIR(1));
-	mvprintw(*y, length, "%s", cropped_line + length);
+	mvprintw(*y, length, "%s", line + length);
 
 	/* highlight pattern */
         if (strstr(current->options, "-i") == NULL)
-                pattern = strstr(cropped_line + length, current->pattern);
+                pattern = strstr(line + length, current->pattern);
         else
-                pattern = strcasestr(cropped_line + length, current->pattern);
+                pattern = strcasestr(line + length, current->pattern);
 
-        if (!pattern) {
-		clrtoeol();
-		return;
-        }
-
-	ptr = cropped_line + length;
-
+	ptr = line + length;
 	move(*y, length);
 	while (ptr != pattern) {
 		addch(*ptr);
@@ -240,15 +229,10 @@ static void print_line(int *y, char *line)
 
 static void print_file(int *y, char *line)
 {
-	int crop = COLS;
-	char cropped_line[PATH_MAX];
 	char filtered_line[PATH_MAX];
 
-	strncpy(cropped_line, line, crop);
-	cropped_line[COLS] = '\0';
-
 	attron(COLOR_PAIR(5));
-	mvprintw(*y, 0, "%s", cropped_line, remove_double_appearance(cropped_line, '/', filtered_line));
+	mvprintw(*y, 0, "%s", line, remove_double_appearance(line, '/', filtered_line));
 }
 
 static void display_entry(int *y, int *index, int color)
