@@ -291,6 +291,7 @@ static int parse_file(const char *file, const char *pattern, char *options)
 	char full_line[LINE_MAX];
 	char *p;
 	char *start;
+	char *end;
 	char *endline;
 	int first;
 	struct stat sb;
@@ -311,7 +312,6 @@ static int parse_file(const char *file, const char *pattern, char *options)
 
 	close(f);
 
-
 	if (strstr(options, "-i") == NULL)
 		parser = strstr;
 	else
@@ -323,7 +323,12 @@ static int parse_file(const char *file, const char *pattern, char *options)
 	first = 1;
 	line_number = 1;
 	start = p;
+	end = p + sb.st_size;
 	while (1) {
+
+		if (p == end)
+			break;
+
 		endline = strchr(p, '\n');
 		if (endline == NULL)
 			break;
