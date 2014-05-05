@@ -188,7 +188,7 @@ static void check_alloc(void)
 static void print_line(int *y, char *line)
 {
 	char *pos;
-	char *buf;
+	char *buf = NULL;
 	char *pattern;
 	char *ptr;
 	int length = 0;
@@ -722,7 +722,7 @@ int main(int argc, char *argv[])
 	const char *specific_files;
 	const char *extensions;
 	char *ptr;
-	char *buf;
+	char *buf = NULL;
 	config_t cfg;
 	pthread_mutex_t *mutex;
 
