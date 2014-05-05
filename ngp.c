@@ -857,8 +857,8 @@ int main(int argc, char *argv[])
 		}
 
 		usleep(10000);
-		refresh();
 		synchronized(mainsearch.data_mutex) {
+			display_entries(&mainsearch.index, &mainsearch.cursor);
 			display_status();
 		}
 
