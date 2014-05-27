@@ -55,8 +55,10 @@ mutex && !pthread_mutex_lock(mutex); \
 pthread_mutex_unlock(mutex), mutex = 0)
 
 typedef struct s_entry_t {
-	char *data;
-	char isfile:1;
+	struct s_entry_t *next;
+	int isfile;
+	int len;
+	char data[];
 } entry_t;
 
 typedef struct s_search_t {
@@ -66,6 +68,7 @@ typedef struct s_search_t {
 
 	/* data */
 	entry_t *entries;
+	entry_t *start;
 	int nbentry;
 	int size;
 
@@ -92,12 +95,18 @@ static search_t	*current;
 static pthread_t pid;
 
 static void ncurses_add_file(const char *file);
-static void ncurses_add_line(const char *line, const char* file);
+static void ncurses_add_line(const char *line);
 static void display_entries(int *index, int *cursor);
 
 static int is_file(int index)
 {
-	return current->entries[index].isfile;
+	int i;
+	entry_t *ptr = current->start;
+
+	for (i = 0; i < index; i++)
+		ptr = ptr->next;
+
+	return ptr->isfile;
 }
 
 static int is_dir_good(char *dir)
@@ -177,12 +186,25 @@ static void ncurses_stop(void)
 	endwin();
 }
 
-static void check_alloc(void)
+static entry_t *alloc_word(entry_t *list, int len, int type)
 {
-	if (mainsearch.nbentry >= mainsearch.size) {
-		mainsearch.size += 500;
-		mainsearch.entries = realloc(mainsearch.entries, mainsearch.size * sizeof(entry_t));
+	entry_t *new;
+
+	new = calloc(1, sizeof(struct s_entry_t) + len);
+	new->len = len;
+	new->isfile = type;
+	new->next = NULL;
+
+	if (list) {
+		/* if list not empty, add new element at end */
+		list->next = new;
+	} else {
+		/* if list is emptry,
+		set first element as start of list */
+		current->start = new;
 	}
+
+	return new;
 }
 
 static void print_line(int *y, char *line)
@@ -238,31 +260,29 @@ static void print_file(int *y, char *line)
 	mvprintw(*y, 0, "%s", line, remove_double_appearance(line, '/', filtered_line));
 }
 
-static void display_entry(int *y, int *index, int color)
+static void display_entry(int *y, entry_t *ptr, int color)
 {
 	char filtered_line[PATH_MAX];
 
-	if (*index < current->nbentry) {
-		if (!is_file(*index)) {
-			if (color == 1) {
-				attron(A_REVERSE);
-				print_line(y, current->entries[*index].data);
-				attroff(A_REVERSE);
-			} else {
-				print_line(y, current->entries[*index].data);
-			}
+	if (!ptr->isfile) {
+		if (color == 1) {
+			attron(A_REVERSE);
+			print_line(y, ptr->data);
+			attroff(A_REVERSE);
 		} else {
-			attron(A_BOLD);
-			if (strcmp(current->directory, "./") == 0)
-				print_file(y, remove_double_appearance(
-					current->entries[*index].data + 3, '/',
-					filtered_line));
-			else
-				print_file(y, remove_double_appearance(
-					current->entries[*index].data, '/',
-					filtered_line));
-			attroff(A_BOLD);
+			print_line(y, ptr->data);
 		}
+	} else {
+		attron(A_BOLD);
+		if (strcmp(current->directory, "./") == 0)
+			print_file(y, remove_double_appearance(
+				ptr->data + 3, '/',
+				filtered_line));
+		else
+			print_file(y, remove_double_appearance(
+				ptr->data, '/',
+				filtered_line));
+		attroff(A_BOLD);
 	}
 }
 
@@ -353,7 +373,7 @@ static int parse_file(const char *file, const char *pattern, char *options)
 			if (p[strlen(p) - 2] == '\r')
 				p[strlen(p) - 2] = '\0';
 			snprintf(full_line, LINE_MAX, "%d:%s", line_number, p);
-			ncurses_add_line(full_line, p);
+			ncurses_add_line(full_line);
 		}
 
 		/* switch back to \n */
@@ -457,39 +477,42 @@ static void lookup_directory(const char *dir, const char *pattern,
 static void display_entries(int *index, int *cursor)
 {
 	int i = 0;
-	int ptr = 0;
+	entry_t *ptr = current->start;
+
+	for (i = 0; i < *index; i++) {
+		ptr = ptr->next;
+	}
 
 	for (i = 0; i < LINES; i++) {
-		ptr = *index + i;
-		if (i == *cursor) {
-			display_entry(&i, &ptr, 1);
-		} else {
-			display_entry(&i, &ptr, 0);
+		if (ptr && *index + i < current->nbentry) {
+			if (i == *cursor)
+				display_entry(&i, ptr, 1);
+			 else
+				display_entry(&i, ptr, 0);
+
+			if (ptr->next)
+				ptr = ptr->next;
 		}
 	}
 }
 
 static void ncurses_add_file(const char *file)
 {
-	char	*new_file;
+	int len;
 
-	check_alloc();
-	new_file = malloc(PATH_MAX * sizeof(char));
-	strncpy(new_file, file, PATH_MAX);
-	current->entries[current->nbentry].data = new_file;
-	current->entries[current->nbentry].isfile = 1;
+	len = strlen(file);
+	current->entries = alloc_word(current->entries, len + 1, 1);
+	strncpy(current->entries->data, file, len + 1);
 	current->nbentry++;
 }
 
-static void ncurses_add_line(const char *line, const char* file)
+static void ncurses_add_line(const char *line)
 {
-	char	*new_line;
+	int len;
 
-	check_alloc();
-	new_line = malloc(LINE_MAX * sizeof(char));
-	strncpy(new_line, line, LINE_MAX);
-	current->entries[current->nbentry].data = new_line;
-	current->entries[current->nbentry].isfile = 0;
+	len = strlen(line);
+	current->entries = alloc_word(current->entries, len + 1, 0);
+	strncpy(current->entries->data, line, len + 1);
 	current->nbentry++;
 	if (current->nbentry <= LINES)
 		display_entries(&current->index, &current->cursor);
@@ -603,19 +626,27 @@ int find_file(int index)
 
 static void open_entry(int index, const char *editor, const char *pattern)
 {
+	int i;
+	entry_t *ptr;
+	entry_t *file = current->start;
+
 	char command[PATH_MAX];
 	char filtered_file_name[PATH_MAX];
 	char line_copy[PATH_MAX];
-	int file_index;
 	pthread_mutex_t *mutex;
 
-	file_index = find_file(index);
+	for (i = 0, ptr = current->start; i < index; i++) {
+		ptr = ptr->next;
+		if (ptr->isfile)
+			file = ptr;
+	}
+
 	synchronized(mainsearch.data_mutex) {
-		strcpy(line_copy, current->entries[index].data);
+		strcpy(line_copy, ptr->data);
 		snprintf(command, sizeof(command), editor,
 			extract_line_number(line_copy),
 			remove_double_appearance(
-				current->entries[file_index].data, '/',
+				file->data, '/',
 				filtered_file_name),
 			pattern);
 	}
@@ -626,12 +657,14 @@ static void open_entry(int index, const char *editor, const char *pattern)
 
 void clean_search(search_t *search)
 {
-	int i;
+	entry_t *ptr = search->start;
+	entry_t *p;
 
-	for (i=0; i<search->nbentry; i++) {
-		free(search->entries[i].data);
+	while (ptr) {
+		p = ptr;
+		ptr = ptr->next;
+		free(p);
 	}
-	free(search->entries);
 }
 
 static void sig_handler(int signo)
@@ -682,6 +715,8 @@ void init_searchstruct(search_t *searchstruct)
 	searchstruct->nbentry = 0;
 	searchstruct->status = 1;
 	searchstruct->raw = 0;
+	searchstruct->entries = NULL;
+	searchstruct->start = searchstruct->entries;
 	strcpy(searchstruct->directory, "./");
 }
 
@@ -803,8 +838,6 @@ int main(int argc, char *argv[])
 
 	signal(SIGINT, sig_handler);
 
-	mainsearch.entries = (entry_t *) calloc(mainsearch.size, sizeof(entry_t));
-
 	if (pthread_create(&pid, NULL, &lookup_thread, &mainsearch)) {
 		fprintf(stderr, "ngp: cannot create thread");
 		clean_search(&mainsearch);
@@ -845,8 +878,7 @@ int main(int argc, char *argv[])
 			if (mainsearch.nbentry == 0)
 				break;
 			ncurses_stop();
-			open_entry(current->cursor + current->index, editor,
-				current->pattern);
+			open_entry(current->cursor + current->index, editor, current->pattern);
 			ncurses_init();
 			resize(&current->index, &current->cursor);
 			break;
