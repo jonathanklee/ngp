@@ -37,6 +37,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <pthread.h>
 #include <ctype.h>
 
+#define NGP_VERSION 1.1
+
 #define CURSOR_UP 	'k'
 #define CURSOR_DOWN 	'j'
 #define PAGE_UP		'K'
@@ -161,6 +163,7 @@ static void usage(void)
 	fprintf(stderr, " -r : raw mode\n");
 	fprintf(stderr, " -e : pattern is a regular expression\n");
 	fprintf(stderr, " -t type : look for a file extension only\n");
+	fprintf(stderr, " -v : display version\n");
 	exit(-1);
 }
 
@@ -756,6 +759,11 @@ void display_status(void)
 		mvaddstr(0, COLS - 5, "Done.");
 }
 
+static void display_version(void)
+{
+	printf("version 1.1\n");
+}
+
 int main(int argc, char *argv[])
 {
 	int opt;
@@ -773,7 +781,7 @@ int main(int argc, char *argv[])
 	init_searchstruct(&mainsearch);
 	pthread_mutex_init(&mainsearch.data_mutex, NULL);
 
-	while ((opt = getopt(argc, argv, "heit:r")) != -1) {
+	while ((opt = getopt(argc, argv, "heit:rv")) != -1) {
 		switch (opt) {
 		case 'h':
 			usage();
@@ -790,6 +798,9 @@ int main(int argc, char *argv[])
 		case 'e':
 			mainsearch.regexp = 1;
 			break;
+		case 'v':
+			display_version();
+			exit(0);
 		default:
 			exit(-1);
 			break;
