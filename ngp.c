@@ -223,6 +223,10 @@ static void print_line(int *y, char *line)
 
 	strncpy(cropped_line, line, crop);
 
+	/* first clear line */
+	move(*y, 0);
+	clrtoeol();
+
 	/* display line number */
 	pos = strtok_r(cropped_line, ":", &buf);
 	attron(COLOR_PAIR(2));
@@ -264,6 +268,10 @@ static void print_file(int *y, char *line)
 	char filtered_line[PATH_MAX];
 	char cropped_line[PATH_MAX] = "";
 	int crop = COLS;
+
+	/* first clear line */
+	move(*y, 0);
+	clrtoeol();
 
 	strncpy(cropped_line, line, crop);
 	attron(COLOR_PAIR(5));
