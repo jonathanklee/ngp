@@ -125,9 +125,8 @@ static int is_specific_file(const char *name)
 
 	for (i = 0; i < current->specific_files_number; i++) {
 		name_begins = (strrchr(name + 3, '/') != NULL) ? strrchr(name + 3, '/') + 1 : (char *) name + 3;
-		if (!strcmp(name_begins, current->specific_files_list[i])) {
+		if (!strcmp(name_begins, current->specific_files_list[i]))
 			return 1;
-		}
 	}
 	return 0;
 }
@@ -143,11 +142,10 @@ static char * remove_double_appearance(char *initial, char c, char *final)
 			i++;
 		} else {
 			final[j] = initial[i];
-			if (initial[i + 1] == c) {
+			if (initial[i + 1] == c)
 				i = i + 2;
-			} else {
+			else
 				i++;
-			}
 		}
 	}
 	final[j] = '\0';
@@ -456,17 +454,15 @@ static void lookup_directory(const char *dir, const char *pattern,
 	DIR *dp;
 
 	dp = opendir(dir);
-	if (!dp) {
+	if (!dp)
 		return;
-	}
 
 	while (1) {
 		struct dirent *ep;
 		ep = readdir(dp);
 
-		if (!ep) {
+		if (!ep)
 			break;
-		}
 
 		if (!(ep->d_type & DT_DIR)) {
 			char file_path[PATH_MAX];
@@ -498,9 +494,8 @@ static void display_entries(int *index, int *cursor)
 	int i = 0;
 	entry_t *ptr = current->start;
 
-	for (i = 0; i < *index; i++) {
+	for (i = 0; i < *index; i++)
 		ptr = ptr->next;
-	}
 
 	for (i = 0; i < LINES; i++) {
 		if (ptr && *index + i < current->nbentry) {
@@ -598,9 +593,8 @@ static void cursor_up(int *index, int *cursor)
 		return;
 	}
 
-	if (*cursor > 0) {
+	if (*cursor > 0)
 		*cursor = *cursor - 1;
-	}
 
 	if (is_file(*index + *cursor))
 		*cursor = *cursor - 1;
@@ -620,9 +614,8 @@ static void cursor_down(int *index, int *cursor)
 		return;
 	}
 
-	if (*cursor + *index < current->nbentry - 1) {
+	if (*cursor + *index < current->nbentry - 1)
 		*cursor = *cursor + 1;
-	}
 
 	if (is_file(*index + *cursor))
 		*cursor = *cursor + 1;
@@ -815,9 +808,8 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (argc - optind < 1 || argc - optind > 2) {
+	if (argc - optind < 1 || argc - optind > 2)
 		usage();
-	}
 
 	for ( ; optind < argc; optind++) {
 		if (!first) {
