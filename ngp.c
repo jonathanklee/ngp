@@ -468,7 +468,7 @@ static void lookup_directory(const char *dir, const char *pattern,
 			break;
 		}
 
-		if (!(ep->d_type & DT_DIR) && is_dir_good(ep->d_name)) {
+		if (!(ep->d_type & DT_DIR)) {
 			char file_path[PATH_MAX];
 			snprintf(file_path, PATH_MAX, "%s/%s", dir,
 				ep->d_name);
