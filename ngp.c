@@ -45,6 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define PAGE_DOWN	'J'
 #define ENTER	 	'p'
 #define QUIT	 	'q'
+#define MARK	 	'm'
 
 #ifdef LINE_MAX
 	#undef LINE_MAX
@@ -61,6 +62,7 @@ typedef struct s_entry_t {
 	int isfile;
 	int len;
 	int opened;
+	int mark;
 	char data[];
 } entry_t;
 
@@ -197,6 +199,7 @@ static entry_t *alloc_word(entry_t *list, int len, int type)
 	new->isfile = type;
 	new->next = NULL;
 	new->opened = 0;
+	new->mark = 0;
 
 	if (list) {
 		/* if list not empty, add new element at end */
@@ -260,6 +263,9 @@ static void print_line(int *y, entry_t *entry)
 		attron(COLOR_PAIR(3));
 	else
 		attron(COLOR_PAIR(4));
+
+	if (!entry->opened && entry->mark)
+		attron(COLOR_PAIR(2));
 
 	length = strlen(current->pattern);
 
@@ -677,6 +683,17 @@ static void open_entry(int index, const char *editor, const char *pattern)
 	ptr->opened = 1;
 }
 
+static void mark_entry(int index)
+{
+	int i;
+	entry_t *ptr;
+
+	for (i = 0, ptr = current->start; i < index; i++)
+		ptr = ptr->next;
+
+	ptr->mark = (ptr->mark + 1) % 2;
+}
+
 void clean_search(search_t *search)
 {
 	entry_t *ptr = search->start;
@@ -913,6 +930,9 @@ int main(int argc, char *argv[])
 			break;
 		case QUIT:
 			goto quit;
+		case MARK:
+			mark_entry(current->cursor + current->index);
+			break;
 		default:
 			break;
 		}
