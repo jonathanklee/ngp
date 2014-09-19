@@ -60,6 +60,7 @@ typedef struct s_entry_t {
 	struct s_entry_t *next;
 	int isfile;
 	int len;
+	int opened;
 	char data[];
 } entry_t;
 
@@ -195,6 +196,7 @@ static entry_t *alloc_word(entry_t *list, int len, int type)
 	new->len = len;
 	new->isfile = type;
 	new->next = NULL;
+	new->opened = 0;
 
 	if (list) {
 		/* if list not empty, add new element at end */
@@ -208,7 +210,7 @@ static entry_t *alloc_word(entry_t *list, int len, int type)
 	return new;
 }
 
-static void print_line(int *y, char *line)
+static void print_line(int *y, entry_t *entry)
 {
 	char *pos;
 	char *buf = NULL;
@@ -218,6 +220,7 @@ static void print_line(int *y, char *line)
 	int crop = COLS;
 	int counter = 0;
 	char cropped_line[PATH_MAX] = "";
+	char *line = entry->data;
 
 	strncpy(cropped_line, line, crop);
 
@@ -251,8 +254,13 @@ static void print_line(int *y, char *line)
 		ptr++;
 	}
 
+	/* switch color to red or cyan */
 	attron(A_REVERSE);
-	attron(COLOR_PAIR(4));
+	if (entry->opened)
+		attron(COLOR_PAIR(3));
+	else
+		attron(COLOR_PAIR(4));
+
 	length = strlen(current->pattern);
 
 	for (counter = 0; counter < length; counter++, ptr++)
@@ -284,10 +292,10 @@ static void display_entry(int *y, entry_t *ptr, int color)
 	if (!ptr->isfile) {
 		if (color == 1) {
 			attron(A_REVERSE);
-			print_line(y, ptr->data);
+			print_line(y, ptr);
 			attroff(A_REVERSE);
 		} else {
-			print_line(y, ptr->data);
+			print_line(y, ptr);
 		}
 	} else {
 		attron(A_BOLD);
@@ -665,6 +673,8 @@ static void open_entry(int index, const char *editor, const char *pattern)
 
 	if (system(command) < 0)
 		return;
+
+	ptr->opened = 1;
 }
 
 void clean_search(search_t *search)
