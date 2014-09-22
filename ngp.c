@@ -915,11 +915,9 @@ int main(int argc, char *argv[])
 			display_version();
 			exit(0);
 		case 'l':
-			list_mode_list();
-			exit(0);
+			return list_mode_list();
 		case 'p':
-			list_mode_open(optarg);
-			exit(0);
+			return list_mode_open(optarg);
 		default:
 			exit(-1);
 			break;
