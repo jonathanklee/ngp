@@ -11,6 +11,10 @@ ngp \- Ncurses code parsing tools
 .RB [ "\-t"
 .I .extension]
 .RI pattern
+.br
+.B ngp -l
+.br
+.B ngp -p index
 .SH DESCRIPTION
 ngp lets you look for a pattern in your source code directory and display results in ncurses.
 ngp lets you browse results in a Vim-like style.
@@ -36,9 +40,19 @@ raw mode. Parse each file of the directory
 \fB-e\fP
 regexp mode. Pattern is a regular expression
 .TP
-\fB-t\fP
+\fB-t extension\fP
 parse only .extension files
-
-.RE
+.TP
+\fB-l\fP
+list latest files opened with ngp
+.TP
+\fB-p index\fP
+open index among latest files opened with ngp
+.TP
+\fB-h\fP
+display this help and exit
+.TP
+\fB-v\fP
+output version information and exit
 .SH AUTHOR
 Written by Jonathan Klee <klee.jonathan@gmail.com>

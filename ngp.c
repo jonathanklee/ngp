@@ -37,7 +37,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <pthread.h>
 #include <ctype.h>
 
-#define NGP_VERSION 1.1
+#define NGP_VERSION 	1.1
+#define NGP_LOG 	".ngplog"
 
 #define CURSOR_UP 	'k'
 #define CURSOR_DOWN 	'j'
@@ -103,6 +104,87 @@ static void ncurses_add_file(const char *file);
 static void ncurses_add_line(const char *line);
 static void display_entries(int *index, int *cursor);
 
+static int list_mode_open(char *pointer_to_count)
+{
+	FILE *f;
+	char *editor;
+	int count;
+	int i;
+	int max;
+	char line[PATH_MAX] = "";
+	char command[PATH_MAX] = "";
+
+	if (access(NGP_LOG, F_OK))
+		return -1;
+
+	sscanf(pointer_to_count, "%d", &i);
+	f = fopen(NGP_LOG, "r");
+
+	max = 0;
+	while (fgets(line, sizeof(line), f))
+		max++;
+
+	if (i >= max) {
+		printf("No file entry for %d\n", i);
+		return -1;
+	}
+
+	fseek(f, 0, SEEK_SET);
+
+	for (count = 0; count < i; count++)
+		fgets(line, sizeof(line), f);
+
+	fgets(line, sizeof(line), f);
+
+	editor = getenv("EDITOR");
+	sprintf(command, "%s %s", editor, line);
+	system(command);
+	return 0;
+}
+
+static int list_mode_add(char *file)
+{
+	FILE *f;
+	char line[PATH_MAX] = "";
+	char new_buffer[2048] = "";
+
+	f = fopen(NGP_LOG, "a+");
+	while (fgets(line, sizeof(line), f)) {
+		line[strlen(line) - 1] = '\0';
+		if (strcmp(line, file + 2)) {
+			strcat(new_buffer, line);
+			strcat(new_buffer, "\n");
+		}
+	}
+	fclose(f);
+
+	f = fopen(NGP_LOG, "w");
+	fprintf(f, "%s\n", file + 2);
+	fprintf(f, "%s", new_buffer);
+	fclose(f);
+
+	return 0;
+}
+
+static int list_mode_list(void)
+{
+	FILE *file;
+	int i;
+	char line[PATH_MAX] = "";
+
+	file = fopen(NGP_LOG, "r");
+	if (!file)
+		return -1;
+
+	i = 0;
+	while (fgets(line, sizeof(line), file)) {
+		printf("%d %s", i++, line);
+	}
+	fclose(file);
+
+	return 0;
+}
+
 static int is_file(int index)
 {
 	int i;
@@ -164,6 +246,8 @@ static void usage(void)
 	fprintf(stderr, " -r : raw mode\n");
 	fprintf(stderr, " -e : pattern is a regular expression\n");
 	fprintf(stderr, " -t type : look for a file extension only\n");
+	fprintf(stderr, " -l : list latest files opened with ngp\n");
+	fprintf(stderr, " -p index : open index among latest files opened with ngp\n");
 	fprintf(stderr, " -v : display version\n");
 	exit(-1);
 }
@@ -681,6 +765,7 @@ static void open_entry(int index, const char *editor, const char *pattern)
 		return;
 
 	ptr->opened = 1;
+	list_mode_add(filtered_file_name);
 }
 
 static void mark_entry(int index)
@@ -809,7 +894,7 @@ int main(int argc, char *argv[])
 	init_searchstruct(&mainsearch);
 	pthread_mutex_init(&mainsearch.data_mutex, NULL);
 
-	while ((opt = getopt(argc, argv, "heit:rv")) != -1) {
+	while ((opt = getopt(argc, argv, "heit:rvlp:")) != -1) {
 		switch (opt) {
 		case 'h':
 			usage();
@@ -828,6 +913,12 @@ int main(int argc, char *argv[])
 			break;
 		case 'v':
 			display_version();
+			exit(0);
+		case 'l':
+			list_mode_list();
+			exit(0);
+		case 'p':
+			list_mode_open(optarg);
 			exit(0);
 		default:
 			exit(-1);
