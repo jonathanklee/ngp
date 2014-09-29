@@ -113,6 +113,8 @@ static int list_mode_open(char *pointer_to_count)
 	int max;
 	char line[PATH_MAX] = "";
 	char command[PATH_MAX] = "";
+	char *ret;
+	int err;
 
 	if (access(NGP_LOG, F_OK))
 		return -1;
@@ -131,14 +133,21 @@ static int list_mode_open(char *pointer_to_count)
 
 	fseek(f, 0, SEEK_SET);
 
-	for (count = 0; count < i; count++)
-		fgets(line, sizeof(line), f);
+	for (count = 0; count < i; count++) {
+		ret = fgets(line, sizeof(line), f);
+		if (!ret)
+			break;
+	}
 
-	fgets(line, sizeof(line), f);
+	ret = fgets(line, sizeof(line), f);
+	if (!ret)
+		return -1;
 
 	editor = getenv("EDITOR");
 	sprintf(command, "%s %s", editor, line);
-	system(command);
+	err = system(command);
+	if (err == -1)
+		return -1;
 	return 0;
 }
 
