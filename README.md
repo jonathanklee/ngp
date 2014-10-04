@@ -19,6 +19,6 @@ Installation
 - enjoy !
 
 
-Looking for "boot_param" pattern in kernel
+Looking for "initial_boot_params" pattern in kernel
 
-![Looking for "boot_param" pattern] (/screenshot.png)
+![Looking for "initial_boot_params" pattern in kernel] (/screenshot.png)
