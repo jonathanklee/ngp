@@ -76,7 +76,6 @@ typedef struct s_search_t {
 	entry_t *entries;
 	entry_t *start;
 	int nbentry;
-	int size;
 
 	/* thread */
 	pthread_mutex_t data_mutex;
@@ -852,7 +851,6 @@ void init_searchstruct(search_t *searchstruct)
 {
 	searchstruct->index = 0;
 	searchstruct->cursor = 0;
-	searchstruct->size = 100;
 	searchstruct->nbentry = 0;
 	searchstruct->status = 1;
 	searchstruct->raw = 0;
