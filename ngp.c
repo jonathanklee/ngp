@@ -160,9 +160,15 @@ static int list_mode_add(char *file)
 	f = fopen(NGP_LOG, "a+");
 	while (fgets(line, sizeof(line), f)) {
 		line[strlen(line) - 1] = '\0';
-		if (strcmp(line, file + 2)) {
-			strcat(new_buffer, line);
-			strcat(new_buffer, "\n");
+		if (strcmp(line, file + 2)) { 
+			/* check for buffer overflow */
+			if (strlen(new_buffer) + 
+				strlen(line) < sizeof(new_buffer)) {
+					strcat(new_buffer, line);
+					strcat(new_buffer, "\n");
+			} else {
+				return -1;	
+			}
 		}
 	}
 	fclose(f);
