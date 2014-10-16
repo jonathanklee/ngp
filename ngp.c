@@ -94,6 +94,7 @@ typedef struct s_search_t {
 	int raw;
 	int regexp;
 	int regexp_is_ok;
+	int ngplog;
 } search_t;
 
 static search_t	mainsearch;
@@ -780,7 +781,8 @@ static void open_entry(int index, const char *editor, const char *pattern)
 		return;
 
 	ptr->opened = 1;
-	list_mode_add(filtered_file_name);
+	if (mainsearch.ngplog)
+		list_mode_add(filtered_file_name);
 }
 
 static void mark_entry(int index)
@@ -900,6 +902,7 @@ int main(int argc, char *argv[])
 	const char *editor;
 	const char *specific_files;
 	const char *extensions;
+	int ngplog = 0;
 	char *ptr;
 	char *buf = NULL;
 	config_t cfg;
@@ -985,6 +988,13 @@ int main(int argc, char *argv[])
 		mainsearch.extensions_number++;
 		ptr = strtok_r(NULL, " ", &buf);
 	}
+
+	/* getting ngplog boolean value */
+	if (!config_lookup_bool(&cfg, "ngplog", &ngplog)) {
+		fprintf(stderr, "ngprc: no ngplog string found!\n");
+		exit(-1);
+	}
+	mainsearch.ngplog = ngplog;
 
 	signal(SIGINT, sig_handler);
 

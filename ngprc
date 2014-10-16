@@ -8,3 +8,4 @@ editor = "vim -c '/%3$s' -c '%1$s' '%2$s'";
 /* editor = "emacs +'%1$s' '%2$s'"; */
 files = "Makefile rules control";
 extensions = ".c .h .cpp .py .S .pl";
+ngplog = false
