@@ -82,6 +82,7 @@ typedef struct s_search_t {
 	int status;
 
 	/* search */
+	const char *editor;
 	char directory[PATH_MAX];
 	char pattern[LINE_MAX];
 	char options[LINE_MAX];
@@ -160,14 +161,14 @@ static int list_mode_add(char *file)
 	f = fopen(NGP_LOG, "a+");
 	while (fgets(line, sizeof(line), f)) {
 		line[strlen(line) - 1] = '\0';
-		if (strcmp(line, file + 2)) { 
+		if (strcmp(line, file + 2)) {
 			/* check for buffer overflow */
-			if (strlen(new_buffer) + 
+			if (strlen(new_buffer) +
 				strlen(line) < sizeof(new_buffer)) {
 					strcat(new_buffer, line);
 					strcat(new_buffer, "\n");
 			} else {
-				return -1;	
+				return -1;
 			}
 		}
 	}
@@ -892,18 +893,65 @@ static void display_version(void)
 	printf("version 1.1\n");
 }
 
-int main(int argc, char *argv[])
+static void read_config(void)
 {
-	int opt;
-	int ch;
-	int first = 0;
-	const char *editor;
 	const char *specific_files;
 	const char *extensions;
 	int ngplog = 0;
 	char *ptr;
 	char *buf = NULL;
 	config_t cfg;
+
+	configuration_init(&cfg);
+
+	if (!config_lookup_string(&cfg, "editor", &mainsearch.editor)) {
+		fprintf(stderr, "ngprc: no editor string found!\n");
+		exit(-1);
+	}
+
+	if (!config_lookup_string(&cfg, "files", &specific_files)) {
+		fprintf(stderr, "ngprc: no files string found!\n");
+		exit(-1);
+	}
+
+	mainsearch.specific_files_number = 0;
+	ptr = strtok_r((char *) specific_files, " ", &buf);
+	while (ptr != NULL) {
+		strcpy(mainsearch.specific_files_list[mainsearch.specific_files_number],
+			ptr);
+		mainsearch.specific_files_number++;
+		ptr = strtok_r(NULL, " ", &buf);
+	}
+
+	/* getting files extensions from configuration */
+	if (!config_lookup_string(&cfg, "extensions", &extensions)) {
+		fprintf(stderr, "ngprc: no extensions string found!\n");
+		exit(-1);
+	}
+
+	mainsearch.extensions_number = 0;
+	ptr = strtok_r((char *) extensions, " ", &buf);
+	while (ptr != NULL) {
+		strcpy(mainsearch.extensions_list[mainsearch.extensions_number],
+			ptr);
+		mainsearch.extensions_number++;
+		ptr = strtok_r(NULL, " ", &buf);
+	}
+
+	/* getting ngplog boolean value */
+	if (!config_lookup_bool(&cfg, "ngplog", &ngplog)) {
+		fprintf(stderr, "ngprc: no ngplog string found!\n");
+		exit(-1);
+	}
+	mainsearch.ngplog = ngplog;
+
+}
+
+int main(int argc, char *argv[])
+{
+	int opt;
+	int ch;
+	int first = 0;
 	pthread_mutex_t *mutex;
 
 	current = &mainsearch;
@@ -952,50 +1000,9 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	configuration_init(&cfg);
-	if (!config_lookup_string(&cfg, "editor", &editor)) {
-		fprintf(stderr, "ngprc: no editor string found!\n");
-		exit(-1);
-	}
-
-	if (!config_lookup_string(&cfg, "files", &specific_files)) {
-		fprintf(stderr, "ngprc: no files string found!\n");
-		exit(-1);
-	}
-
-	mainsearch.specific_files_number = 0;
-	ptr = strtok_r((char *) specific_files, " ", &buf);
-	while (ptr != NULL) {
-		strcpy(mainsearch.specific_files_list[mainsearch.specific_files_number],
-			ptr);
-		mainsearch.specific_files_number++;
-		ptr = strtok_r(NULL, " ", &buf);
-	}
-
-	/* getting files extensions from configuration */
-	if (!config_lookup_string(&cfg, "extensions", &extensions)) {
-		fprintf(stderr, "ngprc: no extensions string found!\n");
-		exit(-1);
-	}
-
-	mainsearch.extensions_number = 0;
-	ptr = strtok_r((char *) extensions, " ", &buf);
-	while (ptr != NULL) {
-		strcpy(mainsearch.extensions_list[mainsearch.extensions_number],
-			ptr);
-		mainsearch.extensions_number++;
-		ptr = strtok_r(NULL, " ", &buf);
-	}
-
-	/* getting ngplog boolean value */
-	if (!config_lookup_bool(&cfg, "ngplog", &ngplog)) {
-		fprintf(stderr, "ngprc: no ngplog string found!\n");
-		exit(-1);
-	}
-	mainsearch.ngplog = ngplog;
+	read_config();
 
 	signal(SIGINT, sig_handler);
-
 	if (pthread_create(&pid, NULL, &lookup_thread, &mainsearch)) {
 		fprintf(stderr, "ngp: cannot create thread");
 		clean_search(&mainsearch);
@@ -1036,7 +1043,8 @@ int main(int argc, char *argv[])
 			if (mainsearch.nbentry == 0)
 				break;
 			ncurses_stop();
-			open_entry(current->cursor + current->index, editor, current->pattern);
+			open_entry(current->cursor + current->index,
+				mainsearch.editor, current->pattern);
 			ncurses_init();
 			resize(&current->index, &current->cursor);
 			break;
