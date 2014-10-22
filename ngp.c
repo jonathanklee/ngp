@@ -95,6 +95,7 @@ typedef struct s_search_t {
 	int regexp;
 	int regexp_is_ok;
 	int ngplog;
+	int ngplog_size;
 } search_t;
 
 static search_t	mainsearch;
@@ -157,9 +158,11 @@ static int list_mode_add(char *file)
 	FILE *f;
 	char line[PATH_MAX] = "";
 	char new_buffer[2048] = "";
+	int count;
 
 	f = fopen(NGP_LOG, "a+");
-	while (fgets(line, sizeof(line), f)) {
+	count = 1;
+	while (fgets(line, sizeof(line), f) && count < mainsearch.ngplog_size) {
 		line[strlen(line) - 1] = '\0';
 		if (strcmp(line, file + 2)) {
 			/* check for buffer overflow */
@@ -170,6 +173,7 @@ static int list_mode_add(char *file)
 			} else {
 				return -1;
 			}
+			count++;
 		}
 	}
 	fclose(f);
@@ -898,6 +902,7 @@ static void read_config(void)
 	const char *specific_files;
 	const char *extensions;
 	int ngplog = 0;
+	int ngplog_size = 10;
 	char *ptr;
 	char *buf = NULL;
 	config_t cfg;
@@ -944,7 +949,15 @@ static void read_config(void)
 		exit(-1);
 	}
 	mainsearch.ngplog = ngplog;
-
+	
+	if (!mainsearch.ngplog)
+		return;
+	
+	if (!config_lookup_int(&cfg, "ngplog_size", &ngplog_size)) {
+		fprintf(stderr, "ngprc: no ngplog_size string found!\n");
+		exit(-1);
+	}
+	mainsearch.ngplog_size = ngplog_size;
 }
 
 int main(int argc, char *argv[])
