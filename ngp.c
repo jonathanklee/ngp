@@ -67,6 +67,11 @@ typedef struct s_entry_t {
 	char data[];
 } entry_t;
 
+struct list {
+	struct list *next;
+	char data[];
+};
+
 typedef struct s_search_t {
 	/* screen */
 	int index;
@@ -89,8 +94,7 @@ typedef struct s_search_t {
 	char file_type[8];
 	char specific_files_list[256][LINE_MAX];
 	int specific_files_number;
-	char extensions_list[64][LINE_MAX];
-	int extensions_number;
+	struct list *extension;
 	int raw;
 	int regexp;
 	int regexp_is_ok;
@@ -525,7 +529,7 @@ static int parse_file(const char *file, const char *pattern, char *options)
 
 static void lookup_file(const char *file, const char *pattern, char *options)
 {
-	int i;
+	struct list *pointer;
 	errno = 0;
 	pthread_mutex_t *mutex;
 
@@ -541,12 +545,14 @@ static void lookup_file(const char *file, const char *pattern, char *options)
 		return;
 	}
 
-	for (i = 0; i < mainsearch.extensions_number; i++) {
-		if (!strcmp(mainsearch.extensions_list[i], file + strlen(file) - strlen(mainsearch.extensions_list[i]))) {
+	pointer = mainsearch.extension;
+	while (pointer) {
+		if (!strcmp(pointer->data, file + strlen(file) - strlen(pointer->data))) {
 			synchronized(mainsearch.data_mutex)
 				parse_file(file, pattern, options);
 			break;
 		}
+		pointer = pointer->next;
 	}
 }
 
@@ -804,11 +810,18 @@ void clean_search(search_t *search)
 {
 	entry_t *ptr = search->start;
 	entry_t *p;
+	struct list *pointer;
 
 	while (ptr) {
 		p = ptr;
 		ptr = ptr->next;
 		free(p);
+	}
+
+	while (mainsearch.extension) {
+		pointer = mainsearch.extension;
+		mainsearch.extension = mainsearch.extension->next;
+		free(pointer);
 	}
 }
 
@@ -897,6 +910,28 @@ static void display_version(void)
 	printf("version 1.1\n");
 }
 
+static void add_element(struct list **list, char *element)
+{
+	struct list *new, *pointer;
+	int len;
+
+	len = strlen(element) + 1;
+	new = calloc(1, sizeof(struct list) + len + 1);
+	strncpy(new->data, element, len + 1);
+
+	if (*list) {
+		/* list not empty */
+		pointer = *list;
+		while (pointer->next)
+			pointer = pointer->next;
+
+		pointer->next = new;
+	} else {
+		/* list empty */
+		*list = new;
+	}
+}
+
 static void read_config(void)
 {
 	const char *specific_files;
@@ -934,12 +969,9 @@ static void read_config(void)
 		exit(-1);
 	}
 
-	mainsearch.extensions_number = 0;
 	ptr = strtok_r((char *) extensions, " ", &buf);
 	while (ptr != NULL) {
-		strcpy(mainsearch.extensions_list[mainsearch.extensions_number],
-			ptr);
-		mainsearch.extensions_number++;
+	        add_element(&mainsearch.extension, ptr);
 		ptr = strtok_r(NULL, " ", &buf);
 	}
 
@@ -949,15 +981,16 @@ static void read_config(void)
 		exit(-1);
 	}
 	mainsearch.ngplog = ngplog;
-	
+
 	if (!mainsearch.ngplog)
 		return;
-	
+
 	if (!config_lookup_int(&cfg, "ngplog_size", &ngplog_size)) {
 		fprintf(stderr, "ngprc: no ngplog_size string found!\n");
 		exit(-1);
 	}
 	mainsearch.ngplog_size = ngplog_size;
+
 }
 
 int main(int argc, char *argv[])
