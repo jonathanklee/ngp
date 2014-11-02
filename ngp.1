@@ -5,12 +5,9 @@ ngp \- Ncurses code parsing tools
 .SH SYNOPSIS
 .ft B
 .B ngp
-.RB [ "\-i" ]
-.RB [ "\-r" ]
-.RB [ "\-e" ]
-.RB [ "\-t"
-.I .extension]
+.RB [OPTION]...
 .RI pattern
+.RI [directory]
 .br
 .B ngp -l
 .br
@@ -28,6 +25,10 @@ use 'K' and 'J' to switch page up and the down.
 use 'p' or Enter to open the occurency with your editor.
 .TP
 use 'q' to quit.
+.TP
+When ngplog is true in ngprc, ngp -l lets you list the latest files opened with ngp.
+.TP
+ngp -p index lets you open the file corresponding to the specified index.
 
 .SS Options
 .TP
@@ -48,12 +49,6 @@ regexp mode. Pattern is a regular expression
 .TP
 \fB-l\fP
 list latest files opened with ngp
-.TP
-\fB-p index\fP
-open index among latest files opened with ngp
-.TP
-\fB-h\fP
-display this help and exit
 .TP
 \fB-v\fP
 output version information and exit
