@@ -267,8 +267,8 @@ static void usage(void)
 	fprintf(stderr, "options:\n");
 	fprintf(stderr, " -i : ignore case distinctions in pattern\n");
 	fprintf(stderr, " -r : raw mode\n");
+	fprintf(stderr, " -t type : look into files that have this extension\n");
 	fprintf(stderr, " -e : pattern is a regular expression\n");
-	fprintf(stderr, " -t type : look for a file extension only\n");
 	fprintf(stderr, " -l : list latest files opened with ngp\n");
 	fprintf(stderr, " -p index : open index among latest files opened with ngp\n");
 	fprintf(stderr, " -v : display version\n");
