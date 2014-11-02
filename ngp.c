@@ -91,8 +91,7 @@ typedef struct s_search_t {
 	char directory[PATH_MAX];
 	char pattern[LINE_MAX];
 	char options[LINE_MAX];
-	char specific_files_list[256][LINE_MAX];
-	int specific_files_number;
+	struct list *specific_file;
 	struct list *extension;
 	int raw;
 	int regexp;
@@ -228,13 +227,14 @@ static int is_dir_good(char *dir)
 
 static int is_specific_file(const char *name)
 {
-	int i;
 	char *name_begins;
+	struct list *pointer = mainsearch.specific_file;
 
-	for (i = 0; i < current->specific_files_number; i++) {
+	while (pointer) {
 		name_begins = (strrchr(name + 3, '/') != NULL) ? strrchr(name + 3, '/') + 1 : (char *) name + 3;
-		if (!strcmp(name_begins, current->specific_files_list[i]))
+		if (!strcmp(name_begins, pointer->data))
 			return 1;
+		pointer = pointer->next;
 	}
 	return 0;
 }
@@ -832,6 +832,7 @@ void clean_search(search_t *search)
 	}
 
 	clear_elements(mainsearch.extension);
+	clear_elements(mainsearch.specific_file);
 }
 
 static void sig_handler(int signo)
@@ -963,12 +964,9 @@ static void read_config(void)
 		exit(-1);
 	}
 
-	mainsearch.specific_files_number = 0;
 	ptr = strtok_r((char *) specific_files, " ", &buf);
 	while (ptr != NULL) {
-		strcpy(mainsearch.specific_files_list[mainsearch.specific_files_number],
-			ptr);
-		mainsearch.specific_files_number++;
+		add_element(&mainsearch.specific_file, ptr);
 		ptr = strtok_r(NULL, " ", &buf);
 	}
 
