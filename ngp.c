@@ -527,9 +527,22 @@ static int parse_file(const char *file, const char *pattern, char *options)
 	return 0;
 }
 
+static int is_extension_good(const char *file) {
+
+	struct list *pointer;
+
+	pointer = mainsearch.extension;
+	while (pointer) {
+		if (!strcmp(pointer->data, file + strlen(file) -
+			strlen(pointer->data)))
+			return 1;
+		pointer = pointer->next;
+	}
+	return 0;
+}
+
 static void lookup_file(const char *file, const char *pattern, char *options)
 {
-	struct list *pointer;
 	errno = 0;
 	pthread_mutex_t *mutex;
 
@@ -545,14 +558,10 @@ static void lookup_file(const char *file, const char *pattern, char *options)
 		return;
 	}
 
-	pointer = mainsearch.extension;
-	while (pointer) {
-		if (!strcmp(pointer->data, file + strlen(file) - strlen(pointer->data))) {
-			synchronized(mainsearch.data_mutex)
-				parse_file(file, pattern, options);
-			break;
-		}
-		pointer = pointer->next;
+	if (is_extension_good(file)) {
+		synchronized(mainsearch.data_mutex)
+			parse_file(file, pattern, options);
+		return;
 	}
 }
 
