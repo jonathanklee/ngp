@@ -93,6 +93,7 @@ typedef struct s_search_t {
 	char options[LINE_MAX];
 	struct list *specific_file;
 	struct list *extension;
+	struct list *ignore;
 	int raw;
 	int regexp;
 	int regexp_is_ok;
@@ -229,6 +230,20 @@ static int is_specific_file(const char *name)
 {
 	char *name_begins;
 	struct list *pointer = mainsearch.specific_file;
+
+	while (pointer) {
+		name_begins = (strrchr(name + 3, '/') != NULL) ? strrchr(name + 3, '/') + 1 : (char *) name + 3;
+		if (!strcmp(name_begins, pointer->data))
+			return 1;
+		pointer = pointer->next;
+	}
+	return 0;
+}
+
+static int is_ignored_file(const char *name)
+{
+	char *name_begins;
+	struct list *pointer = mainsearch.ignore;
 
 	while (pointer) {
 		name_begins = (strrchr(name + 3, '/') != NULL) ? strrchr(name + 3, '/') + 1 : (char *) name + 3;
@@ -545,6 +560,9 @@ static void lookup_file(const char *file, const char *pattern, char *options)
 	errno = 0;
 	pthread_mutex_t *mutex;
 
+	if (is_ignored_file(file))
+		return;
+
 	if (mainsearch.raw) {
 		synchronized(mainsearch.data_mutex)
 			parse_file(file, pattern, options);
@@ -833,6 +851,7 @@ void clean_search(search_t *search)
 
 	clear_elements(mainsearch.extension);
 	clear_elements(mainsearch.specific_file);
+	clear_elements(mainsearch.ignore);
 }
 
 static void sig_handler(int signo)
@@ -946,6 +965,7 @@ static void read_config(void)
 {
 	const char *specific_files;
 	const char *extensions;
+	const char *ignore;
 	int ngplog = 0;
 	int ngplog_size = 10;
 	char *ptr;
@@ -982,6 +1002,18 @@ static void read_config(void)
 		ptr = strtok_r(NULL, " ", &buf);
 	}
 
+	/* getting ignored files from configuration */
+	if (!config_lookup_string(&cfg, "ignore", &ignore)) {
+		fprintf(stderr, "ngprc: no ignore string found!\n");
+		exit(-1);
+	}
+
+	ptr = strtok_r((char *) ignore, " ", &buf);
+	while (ptr != NULL) {
+	        add_element(&mainsearch.ignore, ptr);
+		ptr = strtok_r(NULL, " ", &buf);
+	}
+
 	/* getting ngplog boolean value */
 	if (!config_lookup_bool(&cfg, "ngplog", &ngplog)) {
 		fprintf(stderr, "ngprc: no ngplog string found!\n");
@@ -1004,9 +1036,10 @@ static void parse_args(int argc, char *argv[])
 {
 	int opt;
 	int clear_extensions = 0;
+	int clear_ignores = 0;
 	int first = 0;
 
-	while ((opt = getopt(argc, argv, "heit:rvlp:")) != -1) {
+	while ((opt = getopt(argc, argv, "heit:rI:vlp:")) != -1) {
 		switch (opt) {
 		case 'h':
 			usage();
@@ -1020,6 +1053,13 @@ static void parse_args(int argc, char *argv[])
 				clear_extensions = 1;
 			}
 			add_element(&mainsearch.extension, optarg);
+			break;
+		case 'I':
+			if (!clear_ignores) {
+				clear_elements(mainsearch.ignore);
+				clear_ignores = 1;
+			}
+			add_element(&mainsearch.ignore, optarg);
 			break;
 		case 'r':
 			mainsearch.raw = 1;

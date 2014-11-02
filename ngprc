@@ -7,6 +7,7 @@ arg #3 = pattern to search */
 editor = "vim -c '/%3$s' -c '%1$s' '%2$s'";
 /* editor = "emacs +'%1$s' '%2$s'"; */
 files = "Makefile rules control";
+ignore = "";
 extensions = ".c .h .cpp .py .S .pl";
 ngplog = false;
 ngplog_size = 10;
