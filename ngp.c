@@ -91,7 +91,6 @@ typedef struct s_search_t {
 	char directory[PATH_MAX];
 	char pattern[LINE_MAX];
 	char options[LINE_MAX];
-	char file_type[8];
 	char specific_files_list[256][LINE_MAX];
 	int specific_files_number;
 	struct list *extension;
@@ -582,7 +581,7 @@ static int is_simlink(char *file_path)
 }
 
 static void lookup_directory(const char *dir, const char *pattern,
-	char *options, char *file_type)
+	char *options)
 {
 	DIR *dp;
 
@@ -603,12 +602,7 @@ static void lookup_directory(const char *dir, const char *pattern,
 				ep->d_name);
 
 			if (!is_simlink(file_path)) {
-				if (file_type != NULL) {
-					if (!strcmp(file_type, ep->d_name + strlen(ep->d_name) - strlen(file_type) ))
-						lookup_file(file_path, pattern, options);
-				} else {
-					lookup_file(file_path, pattern, options);
-				}
+				lookup_file(file_path, pattern, options);
 			}
 		}
 
@@ -616,7 +610,7 @@ static void lookup_directory(const char *dir, const char *pattern,
 			char path_dir[PATH_MAX] = "";
 			snprintf(path_dir, PATH_MAX, "%s/%s", dir,
 				ep->d_name);
-			lookup_directory(path_dir, pattern, options, file_type);
+			lookup_directory(path_dir, pattern, options);
 		}
 	}
 	closedir(dp);
@@ -875,7 +869,7 @@ void * lookup_thread(void *arg)
 {
 	search_t *d = (search_t *) arg;
 
-	lookup_directory(d->directory, d->pattern, d->options, d->file_type);
+	lookup_directory(d->directory, d->pattern, d->options);
 	d->status = 0;
 	return (void *) NULL;
 }
@@ -1013,11 +1007,14 @@ int main(int argc, char *argv[])
 	int opt;
 	int ch;
 	int first = 0;
+	int clear_extensions = 0;
 	pthread_mutex_t *mutex;
 
 	current = &mainsearch;
 	init_searchstruct(&mainsearch);
 	pthread_mutex_init(&mainsearch.data_mutex, NULL);
+
+	read_config();
 
 	while ((opt = getopt(argc, argv, "heit:rvlp:")) != -1) {
 		switch (opt) {
@@ -1028,7 +1025,11 @@ int main(int argc, char *argv[])
 			strcpy(mainsearch.options, "-i");
 			break;
 		case 't':
-			strncpy(mainsearch.file_type, optarg, 8);
+			if (!clear_extensions) {
+				clear_elements(mainsearch.extension);
+				clear_extensions = 1;
+			}
+			add_element(&mainsearch.extension, optarg);
 			break;
 		case 'r':
 			mainsearch.raw = 1;
@@ -1060,8 +1061,6 @@ int main(int argc, char *argv[])
 			strcpy(mainsearch.directory, argv[optind]);
 		}
 	}
-
-	read_config();
 
 	signal(SIGINT, sig_handler);
 	if (pthread_create(&pid, NULL, &lookup_thread, &mainsearch)) {
