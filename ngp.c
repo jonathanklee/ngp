@@ -815,11 +815,21 @@ static void mark_entry(int index)
 	ptr->mark = (ptr->mark + 1) % 2;
 }
 
+static void clear_elements(struct list *list)
+{
+	struct list *pointer = list;
+
+	while (mainsearch.extension) {
+		pointer = mainsearch.extension;
+		mainsearch.extension = mainsearch.extension->next;
+		free(pointer);
+	}
+}
+
 void clean_search(search_t *search)
 {
 	entry_t *ptr = search->start;
 	entry_t *p;
-	struct list *pointer;
 
 	while (ptr) {
 		p = ptr;
@@ -827,11 +837,7 @@ void clean_search(search_t *search)
 		free(p);
 	}
 
-	while (mainsearch.extension) {
-		pointer = mainsearch.extension;
-		mainsearch.extension = mainsearch.extension->next;
-		free(pointer);
-	}
+	clear_elements(mainsearch.extension);
 }
 
 static void sig_handler(int signo)
