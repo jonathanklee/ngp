@@ -827,13 +827,13 @@ static void mark_entry(int index)
 	ptr->mark = (ptr->mark + 1) % 2;
 }
 
-static void clear_elements(struct list *list)
+static void clear_elements(struct list **list)
 {
-	struct list *pointer = list;
+	struct list *pointer = *list;
 
-	while (mainsearch.extension) {
-		pointer = mainsearch.extension;
-		mainsearch.extension = mainsearch.extension->next;
+	while (*list) {
+		pointer = *list;
+		*list = (*list)->next;
 		free(pointer);
 	}
 }
@@ -849,9 +849,9 @@ void clean_search(search_t *search)
 		free(p);
 	}
 
-	clear_elements(mainsearch.extension);
-	clear_elements(mainsearch.specific_file);
-	clear_elements(mainsearch.ignore);
+	clear_elements(&mainsearch.extension);
+	clear_elements(&mainsearch.specific_file);
+	clear_elements(&mainsearch.ignore);
 }
 
 static void sig_handler(int signo)
@@ -1049,14 +1049,14 @@ static void parse_args(int argc, char *argv[])
 			break;
 		case 't':
 			if (!clear_extensions) {
-				clear_elements(mainsearch.extension);
+				clear_elements(&mainsearch.extension);
 				clear_extensions = 1;
 			}
 			add_element(&mainsearch.extension, optarg);
 			break;
 		case 'I':
 			if (!clear_ignores) {
-				clear_elements(mainsearch.ignore);
+				clear_elements(&mainsearch.ignore);
 				clear_ignores = 1;
 			}
 			add_element(&mainsearch.ignore, optarg);
