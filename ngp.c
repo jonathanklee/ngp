@@ -1000,19 +1000,11 @@ static void read_config(void)
 
 }
 
-int main(int argc, char *argv[])
+static void parse_args(int argc, char *argv[])
 {
 	int opt;
-	int ch;
-	int first = 0;
 	int clear_extensions = 0;
-	pthread_mutex_t *mutex;
-
-	current = &mainsearch;
-	init_searchstruct(&mainsearch);
-	pthread_mutex_init(&mainsearch.data_mutex, NULL);
-
-	read_config();
+	int first = 0;
 
 	while ((opt = getopt(argc, argv, "heit:rvlp:")) != -1) {
 		switch (opt) {
@@ -1039,9 +1031,11 @@ int main(int argc, char *argv[])
 			display_version();
 			exit(0);
 		case 'l':
-			return list_mode_list();
+			list_mode_list();
+			exit(0);
 		case 'p':
-			return list_mode_open(optarg);
+			list_mode_open(optarg);
+			exit(0);
 		default:
 			exit(-1);
 			break;
@@ -1059,6 +1053,19 @@ int main(int argc, char *argv[])
 			strcpy(mainsearch.directory, argv[optind]);
 		}
 	}
+}
+
+int main(int argc, char *argv[])
+{
+	int ch;
+	pthread_mutex_t *mutex;
+
+	current = &mainsearch;
+	init_searchstruct(&mainsearch);
+	pthread_mutex_init(&mainsearch.data_mutex, NULL);
+
+	read_config();
+	parse_args(argc, argv);
 
 	signal(SIGINT, sig_handler);
 	if (pthread_create(&pid, NULL, &lookup_thread, &mainsearch)) {
