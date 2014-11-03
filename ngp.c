@@ -608,6 +608,9 @@ static void lookup_directory(const char *dir, const char *pattern,
 	if (!dp)
 		return;
 
+	if (is_ignored_file(dir))
+		return;
+
 	while (1) {
 		struct dirent *ep;
 		ep = readdir(dp);
