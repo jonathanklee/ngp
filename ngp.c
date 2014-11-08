@@ -164,6 +164,9 @@ static int list_mode_add(char *file)
 	int count;
 
 	f = fopen(NGP_LOG, "a+");
+	if (!f)
+		return -1;
+
 	count = 1;
 	while (fgets(line, sizeof(line), f) && count < mainsearch.ngplog_size) {
 		line[strlen(line) - 1] = '\0';
