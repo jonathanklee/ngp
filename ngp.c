@@ -38,7 +38,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <ctype.h>
 
 #define NGP_VERSION 	1.1
-#define NGP_LOG 	".ngplog"
 
 #define CURSOR_UP 	'k'
 #define CURSOR_DOWN 	'j'
@@ -97,8 +96,6 @@ typedef struct s_search_t {
 	int raw;
 	int regexp;
 	int regexp_is_ok;
-	int ngplog;
-	int ngplog_size;
 } search_t;
 
 static search_t	mainsearch;
@@ -108,108 +105,6 @@ static pthread_t pid;
 static void ncurses_add_file(const char *file);
 static void ncurses_add_line(const char *line);
 static void display_entries(int *index, int *cursor);
-
-static int list_mode_open(char *pointer_to_count)
-{
-	FILE *f;
-	char *editor;
-	int count;
-	int i;
-	int max;
-	char line[PATH_MAX] = "";
-	char command[PATH_MAX] = "";
-	char *ret;
-	int err;
-
-	if (access(NGP_LOG, F_OK))
-		return -1;
-
-	sscanf(pointer_to_count, "%d", &i);
-	f = fopen(NGP_LOG, "r");
-
-	max = 0;
-	while (fgets(line, sizeof(line), f))
-		max++;
-
-	if (i >= max) {
-		printf("No file entry for %d\n", i);
-		return -1;
-	}
-
-	fseek(f, 0, SEEK_SET);
-
-	for (count = 0; count < i; count++) {
-		ret = fgets(line, sizeof(line), f);
-		if (!ret)
-			break;
-	}
-
-	ret = fgets(line, sizeof(line), f);
-	if (!ret)
-		return -1;
-
-	editor = getenv("EDITOR");
-	sprintf(command, "%s %s", editor, line);
-	err = system(command);
-	if (err == -1)
-		return -1;
-	return 0;
-}
-
-static int list_mode_add(char *file)
-{
-	FILE *f;
-	char line[PATH_MAX] = "";
-	char new_buffer[2048] = "";
-	int count;
-
-	f = fopen(NGP_LOG, "a+");
-	if (!f)
-		return -1;
-
-	count = 1;
-	while (fgets(line, sizeof(line), f) && count < mainsearch.ngplog_size) {
-		line[strlen(line) - 1] = '\0';
-		if (strcmp(line, file + 2)) {
-			/* check for buffer overflow */
-			if (strlen(new_buffer) +
-				strlen(line) < sizeof(new_buffer)) {
-					strcat(new_buffer, line);
-					strcat(new_buffer, "\n");
-			} else {
-				return -1;
-			}
-			count++;
-		}
-	}
-	fclose(f);
-
-	f = fopen(NGP_LOG, "w");
-	fprintf(f, "%s\n", file + 2);
-	fprintf(f, "%s", new_buffer);
-	fclose(f);
-
-	return 0;
-}
-
-static int list_mode_list(void)
-{
-	FILE *file;
-	int i;
-	char line[PATH_MAX] = "";
-
-	file = fopen(NGP_LOG, "r");
-	if (!file)
-		return -1;
-
-	i = 0;
-	while (fgets(line, sizeof(line), file)) {
-		printf("%d %s", i++, line);
-	}
-	fclose(file);
-
-	return 0;
-}
 
 static int is_file(int index)
 {
@@ -288,8 +183,6 @@ static void usage(void)
 	fprintf(stderr, " -t type : look into files that have this extension\n");
 	fprintf(stderr, " -I name : ignore file that have this name\n");
 	fprintf(stderr, " -e : pattern is a regular expression\n");
-	fprintf(stderr, " -l : list latest files opened with ngp\n");
-	fprintf(stderr, " -p index : open index among latest files opened with ngp\n");
 	fprintf(stderr, " -v : display version\n");
 	exit(-1);
 }
@@ -819,8 +712,6 @@ static void open_entry(int index, const char *editor, const char *pattern)
 		return;
 
 	ptr->opened = 1;
-	if (mainsearch.ngplog)
-		list_mode_add(filtered_file_name);
 }
 
 static void mark_entry(int index)
@@ -973,8 +864,6 @@ static void read_config(void)
 	const char *specific_files;
 	const char *extensions;
 	const char *ignore;
-	int ngplog = 0;
-	int ngplog_size = 10;
 	char *ptr;
 	char *buf = NULL;
 	config_t cfg;
@@ -1020,23 +909,6 @@ static void read_config(void)
 	        add_element(&mainsearch.ignore, ptr);
 		ptr = strtok_r(NULL, " ", &buf);
 	}
-
-	/* getting ngplog boolean value */
-	if (!config_lookup_bool(&cfg, "ngplog", &ngplog)) {
-		fprintf(stderr, "ngprc: no ngplog string found!\n");
-		exit(-1);
-	}
-	mainsearch.ngplog = ngplog;
-
-	if (!mainsearch.ngplog)
-		return;
-
-	if (!config_lookup_int(&cfg, "ngplog_size", &ngplog_size)) {
-		fprintf(stderr, "ngprc: no ngplog_size string found!\n");
-		exit(-1);
-	}
-	mainsearch.ngplog_size = ngplog_size;
-
 }
 
 static void parse_args(int argc, char *argv[])
@@ -1046,7 +918,7 @@ static void parse_args(int argc, char *argv[])
 	int clear_ignores = 0;
 	int first = 0;
 
-	while ((opt = getopt(argc, argv, "heit:rI:vlp:")) != -1) {
+	while ((opt = getopt(argc, argv, "heit:rI:v")) != -1) {
 		switch (opt) {
 		case 'h':
 			usage();
@@ -1076,12 +948,6 @@ static void parse_args(int argc, char *argv[])
 			break;
 		case 'v':
 			display_version();
-			exit(0);
-		case 'l':
-			list_mode_list();
-			exit(0);
-		case 'p':
-			list_mode_open(optarg);
 			exit(0);
 		default:
 			exit(-1);

@@ -8,10 +8,6 @@ ngp \- Ncurses code parsing tools
 .RB [OPTION]...
 .RI pattern
 .RI [directory]
-.br
-.B ngp -l
-.br
-.B ngp -p index
 .SH DESCRIPTION
 ngp lets you look for a pattern in your source code directory and display results in ncurses.
 ngp lets you browse results in a Vim-like style.
@@ -25,10 +21,6 @@ use 'K' and 'J' to switch page up and the down.
 use 'p' or Enter to open the occurency with your editor.
 .TP
 use 'q' to quit.
-.TP
-When ngplog is true in ngprc, ngp -l lets you list the latest files opened with ngp.
-.TP
-ngp -p index lets you open the file corresponding to the specified index.
 
 .SS Options
 .TP
@@ -47,8 +39,6 @@ ignore file that have this name
 \fB-e\fP
 regexp mode. Pattern is a regular expression
 .TP
-\fB-l\fP
-list latest files opened with ngp
 .TP
 \fB-v\fP
 output version information and exit
