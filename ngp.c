@@ -57,6 +57,11 @@ for(mutex = &MUTEX; \
 mutex && !pthread_mutex_lock(mutex); \
 pthread_mutex_unlock(mutex), mutex = 0)
 
+enum cursor {
+	CURSOR_OFF,
+	CURSOR_ON
+};
+
 typedef struct s_entry_t {
 	struct s_entry_t *next;
 	int isfile;
@@ -322,12 +327,12 @@ static void print_file(int *y, char *line)
 		remove_double_appearance(cropped_line, '/', filtered_line));
 }
 
-static void display_entry(int *y, entry_t *ptr, int color)
+static void display_entry(int *y, entry_t *ptr, int cursor)
 {
 	char filtered_line[PATH_MAX];
 
 	if (!ptr->isfile) {
-		if (color == 1) {
+		if (cursor == CURSOR_ON) {
 			attron(A_REVERSE);
 			print_line(y, ptr);
 			attroff(A_REVERSE);
@@ -557,9 +562,9 @@ static void display_entries(int *index, int *cursor)
 	for (i = 0; i < LINES; i++) {
 		if (ptr && *index + i < current->nbentry) {
 			if (i == *cursor)
-				display_entry(&i, ptr, 1);
+				display_entry(&i, ptr, CURSOR_ON);
 			 else
-				display_entry(&i, ptr, 0);
+				display_entry(&i, ptr, CURSOR_OFF);
 
 			if (ptr->next)
 				ptr = ptr->next;
