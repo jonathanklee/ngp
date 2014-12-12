@@ -124,13 +124,25 @@ static int is_dir_good(char *dir)
 		strcmp(dir, ".git") != 0 ? 1 : 0;
 }
 
+static char * get_file_name(const char * absolute_path)
+{
+	char *ret;
+
+	if (strrchr(absolute_path + 3, '/') != NULL)
+		ret = strrchr(absolute_path + 3, '/') + 1;
+	else
+		ret = (char *) absolute_path + 3;
+
+	return ret;
+}
+
 static int is_specific_file(const char *name)
 {
 	char *name_begins;
 	struct list *pointer = mainsearch.specific_file;
 
 	while (pointer) {
-		name_begins = (strrchr(name + 3, '/') != NULL) ? strrchr(name + 3, '/') + 1 : (char *) name + 3;
+		name_begins = get_file_name(name);
 		if (!strcmp(name_begins, pointer->data))
 			return 1;
 		pointer = pointer->next;
@@ -144,7 +156,7 @@ static int is_ignored_file(const char *name)
 	struct list *pointer = mainsearch.ignore;
 
 	while (pointer) {
-		name_begins = (strrchr(name + 3, '/') != NULL) ? strrchr(name + 3, '/') + 1 : (char *) name + 3;
+		name_begins = get_file_name(name);
 		if (!strcmp(name_begins, pointer->data))
 			return 1;
 		pointer = pointer->next;
