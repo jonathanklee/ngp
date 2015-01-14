@@ -119,7 +119,7 @@ static int is_file(int index)
 
 static int is_dir_good(char *dir)
 {
-	return  strcmp(dir, ".") != 0 &&
+	return  *dir != '.' &&
 		strcmp(dir, "..") != 0 &&
 		strcmp(dir, ".git") != 0 ? 1 : 0;
 }
@@ -797,7 +797,15 @@ static void configuration_init(config_t *cfg)
 
 void * lookup_thread(void *arg)
 {
+	DIR *dp;
+
 	search_t *d = (search_t *) arg;
+	dp = opendir(d->directory);
+
+	if (!dp) {
+                fprintf(stderr, "error: coult not open directory \"%s\"\n", d->directory);
+                exit(-1);
+	}
 
 	lookup_directory(d->directory, d->pattern, d->options);
 	d->status = 0;
