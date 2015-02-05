@@ -877,8 +877,8 @@ static void add_element(struct list **list, char *element)
 	int len;
 
 	len = strlen(element) + 1;
-	new = calloc(1, sizeof(struct list) + len + 1);
-	strncpy(new->data, element, len + 1);
+	new = calloc(1, sizeof(struct list) + len);
+	strncpy(new->data, element, len);
 
 	if (*list) {
 		/* list not empty */
