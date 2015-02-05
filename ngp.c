@@ -375,6 +375,21 @@ static char * regex(const char *line, const char *pattern)
 	}
 }
 
+static void *get_parser(const char *options)
+{
+	char * (*parser)(const char *, const char*);
+
+	if (strstr(options, "-i") == NULL)
+		parser = strstr;
+	else
+		parser = strcasestr;
+
+	if (mainsearch.regexp)
+		parser = regex;
+
+	return parser;
+}
+
 static int parse_file(const char *file, const char *pattern, char *options)
 {
 	int f;
@@ -406,13 +421,7 @@ static int parse_file(const char *file, const char *pattern, char *options)
 
 	close(f);
 
-	if (strstr(options, "-i") == NULL)
-		parser = strstr;
-	else
-		parser = strcasestr;
-
-	if (mainsearch.regexp)
-		parser = regex;
+	parser = get_parser(options);
 
 	first = 1;
 	line_number = 1;
