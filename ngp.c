@@ -37,7 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <pthread.h>
 #include <ctype.h>
 
-#define NGP_VERSION 	1.1
+#define NGP_VERSION 	"1.2"
 
 #define CURSOR_UP 	'k'
 #define CURSOR_DOWN 	'j'
@@ -854,7 +854,7 @@ void display_status(void)
 
 static void display_version(void)
 {
-	printf("version 1.1\n");
+	printf("version %s\n", NGP_VERSION);
 }
 
 static void add_element(struct list **list, char *element)
