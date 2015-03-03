@@ -111,13 +111,13 @@ static void print_line(int *y, entry_t *entry)
 	mvprintw(*y, length, "%s", cropped_line + length);
 
 	/* highlight pattern */
-        if (strstr(current->options, "-i") == NULL)
-                pattern = strstr(cropped_line + length, current->pattern);
-        else
-                pattern = strcasestr(cropped_line + length, current->pattern);
+	if (strstr(current->options, "-i") == NULL)
+		pattern = strstr(cropped_line + length, current->pattern);
+	else
+		pattern = strcasestr(cropped_line + length, current->pattern);
 
-        if (!pattern)
-        	return;
+	if (!pattern)
+		return;
 
 	ptr = cropped_line + length;
 	move(*y, length);
@@ -197,7 +197,7 @@ static char * regex(const char *line, const char *pattern)
 		return "1";
 	}
 
-        current->regexp_is_ok = 1;
+	current->regexp_is_ok = 1;
 	ret = regexec(&reg, line, 0, NULL, 0);
 	if (!ret) {
 		regfree(&reg);
@@ -598,8 +598,8 @@ void * lookup_thread(void *arg)
 	dp = opendir(d->directory);
 
 	if (!dp) {
-                fprintf(stderr, "error: coult not open directory \"%s\"\n", d->directory);
-                exit(-1);
+		fprintf(stderr, "error: coult not open directory \"%s\"\n", d->directory);
+		exit(-1);
 	}
 
 	lookup_directory(d->directory, d->pattern, d->options);
