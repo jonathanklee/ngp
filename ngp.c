@@ -26,75 +26,6 @@ static void ncurses_add_file(const char *file);
 static void ncurses_add_line(const char *line);
 static void display_entries(int *index, int *cursor);
 
-static int is_dir_good(char *dir)
-{
-	return  *dir != '.' &&
-		strcmp(dir, "..") != 0 &&
-		strcmp(dir, ".git") != 0 ? 1 : 0;
-}
-
-static char * get_file_name(const char * absolute_path)
-{
-	char *ret;
-
-	if (strrchr(absolute_path + 3, '/') != NULL)
-		ret = strrchr(absolute_path + 3, '/') + 1;
-	else
-		ret = (char *) absolute_path + 3;
-
-	return ret;
-}
-
-static int is_specific_file(const char *name)
-{
-	char *name_begins;
-	struct list *pointer = current->specific_file;
-
-	while (pointer) {
-		name_begins = get_file_name(name);
-		if (!strcmp(name_begins, pointer->data))
-			return 1;
-		pointer = pointer->next;
-	}
-	return 0;
-}
-
-static int is_ignored_file(const char *name)
-{
-	char *name_begins;
-	struct list *pointer = current->ignore;
-
-	while (pointer) {
-		name_begins = get_file_name(name);
-		if (!strcmp(name_begins, pointer->data))
-			return 1;
-		pointer = pointer->next;
-	}
-	return 0;
-}
-
-static char * remove_double_appearance(char *initial, char c, char *final)
-{
-	int i, j;
-	int len = strlen(initial);
-
-	for (i = 0, j = 0; i < len; j++ ) {
-		if (initial[i] != c) {
-			final[j] = initial[i];
-			i++;
-		} else {
-			final[j] = initial[i];
-			if (initial[i + 1] == c)
-				i = i + 2;
-			else
-				i++;
-		}
-	}
-	final[j] = '\0';
-
-	return final;
-}
-
 static void usage(void)
 {
 	fprintf(stderr, "usage: ngp [options]... pattern [directory]\n\n");
@@ -368,20 +299,6 @@ static int parse_file(const char *file, const char *pattern, char *options)
 	return 0;
 }
 
-static int is_extension_good(const char *file) {
-
-	struct list *pointer;
-
-	pointer = current->extension;
-	while (pointer) {
-		if (!strcmp(pointer->data, file + strlen(file) -
-			strlen(pointer->data)))
-			return 1;
-		pointer = pointer->next;
-	}
-	return 0;
-}
-
 static void lookup_file(const char *file, const char *pattern, char *options)
 {
 	errno = 0;
@@ -407,22 +324,6 @@ static void lookup_file(const char *file, const char *pattern, char *options)
 			parse_file(file, pattern, options);
 		return;
 	}
-}
-
-static char * extract_line_number(char *line)
-{
-	char *token;
-	char *buffer;
-	token = strtok_r(line, " :", &buffer);
-	return token;
-}
-
-static int is_simlink(char *file_path)
-{
-	struct stat filestat;
-
-	lstat(file_path, &filestat);
-	return S_ISLNK(filestat.st_mode);
 }
 
 static void lookup_directory(const char *dir, const char *pattern,
