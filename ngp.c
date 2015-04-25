@@ -16,25 +16,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include "ngp.h"
+#include "utils.h"
 
 static search_t	mainsearch;
-static search_t	*current;
+search_t *current;
 static pthread_t pid;
 
 static void ncurses_add_file(const char *file);
 static void ncurses_add_line(const char *line);
 static void display_entries(int *index, int *cursor);
-
-static int is_file(int index)
-{
-	int i;
-	entry_t *ptr = current->start;
-
-	for (i = 0; i < index; i++)
-		ptr = ptr->next;
-
-	return ptr->isfile;
-}
 
 static int is_dir_good(char *dir)
 {
