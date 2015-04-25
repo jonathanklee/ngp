@@ -9,3 +9,13 @@ editor = "vim -c '/%3$s' -c '%1$s' '%2$s'";
 files = "Makefile rules control";
 ignore = "";
 extensions = ".c .h .cpp .py .S .pl";
+
+/* themes
+   colors available: cyan, yellow, red, green,
+   black, white, blue, magenta */
+
+lines_color = "white";
+line_numbers_color = "green";
+pattern_color = "cyan";
+files_color = "green";
+parsed_pattern_color = "red";

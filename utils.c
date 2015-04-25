@@ -129,3 +129,25 @@ int is_simlink(char *file_path)
 	return S_ISLNK(filestat.st_mode);
 }
 
+void configuration_init(config_t *cfg)
+{
+	char *user_name;
+	char user_ngprc[PATH_MAX];
+
+	config_init(cfg);
+
+	user_name = getenv("USER");
+	snprintf(user_ngprc, PATH_MAX, "/home/%s/%s",
+		user_name, ".ngprc");
+
+	if (config_read_file(cfg, user_ngprc))
+		return;
+
+	if (!config_read_file(cfg, "/etc/ngprc")) {
+		fprintf(stderr, "error in /etc/ngprc\n");
+		fprintf(stderr, "Could be that the configuration file has not been found\n");
+		config_destroy(cfg);
+		exit(1);
+	}
+}
+

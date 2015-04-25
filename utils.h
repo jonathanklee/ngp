@@ -18,6 +18,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <libconfig.h>
+
 int is_file(int index);
 int is_dir_good(char *dir);
 int is_specific_file(const char *name);
@@ -27,5 +29,6 @@ int is_simlink(char *file_path);
 char * get_file_name(const char * absolute_path);
 char * remove_double_appearance(char *initial, char c, char *final);
 char * extract_line_number(char *line);
+void configuration_init(config_t *cfg);
 
 #endif /* UTILS_H */

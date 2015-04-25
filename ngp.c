@@ -17,6 +17,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "ngp.h"
 #include "utils.h"
+#include "themes.h"
 
 static search_t	mainsearch;
 search_t *current;
@@ -49,10 +50,7 @@ static void ncurses_init(void)
 	start_color();
 	use_default_colors();
 	init_pair(1, -1, -1);
-	init_pair(2, COLOR_YELLOW, -1);
-	init_pair(3, COLOR_RED, -1);
-	init_pair(4, COLOR_CYAN, -1);
-	init_pair(5, COLOR_GREEN, -1);
+	apply_theme();
 	curs_set(0);
 }
 
@@ -592,28 +590,6 @@ static void sig_handler(int signo)
 	}
 }
 
-static void configuration_init(config_t *cfg)
-{
-	char *user_name;
-	char user_ngprc[PATH_MAX];
-
-	config_init(cfg);
-
-	user_name = getenv("USER");
-	snprintf(user_ngprc, PATH_MAX, "/home/%s/%s",
-		user_name, ".ngprc");
-
-	if (config_read_file(cfg, user_ngprc))
-		return;
-
-	if (!config_read_file(cfg, "/etc/ngprc")) {
-		fprintf(stderr, "error in /etc/ngprc\n");
-		fprintf(stderr, "Could be that the configuration file has not been found\n");
-		config_destroy(cfg);
-		exit(1);
-	}
-}
-
 void * lookup_thread(void *arg)
 {
 	DIR *dp;
@@ -817,6 +793,7 @@ int main(int argc, char *argv[])
 	pthread_mutex_init(&current->data_mutex, NULL);
 
 	read_config();
+	read_theme();
 	parse_args(argc, argv);
 
 	signal(SIGINT, sig_handler);
