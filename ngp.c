@@ -48,7 +48,7 @@ static char * get_file_name(const char * absolute_path)
 static int is_specific_file(const char *name)
 {
 	char *name_begins;
-	struct list *pointer = mainsearch.specific_file;
+	struct list *pointer = current->specific_file;
 
 	while (pointer) {
 		name_begins = get_file_name(name);
@@ -62,7 +62,7 @@ static int is_specific_file(const char *name)
 static int is_ignored_file(const char *name)
 {
 	char *name_begins;
-	struct list *pointer = mainsearch.ignore;
+	struct list *pointer = current->ignore;
 
 	while (pointer) {
 		name_begins = get_file_name(name);
@@ -268,7 +268,7 @@ static char * regex(const char *line, const char *pattern)
 		return "1";
 	}
 
-        mainsearch.regexp_is_ok = 1;
+        current->regexp_is_ok = 1;
 	ret = regexec(&reg, line, 0, NULL, 0);
 	if (!ret) {
 		regfree(&reg);
@@ -288,7 +288,7 @@ static void *get_parser(const char *options)
 	else
 		parser = strcasestr;
 
-	if (mainsearch.regexp)
+	if (current->regexp)
 		parser = regex;
 
 	return parser;
@@ -372,7 +372,7 @@ static int is_extension_good(const char *file) {
 
 	struct list *pointer;
 
-	pointer = mainsearch.extension;
+	pointer = current->extension;
 	while (pointer) {
 		if (!strcmp(pointer->data, file + strlen(file) -
 			strlen(pointer->data)))
@@ -390,20 +390,20 @@ static void lookup_file(const char *file, const char *pattern, char *options)
 	if (is_ignored_file(file))
 		return;
 
-	if (mainsearch.raw) {
-		synchronized(mainsearch.data_mutex)
+	if (current->raw) {
+		synchronized(current->data_mutex)
 			parse_file(file, pattern, options);
 		return;
 	}
 
 	if (is_specific_file(file)) {
-		synchronized(mainsearch.data_mutex)
+		synchronized(current->data_mutex)
 			parse_file(file, pattern, options);
 		return;
 	}
 
 	if (is_extension_good(file)) {
-		synchronized(mainsearch.data_mutex)
+		synchronized(current->data_mutex)
 			parse_file(file, pattern, options);
 		return;
 	}
@@ -628,7 +628,7 @@ static void open_entry(int index, const char *editor, const char *pattern)
 			file = ptr;
 	}
 
-	synchronized(mainsearch.data_mutex) {
+	synchronized(current->data_mutex) {
 		strcpy(line_copy, ptr->data);
 		snprintf(command, sizeof(command), editor,
 			extract_line_number(line_copy),
@@ -677,16 +677,16 @@ void clean_search(search_t *search)
 		free(p);
 	}
 
-	clear_elements(&mainsearch.extension);
-	clear_elements(&mainsearch.specific_file);
-	clear_elements(&mainsearch.ignore);
+	clear_elements(&current->extension);
+	clear_elements(&current->specific_file);
+	clear_elements(&current->ignore);
 }
 
 static void sig_handler(int signo)
 {
 	if (signo == SIGINT) {
 		ncurses_stop();
-		clean_search(&mainsearch);
+		clean_search(current);
 		exit(-1);
 	}
 }
@@ -764,7 +764,7 @@ void display_status(void)
 	static int i = 0;
 
 	attron(COLOR_PAIR(1));
-	if (mainsearch.status)
+	if (current->status)
 		mvaddstr(0, COLS - 3, rollingwheel[++i%60]);
 	else
 		mvaddstr(0, COLS - 5, "Done.");
@@ -808,7 +808,7 @@ static void read_config(void)
 
 	configuration_init(&cfg);
 
-	if (!config_lookup_string(&cfg, "editor", &mainsearch.editor)) {
+	if (!config_lookup_string(&cfg, "editor", &current->editor)) {
 		fprintf(stderr, "ngprc: no editor string found!\n");
 		exit(-1);
 	}
@@ -820,7 +820,7 @@ static void read_config(void)
 
 	ptr = strtok_r((char *) specific_files, " ", &buf);
 	while (ptr != NULL) {
-		add_element(&mainsearch.specific_file, ptr);
+		add_element(&current->specific_file, ptr);
 		ptr = strtok_r(NULL, " ", &buf);
 	}
 
@@ -832,7 +832,7 @@ static void read_config(void)
 
 	ptr = strtok_r((char *) extensions, " ", &buf);
 	while (ptr != NULL) {
-	        add_element(&mainsearch.extension, ptr);
+	        add_element(&current->extension, ptr);
 		ptr = strtok_r(NULL, " ", &buf);
 	}
 
@@ -844,7 +844,7 @@ static void read_config(void)
 
 	ptr = strtok_r((char *) ignore, " ", &buf);
 	while (ptr != NULL) {
-	        add_element(&mainsearch.ignore, ptr);
+	        add_element(&current->ignore, ptr);
 		ptr = strtok_r(NULL, " ", &buf);
 	}
 }
@@ -862,27 +862,27 @@ static void parse_args(int argc, char *argv[])
 			usage();
 			break;
 		case 'i':
-			strcpy(mainsearch.options, "-i");
+			strcpy(current->options, "-i");
 			break;
 		case 't':
 			if (!clear_extensions) {
-				clear_elements(&mainsearch.extension);
+				clear_elements(&current->extension);
 				clear_extensions = 1;
 			}
-			add_element(&mainsearch.extension, optarg);
+			add_element(&current->extension, optarg);
 			break;
 		case 'I':
 			if (!clear_ignores) {
-				clear_elements(&mainsearch.ignore);
+				clear_elements(&current->ignore);
 				clear_ignores = 1;
 			}
-			add_element(&mainsearch.ignore, optarg);
+			add_element(&current->ignore, optarg);
 			break;
 		case 'r':
-			mainsearch.raw = 1;
+			current->raw = 1;
 			break;
 		case 'e':
-			mainsearch.regexp = 1;
+			current->regexp = 1;
 			break;
 		case 'v':
 			display_version();
@@ -898,10 +898,10 @@ static void parse_args(int argc, char *argv[])
 
 	for ( ; optind < argc; optind++) {
 		if (!first) {
-			strcpy(mainsearch.pattern, argv[optind]);
+			strcpy(current->pattern, argv[optind]);
 			first = 1;
 		} else {
-			strcpy(mainsearch.directory, argv[optind]);
+			strcpy(current->directory, argv[optind]);
 		}
 	}
 }
@@ -912,55 +912,55 @@ int main(int argc, char *argv[])
 	pthread_mutex_t *mutex;
 
 	current = &mainsearch;
-	init_searchstruct(&mainsearch);
-	pthread_mutex_init(&mainsearch.data_mutex, NULL);
+	init_searchstruct(current);
+	pthread_mutex_init(&current->data_mutex, NULL);
 
 	read_config();
 	parse_args(argc, argv);
 
 	signal(SIGINT, sig_handler);
-	if (pthread_create(&pid, NULL, &lookup_thread, &mainsearch)) {
+	if (pthread_create(&pid, NULL, &lookup_thread, current)) {
 		fprintf(stderr, "ngp: cannot create thread");
-		clean_search(&mainsearch);
+		clean_search(current);
 		exit(-1);
 	}
 
-	synchronized(mainsearch.data_mutex)
-		display_entries(&mainsearch.index, &mainsearch.cursor);
+	synchronized(current->data_mutex)
+		display_entries(&current->index, &current->cursor);
 
 	while ((ch = getch())) {
 		switch(ch) {
 		case KEY_RESIZE:
-			synchronized(mainsearch.data_mutex)
+			synchronized(current->data_mutex)
 				resize(&current->index, &current->cursor);
 			break;
 		case CURSOR_DOWN:
 		case KEY_DOWN:
-			synchronized(mainsearch.data_mutex)
+			synchronized(current->data_mutex)
 				cursor_down(&current->index, &current->cursor);
 			break;
 		case CURSOR_UP:
 		case KEY_UP:
-			synchronized(mainsearch.data_mutex)
+			synchronized(current->data_mutex)
 				cursor_up(&current->index, &current->cursor);
 			break;
 		case KEY_PPAGE:
 		case PAGE_UP:
-			synchronized(mainsearch.data_mutex)
+			synchronized(current->data_mutex)
 				page_up(&current->index, &current->cursor);
 			break;
 		case KEY_NPAGE:
 		case PAGE_DOWN:
-			synchronized(mainsearch.data_mutex)
+			synchronized(current->data_mutex)
 				page_down(&current->index, &current->cursor);
 			break;
 		case ENTER:
 		case '\n':
-			if (mainsearch.nbentry == 0)
+			if (current->nbentry == 0)
 				break;
 			ncurses_stop();
 			open_entry(current->cursor + current->index,
-				mainsearch.editor, current->pattern);
+				current->editor, current->pattern);
 			ncurses_init();
 			resize(&current->index, &current->cursor);
 			break;
@@ -974,13 +974,13 @@ int main(int argc, char *argv[])
 		}
 
 		usleep(10000);
-		synchronized(mainsearch.data_mutex) {
-			display_entries(&mainsearch.index, &mainsearch.cursor);
+		synchronized(current->data_mutex) {
+			display_entries(&current->index, &current->cursor);
 			display_status();
 		}
 
-		synchronized(mainsearch.data_mutex) {
-			if (mainsearch.status == 0 && mainsearch.nbentry == 0) {
+		synchronized(current->data_mutex) {
+			if (current->status == 0 && current->nbentry == 0) {
 				goto quit;
 			}
 		}
