@@ -227,11 +227,11 @@ static int parse_file(const char *file, const char *pattern, char *options)
 {
 	int f;
 	char full_line[LINE_MAX];
-	char *p;
+	char *pointer;
 	char *start;
 	char *end;
 	char *endline;
-	int first;
+	int first_occurrence;
 	struct stat sb;
 	int line_number;
 	char * (*parser)(const char *, const char*);
@@ -246,8 +246,8 @@ static int parse_file(const char *file, const char *pattern, char *options)
 		return -1;
 	}
 
-	p = mmap(0, sb.st_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, f, 0);
-	if (p == MAP_FAILED) {
+	pointer = mmap(0, sb.st_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, f, 0);
+	if (pointer == MAP_FAILED) {
 		close(f);
 		return -1;
 	}
@@ -256,38 +256,38 @@ static int parse_file(const char *file, const char *pattern, char *options)
 
 	parser = get_parser(options);
 
-	first = 1;
+	first_occurrence = 1;
 	line_number = 1;
-	start = p;
-	end = p + sb.st_size;
+	start = pointer;
+	end = pointer + sb.st_size;
 	while (1) {
 
-		if (p == end)
+		if (pointer == end)
 			break;
 
-		endline = strchr(p, '\n');
+		endline = strchr(pointer, '\n');
 		if (endline == NULL)
 			break;
 
 		/* replace \n with \0 */
 		*endline = '\0';
 
-		if (parser(p, pattern) != NULL) {
-			if (first) {
+		if (parser(pointer, pattern) != NULL) {
+			if (first_occurrence) {
 				if (current->nbentry == 0)
 					ncurses_init();
 				ncurses_add_file(file);
-				first = 0;
+				first_occurrence = 0;
 			}
-			if (p[strlen(p) - 2] == '\r')
-				p[strlen(p) - 2] = '\0';
-			snprintf(full_line, LINE_MAX, "%d:%s", line_number, p);
+			if (pointer[strlen(pointer) - 2] == '\r')
+				pointer[strlen(pointer) - 2] = '\0';
+			snprintf(full_line, LINE_MAX, "%d:%s", line_number, pointer);
 			ncurses_add_line(full_line);
 		}
 
 		/* switch back to \n */
 		*endline = '\n';
-		p = endline + 1;
+		pointer = endline + 1;
 		line_number++;
 	}
 
