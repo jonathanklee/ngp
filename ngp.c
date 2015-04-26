@@ -19,8 +19,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "utils.h"
 #include "themes.h"
 
-static search_t	mainsearch;
-search_t *current;
+static struct search_t mainsearch;
+struct search_t *current;
 static pthread_t pid;
 
 static void ncurses_add_file(const char *file);
@@ -59,11 +59,11 @@ static void ncurses_stop(void)
 	endwin();
 }
 
-static entry_t *alloc_word(entry_t *list, int len, int type)
+static struct entry_t *alloc_word(struct entry_t *list, int len, int type)
 {
-	entry_t *new;
+	struct entry_t *new;
 
-	new = calloc(1, sizeof(struct s_entry_t) + len);
+	new = calloc(1, sizeof(struct entry_t) + len);
 	new->len = len;
 	new->isfile = type;
 	new->next = NULL;
@@ -82,7 +82,7 @@ static entry_t *alloc_word(entry_t *list, int len, int type)
 	return new;
 }
 
-static void print_line(int *y, entry_t *entry)
+static void print_line(int *y, struct entry_t *entry)
 {
 	char *pos;
 	char *buf = NULL;
@@ -160,7 +160,7 @@ static void print_file(int *y, char *line)
 		remove_double_appearance(cropped_line, '/', filtered_line));
 }
 
-static void display_entry(int *y, entry_t *ptr, int cursor)
+static void display_entry(int *y, struct entry_t *ptr, int cursor)
 {
 	char filtered_line[PATH_MAX];
 
@@ -366,7 +366,7 @@ static void lookup_directory(const char *dir, const char *pattern,
 static void display_entries(int *index, int *cursor)
 {
 	int i = 0;
-	entry_t *ptr = current->start;
+	struct entry_t *ptr = current->start;
 
 	for (i = 0; i < *index; i++)
 		ptr = ptr->next;
@@ -513,8 +513,8 @@ int find_file(int index)
 static void open_entry(int index, const char *editor, const char *pattern)
 {
 	int i;
-	entry_t *ptr;
-	entry_t *file = current->start;
+	struct entry_t *ptr;
+	struct entry_t *file = current->start;
 
 	char command[PATH_MAX];
 	char filtered_file_name[PATH_MAX];
@@ -546,7 +546,7 @@ static void open_entry(int index, const char *editor, const char *pattern)
 static void mark_entry(int index)
 {
 	int i;
-	entry_t *ptr;
+	struct entry_t *ptr;
 
 	for (i = 0, ptr = current->start; i < index; i++)
 		ptr = ptr->next;
@@ -565,10 +565,10 @@ static void clear_elements(struct list **list)
 	}
 }
 
-void clean_search(search_t *search)
+void clean_search(struct search_t *search)
 {
-	entry_t *ptr = search->start;
-	entry_t *p;
+	struct entry_t *ptr = search->start;
+	struct entry_t *p;
 
 	while (ptr) {
 		p = ptr;
@@ -594,7 +594,7 @@ void * lookup_thread(void *arg)
 {
 	DIR *dp;
 
-	search_t *d = (search_t *) arg;
+	struct search_t *d = (struct search_t *) arg;
 	dp = opendir(d->directory);
 
 	if (!dp) {
@@ -607,7 +607,7 @@ void * lookup_thread(void *arg)
 	return (void *) NULL;
 }
 
-void init_searchstruct(search_t *searchstruct)
+void init_searchstruct(struct search_t *searchstruct)
 {
 	searchstruct->index = 0;
 	searchstruct->cursor = 0;

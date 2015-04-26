@@ -17,12 +17,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "ngp.h"
 
-extern search_t	*current;
+extern struct search_t *current;
 
 int is_file(int index)
 {
 	int i;
-	entry_t *ptr = current->start;
+	struct entry_t *ptr = current->start;
 
 	for (i = 0; i < index; i++)
 		ptr = ptr->next;

@@ -65,28 +65,28 @@ enum cursor {
 	CURSOR_ON
 };
 
-typedef struct s_entry_t {
-	struct s_entry_t *next;
+struct entry_t {
+	struct entry_t *next;
 	int isfile;
 	int len;
 	int opened;
 	int mark;
 	char data[];
-} entry_t;
+};
 
 struct list {
 	struct list *next;
 	char data[];
 };
 
-typedef struct s_search_t {
+struct search_t {
 	/* screen */
 	int index;
 	int cursor;
 
 	/* data */
-	entry_t *entries;
-	entry_t *start;
+	struct entry_t *entries;
+	struct entry_t *start;
 	int nbentry;
 
 	/* thread */
@@ -104,6 +104,6 @@ typedef struct s_search_t {
 	int raw;
 	int regexp;
 	int regexp_is_ok;
-} search_t;
+};
 
 #endif /* NGP_H */
