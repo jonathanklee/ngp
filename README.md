@@ -23,3 +23,8 @@ Installation
 Looking for "initial_boot_params" pattern in kernel
 
 ![Looking for "initial_boot_params" pattern in kernel] (/screenshot.png)
+
+Todo
+----
+
+- Implement regexp search using libpcre jit
