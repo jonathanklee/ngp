@@ -27,4 +27,4 @@ Looking for "initial_boot_params" pattern in kernel
 Todo
 ----
 
-- Implement regexp search using libpcre jit
+- Implement highlight of regexp
