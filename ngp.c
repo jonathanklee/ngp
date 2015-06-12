@@ -189,23 +189,30 @@ static void display_entry(int *y, struct entry_t *ptr, int cursor)
 static char * regex(const char *line, const char *pattern)
 {
 	int ret;
-	regex_t reg;
+	const char *pcre_error;
+	int pcre_error_offset;
+	int substring_vector[30];
 
-	ret = regcomp(&reg, pattern, REG_NEWLINE);
-	if (ret) {
-		regfree(&reg);
-		return "1";
+	/* check if regexp has already been compiled */
+	if (!current->compiled) {
+		current->compiled = pcre_compile(pattern, 0, &pcre_error,
+			&pcre_error_offset, NULL);
+		if (!current->compiled)
+			return NULL;
+
+		current->pcre_extra =
+			pcre_study(current->compiled, 0, &pcre_error);
+		if (!current->pcre_extra)
+			return NULL;
 	}
 
-	current->regexp_is_ok = 1;
-	ret = regexec(&reg, line, 0, NULL, 0);
-	if (!ret) {
-		regfree(&reg);
-		return "1";
-	} else {
-		regfree(&reg);
+	ret = pcre_exec(current->compiled, current->pcre_extra, line,
+		strlen(line), 0, 0, substring_vector, 30);
+
+	if (ret < 0)
 		return NULL;
-	}
+
+	return "1";
 }
 
 static void *get_parser(const char *options)

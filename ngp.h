@@ -39,6 +39,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sys/mman.h>
 #include <pthread.h>
 #include <ctype.h>
+#include <pcre.h>
 
 #define NGP_VERSION 	"1.2"
 
@@ -94,6 +95,8 @@ struct search_t {
 	int status;
 
 	/* search */
+	const pcre *compiled;
+	const pcre_extra *pcre_extra;
 	const char *editor;
 	char directory[PATH_MAX];
 	char pattern[LINE_MAX];
