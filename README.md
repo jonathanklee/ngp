@@ -12,7 +12,7 @@ ngp lets you open a result with your favorite editor at the right line.
 Installation
 ------------
 
-- install build dependencies : libconfig & ncurses
+- install build dependencies : libconfig, libpcre & ncurses
 - ./autogen.sh
 - ./configure
 - make
