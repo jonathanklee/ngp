@@ -146,10 +146,12 @@ start_printing:
 	if (!entry->opened && entry->mark)
 		attron(COLOR_PAIR(2));
 
-	if (current->regexp)
+	if (current->regexp) {
 		length = strlen(regexp_matched_string);
-	else
+		pcre_free_substring(regexp_matched_string);
+	} else {
 		length = strlen(current->pattern);
+	}
 
 	for (counter = 0; counter < length; counter++, ptr++)
 		addch(*ptr);
@@ -605,10 +607,10 @@ void clean_search(struct search_t *search)
 
 	/* free pcre stuffs if needed */
 	if (current->pcre_compiled)
-		free((void *) current->pcre_compiled);
+		pcre_free((void *) current->pcre_compiled);
 
 	if (current->pcre_extra)
-		free((void *) current->pcre_extra);
+		pcre_free((void *) current->pcre_extra);
 
 }
 
