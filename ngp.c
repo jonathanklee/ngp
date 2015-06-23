@@ -208,19 +208,19 @@ static char * regex(const char *line, const char *pattern)
 	const char *matched_string;
 
 	/* check if regexp has already been compiled */
-	if (!current->compiled) {
-		current->compiled = pcre_compile(pattern, 0, &pcre_error,
+	if (!current->pcre_compiled) {
+		current->pcre_compiled = pcre_compile(pattern, 0, &pcre_error,
 			&pcre_error_offset, NULL);
-		if (!current->compiled)
+		if (!current->pcre_compiled)
 			return NULL;
 
 		current->pcre_extra =
-			pcre_study(current->compiled, 0, &pcre_error);
+			pcre_study(current->pcre_compiled, 0, &pcre_error);
 		if (!current->pcre_extra)
 			return NULL;
 	}
 
-	ret = pcre_exec(current->compiled, current->pcre_extra, line,
+	ret = pcre_exec(current->pcre_compiled, current->pcre_extra, line,
 		strlen(line), 0, 0, substring_vector, 30);
 
 	if (ret < 0)
@@ -602,6 +602,14 @@ void clean_search(struct search_t *search)
 	clear_elements(&current->extension);
 	clear_elements(&current->specific_file);
 	clear_elements(&current->ignore);
+
+	/* free pcre stuffs if needed */
+	if (current->pcre_compiled)
+		free((void *) current->pcre_compiled);
+
+	if (current->pcre_extra)
+		free((void *) current->pcre_extra);
+
 }
 
 static void sig_handler(int signo)
