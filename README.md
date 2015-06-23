@@ -24,7 +24,3 @@ Looking for "initial_boot_params" pattern in kernel
 
 ![Looking for "initial_boot_params" pattern in kernel] (/screenshot.png)
 
-Todo
-----
-
-- Implement highlight of regexp

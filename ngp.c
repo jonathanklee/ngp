@@ -26,6 +26,7 @@ static pthread_t pid;
 static void ncurses_add_file(const char *file);
 static void ncurses_add_line(const char *line);
 static void display_entries(int *index, int *cursor);
+static char * regex(const char *line, const char *pattern);
 
 static void usage(void)
 {
@@ -86,8 +87,9 @@ static void print_line(int *y, struct entry_t *entry)
 {
 	char *pos;
 	char *buf = NULL;
-	char *pattern;
+	char *pattern = NULL;
 	char *ptr;
+	char *regexp_matched_string = NULL;
 	int length = 0;
 	int crop = COLS;
 	int counter = 0;
@@ -111,10 +113,18 @@ static void print_line(int *y, struct entry_t *entry)
 	mvprintw(*y, length, "%s", cropped_line + length);
 
 	/* highlight pattern */
+	if (current->regexp) {
+		regexp_matched_string = regex(cropped_line + length, current->pattern);
+		pattern = strstr(cropped_line + length, regexp_matched_string);
+		goto start_printing;
+	}
+
 	if (strstr(current->options, "-i") == NULL)
 		pattern = strstr(cropped_line + length, current->pattern);
 	else
 		pattern = strcasestr(cropped_line + length, current->pattern);
+
+start_printing:
 
 	if (!pattern)
 		return;
@@ -136,7 +146,10 @@ static void print_line(int *y, struct entry_t *entry)
 	if (!entry->opened && entry->mark)
 		attron(COLOR_PAIR(2));
 
-	length = strlen(current->pattern);
+	if (current->regexp)
+		length = strlen(regexp_matched_string);
+	else
+		length = strlen(current->pattern);
 
 	for (counter = 0; counter < length; counter++, ptr++)
 		addch(*ptr);
@@ -192,6 +205,7 @@ static char * regex(const char *line, const char *pattern)
 	const char *pcre_error;
 	int pcre_error_offset;
 	int substring_vector[30];
+	const char *matched_string;
 
 	/* check if regexp has already been compiled */
 	if (!current->compiled) {
@@ -212,7 +226,9 @@ static char * regex(const char *line, const char *pattern)
 	if (ret < 0)
 		return NULL;
 
-	return "1";
+	pcre_get_substring(line, substring_vector, ret, 0, &matched_string);
+
+	return (char *) matched_string;
 }
 
 static void *get_parser(const char *options)
