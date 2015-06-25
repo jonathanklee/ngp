@@ -115,6 +115,9 @@ static void print_line(int *y, struct entry_t *entry)
 	/* highlight pattern */
 	if (current->regexp) {
 		regexp_matched_string = regex(cropped_line + length, current->pattern);
+		if (!regexp_matched_string)
+			return;
+
 		pattern = strstr(cropped_line + length, regexp_matched_string);
 		goto start_printing;
 	}
