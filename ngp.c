@@ -26,7 +26,8 @@ static pthread_t pid;
 static void ncurses_add_file(const char *file);
 static void ncurses_add_line(const char *line);
 static void display_entries(int *index, int *cursor);
-static char * regex(const char *line, const char *pattern);
+static void *get_parser(const char *options);
+static char *regex(const char *line, const char *pattern);
 
 static void usage(void)
 {
@@ -90,6 +91,7 @@ static void print_line(int *y, struct entry_t *entry)
 	char *pattern = NULL;
 	char *ptr;
 	char *regexp_matched_string = NULL;
+	char * (*parser)(const char *, const char*);
 	int length = 0;
 	int crop = COLS;
 	int counter = 0;
@@ -122,10 +124,8 @@ static void print_line(int *y, struct entry_t *entry)
 		goto start_printing;
 	}
 
-	if (strstr(current->options, "-i") == NULL)
-		pattern = strstr(cropped_line + length, current->pattern);
-	else
-		pattern = strcasestr(cropped_line + length, current->pattern);
+	parser = get_parser(current->options);
+	pattern = parser(cropped_line + length, current->pattern);
 
 start_printing:
 
