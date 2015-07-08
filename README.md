@@ -20,7 +20,7 @@ Installation
 - enjoy !
 
 
-Looking for "is_.*\(" regexp in ngp source code.
+Looking for "is_..." regexp in ngp source code.
 
-![Looking for "initial_boot_params" pattern in kernel] (/screenshot.png)
+![gif] (/ngp.gif)
 
