@@ -38,33 +38,36 @@ void read_theme(void)
 
 	if (!config_lookup_string(&cfg, "lines_color", &buffer)) {
 		fprintf(stderr, "ngprc: no lines_color string found!\n");
-		exit(-1);
+		goto exit_read_theme;
 	}
 	strcpy(lines_color, buffer);
 
 	if (!config_lookup_string(&cfg, "line_numbers_color", &buffer)) {
 		fprintf(stderr, "ngprc: no line_numbers_color string found!\n");
-		exit(-1);
+		goto exit_read_theme;
 	}
 	strcpy(line_numbers_color, buffer);
 
 	if (!config_lookup_string(&cfg, "pattern_color", &buffer)) {
 		fprintf(stderr, "ngprc: no pattern_color string found!\n");
-		exit(-1);
+		goto exit_read_theme;
 	}
 	strcpy(pattern_color, buffer);
 
 	if (!config_lookup_string(&cfg, "files_color", &buffer)) {
 		fprintf(stderr, "ngprc: no files_color string found!\n");
-		exit(-1);
+		goto exit_read_theme;
 	}
 	strcpy(files_color, buffer);
 
 	if (!config_lookup_string(&cfg, "parsed_pattern_color", &buffer)) {
 		fprintf(stderr, "ngprc: no parsed_pattern_color string found!\n");
-		exit(-1);
+		goto exit_read_theme;
 	}
 	strcpy(parsed_pattern_color, buffer);
+
+exit_read_theme:
+	config_destroy(&cfg);
 }
 
 void apply_theme(void)

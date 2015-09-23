@@ -22,6 +22,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 static struct search_t mainsearch;
 struct search_t *current;
 static pthread_t pid;
+static config_t cfg;
 
 static void ncurses_add_file(const char *file);
 static void ncurses_add_line(const char *line);
@@ -361,8 +362,10 @@ static void lookup_directory(const char *dir, const char *pattern,
 	if (!dp)
 		return;
 
-	if (is_ignored_file(dir))
+	if (is_ignored_file(dir)) {
+		closedir(dp);
 		return;
+	}
 
 	while (1) {
 		struct dirent *ep;
@@ -615,6 +618,7 @@ void clean_search(struct search_t *search)
 	if (current->pcre_extra)
 		pcre_free((void *) current->pcre_extra);
 
+	config_destroy(&cfg);
 }
 
 static void sig_handler(int signo)
@@ -640,6 +644,7 @@ void * lookup_thread(void *arg)
 
 	lookup_directory(d->directory, d->pattern, d->options);
 	d->status = 0;
+	closedir(dp);
 	return (void *) NULL;
 }
 
@@ -717,7 +722,6 @@ static void read_config(void)
 	const char *ignore;
 	char *ptr;
 	char *buf = NULL;
-	config_t cfg;
 
 	configuration_init(&cfg);
 
