@@ -784,6 +784,7 @@ static void parse_args(int argc, char *argv[])
 		case 't':
 			if (!clear_extensions) {
 				clear_elements(&current->extension);
+				clear_elements(&current->specific_file);
 				clear_extensions = 1;
 			}
 			add_element(&current->extension, optarg);
