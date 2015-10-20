@@ -36,8 +36,8 @@ static void usage(void)
 	fprintf(stderr, "options:\n");
 	fprintf(stderr, " -i : ignore case distinctions in pattern\n");
 	fprintf(stderr, " -r : raw mode\n");
-	fprintf(stderr, " -t type : look into files that have this extension\n");
-	fprintf(stderr, " -I name : ignore file that have this name\n");
+	fprintf(stderr, " -t type : look into files with this extension\n");
+	fprintf(stderr, " -I name : ignore file with this name\n");
 	fprintf(stderr, " -e : pattern is a regular expression\n");
 	fprintf(stderr, " -v : display version\n");
 	exit(-1);
