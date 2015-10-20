@@ -104,8 +104,10 @@ struct search_t {
 	struct list *specific_file;
 	struct list *extension;
 	struct list *ignore;
-	int raw;
-	int regexp;
+	int raw_option;
+	int regexp_option;
+	int extension_option;
+	int ignore_option;
 	int regexp_is_ok;
 };
 

@@ -116,7 +116,7 @@ static void print_line(int *y, struct entry_t *entry)
 	mvprintw(*y, length, "%s", cropped_line + length);
 
 	/* highlight pattern */
-	if (current->regexp) {
+	if (current->regexp_option) {
 		regexp_matched_string = regex(cropped_line + length, current->pattern);
 		if (!regexp_matched_string)
 			return;
@@ -150,7 +150,7 @@ start_printing:
 	if (!entry->opened && entry->mark)
 		attron(COLOR_PAIR(2));
 
-	if (current->regexp) {
+	if (current->regexp_option) {
 		length = strlen(regexp_matched_string);
 		pcre_free_substring(regexp_matched_string);
 	} else {
@@ -246,7 +246,7 @@ static void *get_parser(const char *options)
 	else
 		parser = strcasestr;
 
-	if (current->regexp)
+	if (current->regexp_option)
 		parser = regex;
 
 	return parser;
@@ -334,7 +334,7 @@ static void lookup_file(const char *file, const char *pattern, char *options)
 	if (is_ignored_file(file))
 		return;
 
-	if (current->raw) {
+	if (current->raw_option) {
 		synchronized(current->data_mutex)
 			parse_file(file, pattern, options);
 		return;
@@ -654,7 +654,7 @@ void init_searchstruct(struct search_t *searchstruct)
 	searchstruct->cursor = 0;
 	searchstruct->nbentry = 0;
 	searchstruct->status = 1;
-	searchstruct->raw = 0;
+	searchstruct->raw_option = 0;
 	searchstruct->entries = NULL;
 	searchstruct->start = searchstruct->entries;
 	strcpy(searchstruct->directory, "./");
@@ -730,39 +730,44 @@ static void read_config(void)
 		exit(-1);
 	}
 
-	if (!config_lookup_string(&cfg, "files", &specific_files)) {
-		fprintf(stderr, "ngprc: no files string found!\n");
-		exit(-1);
+	/* only if we don't provide extension as argument */
+	if (!current->extension_option) {
+		if (!config_lookup_string(&cfg, "files", &specific_files)) {
+			fprintf(stderr, "ngprc: no files string found!\n");
+			exit(-1);
+		}
+
+		ptr = strtok_r((char *) specific_files, " ", &buf);
+		while (ptr != NULL) {
+			add_element(&current->specific_file, ptr);
+			ptr = strtok_r(NULL, " ", &buf);
+		}
 	}
 
-	ptr = strtok_r((char *) specific_files, " ", &buf);
-	while (ptr != NULL) {
-		add_element(&current->specific_file, ptr);
-		ptr = strtok_r(NULL, " ", &buf);
+	if (!current->extension_option) {
+		/* getting files extensions from configuration */
+		if (!config_lookup_string(&cfg, "extensions", &extensions)) {
+			fprintf(stderr, "ngprc: no extensions string found!\n");
+			exit(-1);
+		}
+		ptr = strtok_r((char *) extensions, " ", &buf);
+		while (ptr != NULL) {
+			add_element(&current->extension, ptr);
+			ptr = strtok_r(NULL, " ", &buf);
+		}
 	}
 
-	/* getting files extensions from configuration */
-	if (!config_lookup_string(&cfg, "extensions", &extensions)) {
-		fprintf(stderr, "ngprc: no extensions string found!\n");
-		exit(-1);
-	}
-
-	ptr = strtok_r((char *) extensions, " ", &buf);
-	while (ptr != NULL) {
-	        add_element(&current->extension, ptr);
-		ptr = strtok_r(NULL, " ", &buf);
-	}
-
-	/* getting ignored files from configuration */
-	if (!config_lookup_string(&cfg, "ignore", &ignore)) {
-		fprintf(stderr, "ngprc: no ignore string found!\n");
-		exit(-1);
-	}
-
-	ptr = strtok_r((char *) ignore, " ", &buf);
-	while (ptr != NULL) {
-	        add_element(&current->ignore, ptr);
-		ptr = strtok_r(NULL, " ", &buf);
+	if (!current->ignore_option) {
+		/* getting ignored files from configuration */
+		if (!config_lookup_string(&cfg, "ignore", &ignore)) {
+			fprintf(stderr, "ngprc: no ignore string found!\n");
+			exit(-1);
+		}
+		ptr = strtok_r((char *) ignore, " ", &buf);
+		while (ptr != NULL) {
+			add_element(&current->ignore, ptr);
+			ptr = strtok_r(NULL, " ", &buf);
+		}
 	}
 }
 
@@ -784,7 +789,7 @@ static void parse_args(int argc, char *argv[])
 		case 't':
 			if (!clear_extensions) {
 				clear_elements(&current->extension);
-				clear_elements(&current->specific_file);
+				current->extension_option = 1;
 				clear_extensions = 1;
 			}
 			add_element(&current->extension, optarg);
@@ -792,15 +797,16 @@ static void parse_args(int argc, char *argv[])
 		case 'I':
 			if (!clear_ignores) {
 				clear_elements(&current->ignore);
+				current->ignore_option = 1;
 				clear_ignores = 1;
 			}
 			add_element(&current->ignore, optarg);
 			break;
 		case 'r':
-			current->raw = 1;
+			current->raw_option = 1;
 			break;
 		case 'e':
-			current->regexp = 1;
+			current->regexp_option = 1;
 			break;
 		case 'v':
 			display_version();
@@ -834,9 +840,9 @@ int main(int argc, char *argv[])
 	init_searchstruct(current);
 	pthread_mutex_init(&current->data_mutex, NULL);
 
+	parse_args(argc, argv);
 	read_config();
 	read_theme();
-	parse_args(argc, argv);
 
 	signal(SIGINT, sig_handler);
 	if (pthread_create(&pid, NULL, &lookup_thread, current)) {
