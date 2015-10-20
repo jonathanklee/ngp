@@ -685,7 +685,7 @@ void display_status(void)
 	if (current->status)
 		mvaddstr(0, COLS - 3, rollingwheel[++i%60]);
 	else
-		mvaddstr(0, COLS - 5, "Done.");
+		mvaddstr(0, COLS - 5, "");
 }
 
 static void display_version(void)
