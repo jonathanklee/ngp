@@ -37,7 +37,7 @@ int is_dir_good(char *dir)
 		strcmp(dir, ".git") != 0 ? 1 : 0;
 }
 
-char * get_file_name(const char * absolute_path)
+char *get_file_name(const char * absolute_path)
 {
 	char *ret;
 
@@ -91,7 +91,7 @@ int is_extension_good(const char *file) {
 	return 0;
 }
 
-char * remove_double_appearance(char *initial, char c, char *final)
+char *remove_double_appearance(char *initial, char c, char *final)
 {
 	int i, j;
 	int len = strlen(initial);
@@ -113,7 +113,7 @@ char * remove_double_appearance(char *initial, char c, char *final)
 	return final;
 }
 
-char * extract_line_number(char *line)
+char *extract_line_number(char *line)
 {
 	char *token;
 	char *buffer;

@@ -205,7 +205,7 @@ static void display_entry(int *y, struct entry_t *ptr, int cursor)
 	}
 }
 
-static char * regex(const char *line, const char *pattern)
+static char *regex(const char *line, const char *pattern)
 {
 	int ret;
 	const char *pcre_error;
