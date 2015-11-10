@@ -17,12 +17,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "ngp.h"
 
-extern struct search_t *global_current;
-
-int is_file(int index)
+int is_file(struct search_t *current, int index)
 {
 	int i;
-	struct entry_t *ptr = global_current->start;
+	struct entry_t *ptr = current->start;
 
 	for (i = 0; i < index; i++)
 		ptr = ptr->next;
@@ -49,10 +47,10 @@ char *get_file_name(const char * absolute_path)
 	return ret;
 }
 
-int is_specific_file(const char *name)
+int is_specific_file(struct search_t *current, const char *name)
 {
 	char *name_begins;
-	struct list *pointer = global_current->specific_file;
+	struct list *pointer = current->specific_file;
 
 	while (pointer) {
 		name_begins = get_file_name(name);
@@ -63,10 +61,10 @@ int is_specific_file(const char *name)
 	return 0;
 }
 
-int is_ignored_file(const char *name)
+int is_ignored_file(struct search_t *current, const char *name)
 {
 	char *name_begins;
-	struct list *pointer = global_current->ignore;
+	struct list *pointer = current->ignore;
 
 	while (pointer) {
 		name_begins = get_file_name(name);
@@ -77,11 +75,11 @@ int is_ignored_file(const char *name)
 	return 0;
 }
 
-int is_extension_good(const char *file) {
+int is_extension_good(struct search_t *current, const char *file) {
 
 	struct list *pointer;
 
-	pointer = global_current->extension;
+	pointer = current->extension;
 	while (pointer) {
 		if (!strcmp(pointer->data, file + strlen(file) -
 			strlen(pointer->data)))

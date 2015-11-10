@@ -19,12 +19,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define UTILS_H
 
 #include <libconfig.h>
+#include "ngp.h"
 
-int is_file(int index);
+int is_file(struct search_t *current ,int index);
 int is_dir_good(char *dir);
-int is_specific_file(const char *name);
-int is_ignored_file(const char *name);
-int is_extension_good(const char *file);
+int is_specific_file(struct search_t *current, const char *name);
+int is_ignored_file(struct search_t *current, const char *name);
+int is_extension_good(struct search_t *current, const char *file);
 int is_simlink(char *file_path);
 char * get_file_name(const char * absolute_path);
 char * remove_double_appearance(char *initial, char c, char *final);

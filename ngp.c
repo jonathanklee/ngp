@@ -19,10 +19,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "utils.h"
 #include "themes.h"
 
-static struct search_t mainsearch;
-struct search_t *global_current;
 static pthread_t pid;
 static config_t cfg;
+struct search_t *global_search;
 
 static void ncurses_add_file(struct search_t *current, const char *file);
 static void ncurses_add_line(struct search_t *current, const char *line);
@@ -341,7 +340,7 @@ static void lookup_file(struct search_t *current, const char *file, const char *
 	errno = 0;
 	pthread_mutex_t *mutex;
 
-	if (is_ignored_file(file))
+	if (is_ignored_file(current, file))
 		return;
 
 	if (current->raw_option) {
@@ -350,13 +349,13 @@ static void lookup_file(struct search_t *current, const char *file, const char *
 		return;
 	}
 
-	if (is_specific_file(file)) {
+	if (is_specific_file(current, file)) {
 		synchronized(current->data_mutex)
 			parse_file(current, file, pattern, options);
 		return;
 	}
 
-	if (is_extension_good(file)) {
+	if (is_extension_good(current, file)) {
 		synchronized(current->data_mutex)
 			parse_file(current, file, pattern, options);
 		return;
@@ -372,7 +371,7 @@ static void lookup_directory(struct search_t *current, const char *dir, const ch
 	if (!dp)
 		return;
 
-	if (is_ignored_file(dir)) {
+	if (is_ignored_file(current, dir)) {
 		closedir(dp);
 		return;
 	}
@@ -468,7 +467,7 @@ static void page_up(struct search_t *current, int *index, int *cursor)
 	*index -= LINES;
 	*index = (*index < 0 ? 0 : *index);
 
-	if (is_file(*index + *cursor) && *index != 0)
+	if (is_file(current, *index + *cursor) && *index != 0)
 		*cursor -= 1;
 
 	display_entries(current, index, cursor);
@@ -496,7 +495,7 @@ static void page_down(struct search_t *current, int *index, int *cursor)
 	*index += LINES;
 	*index = (*index > max_index ? max_index : *index);
 
-	if (is_file(*index + *cursor))
+	if (is_file(current, *index + *cursor))
 		*cursor += 1;
 	display_entries(current, index, cursor);
 }
@@ -511,7 +510,7 @@ static void cursor_up(struct search_t *current, int *index, int *cursor)
 	if (*cursor > 0)
 		*cursor = *cursor - 1;
 
-	if (is_file(*index + *cursor))
+	if (is_file(current, *index + *cursor))
 		*cursor = *cursor - 1;
 
 	if (*cursor < 0) {
@@ -532,7 +531,7 @@ static void cursor_down(struct search_t *current, int *index, int *cursor)
 	if (*cursor + *index < current->nbentry - 1)
 		*cursor = *cursor + 1;
 
-	if (is_file(*index + *cursor))
+	if (is_file(current, *index + *cursor))
 		*cursor = *cursor + 1;
 
 	if (*cursor > (LINES - 1)) {
@@ -541,14 +540,6 @@ static void cursor_down(struct search_t *current, int *index, int *cursor)
 	}
 
 	display_entries(current, index, cursor);
-}
-
-int find_file(int index)
-{
-	while (!is_file(index))
-		index--;
-
-	return index;
 }
 
 static void open_entry(struct search_t *current, int index, const char *editor, const char *pattern)
@@ -634,9 +625,9 @@ void clean_search(struct search_t *current)
 static void sig_handler(int signo)
 {
 	if (signo == SIGINT) {
-		ncurses_stop();
-		clean_search(global_current);
-		exit(-1);
+                ncurses_stop();
+                clean_search(global_search);
+                exit(-1);
 	}
 }
 
@@ -845,78 +836,81 @@ int main(int argc, char *argv[])
 	int ch;
 	void *res;
 	pthread_mutex_t *mutex;
+        static struct search_t mainsearch;
+        struct search_t *current;
 
-	global_current = &mainsearch;
-	init_searchstruct(global_current);
-	pthread_mutex_init(&global_current->data_mutex, NULL);
+	current = &mainsearch;
+        global_search = &mainsearch;
+	init_searchstruct(current);
+	pthread_mutex_init(&current->data_mutex, NULL);
 
-	parse_args(global_current, argc, argv);
-	read_config(global_current);
+	parse_args(current, argc, argv);
+	read_config(current);
 	read_theme();
 
 	signal(SIGINT, sig_handler);
-	if (pthread_create(&pid, NULL, &lookup_thread, global_current)) {
+	if (pthread_create(&pid, NULL, &lookup_thread, current)) {
 		fprintf(stderr, "ngp: cannot create thread");
-		clean_search(global_current);
+		clean_search(current);
 		exit(-1);
 	}
 
-	synchronized(global_current->data_mutex)
-		display_entries(global_current, &global_current->index, &global_current->cursor);
+	synchronized(current->data_mutex)
+		display_entries(current, &current->index, &current->cursor);
 
 	while ((ch = getch())) {
 		switch(ch) {
 		case KEY_RESIZE:
-			synchronized(global_current->data_mutex)
-				resize(global_current, &global_current->index, &global_current->cursor);
+			synchronized(current->data_mutex)
+				resize(current, &current->index, &current->cursor);
 			break;
 		case CURSOR_DOWN:
 		case KEY_DOWN:
-			synchronized(global_current->data_mutex)
-				cursor_down(global_current, &global_current->index, &global_current->cursor);
+			synchronized(current->data_mutex)
+				cursor_down(current, &current->index, &current->cursor);
 			break;
 		case CURSOR_UP:
 		case KEY_UP:
-			synchronized(global_current->data_mutex)
-				cursor_up(global_current, &global_current->index, &global_current->cursor);
+			synchronized(current->data_mutex)
+				cursor_up(current, &current->index, &current->cursor);
 			break;
 		case KEY_PPAGE:
 		case PAGE_UP:
-			synchronized(global_current->data_mutex)
-				page_up(global_current, &global_current->index, &global_current->cursor);
+			synchronized(current->data_mutex)
+				page_up(current, &current->index, &current->cursor);
 			break;
 		case KEY_NPAGE:
 		case PAGE_DOWN:
-			synchronized(global_current->data_mutex)
-				page_down(global_current, &global_current->index, &global_current->cursor);
+			synchronized(current->data_mutex)
+				page_down(current, &current->index, &current->cursor);
 			break;
 		case ENTER:
 		case '\n':
-			if (global_current->nbentry == 0)
+			if (current->nbentry == 0)
 				break;
 			ncurses_stop();
-			open_entry(global_current, global_current->cursor + global_current->index,
-				global_current->editor, global_current->pattern);
+			open_entry(current, current->cursor + current->index,
+				current->editor, current->pattern);
 			ncurses_init();
-			resize(global_current, &global_current->index, &global_current->cursor);
+			resize(current, &current->index, &current->cursor);
 			break;
 		case QUIT:
 			goto quit;
 		case MARK:
-			mark_entry(global_current, global_current->cursor + global_current->index);
+			mark_entry(current, current->cursor + current->index);
 			break;
 		default:
 			break;
 		}
 
 		usleep(10000);
-		synchronized(global_current->data_mutex) {
-			display_entries(global_current, &global_current->index, &global_current->cursor);
-			display_status(global_current);
+		synchronized(current->data_mutex) {
+			display_entries(current, &current->index, &current->cursor);
+			display_status(current);
 		}
 
-		synchronized(global_current->data_mutex) {
-			if (global_current->status == 0 && global_current->nbentry == 0) {
+		synchronized(current->data_mutex) {
+			if (current->status == 0 && current->nbentry == 0) {
 				goto quit;
 			}
 		}
