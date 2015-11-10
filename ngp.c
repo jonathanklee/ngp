@@ -19,7 +19,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "utils.h"
 #include "themes.h"
 
-static pthread_t pid;
 static config_t cfg;
 struct search_t *global_search;
 
@@ -838,6 +837,7 @@ int main(int argc, char *argv[])
 	pthread_mutex_t *mutex;
         static struct search_t mainsearch;
         struct search_t *current;
+        pthread_t pid;
 
 	current = &mainsearch;
         global_search = &mainsearch;
