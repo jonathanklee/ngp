@@ -647,16 +647,16 @@ void *lookup_thread(void *arg)
 	return (void *) NULL;
 }
 
-void init_searchstruct(struct search_t *searchstruct)
+void init_searchstruct(struct search_t *search)
 {
-	searchstruct->index = 0;
-	searchstruct->cursor = 0;
-	searchstruct->nbentry = 0;
-	searchstruct->status = 1;
-	searchstruct->raw_option = 0;
-	searchstruct->entries = NULL;
-	searchstruct->start = searchstruct->entries;
-	strcpy(searchstruct->directory, "./");
+	search->index = 0;
+	search->cursor = 0;
+	search->nbentry = 0;
+	search->status = 1;
+	search->raw_option = 0;
+	search->entries = NULL;
+	search->start = search->entries;
+	strcpy(search->directory, "./");
 }
 
 void display_status(struct search_t *search)
