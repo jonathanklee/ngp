@@ -17,10 +17,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "ngp.h"
 
-int is_file(struct search_t *current, int index)
+int is_file(struct search_t *search, int index)
 {
 	int i;
-	struct entry_t *ptr = current->start;
+	struct entry_t *ptr = search->start;
 
 	for (i = 0; i < index; i++)
 		ptr = ptr->next;
@@ -47,10 +47,10 @@ char *get_file_name(const char * absolute_path)
 	return ret;
 }
 
-int is_specific_file(struct search_t *current, const char *name)
+int is_specific_file(struct search_t *search, const char *name)
 {
 	char *name_begins;
-	struct list *pointer = current->specific_file;
+	struct list *pointer = search->specific_file;
 
 	while (pointer) {
 		name_begins = get_file_name(name);
@@ -61,10 +61,10 @@ int is_specific_file(struct search_t *current, const char *name)
 	return 0;
 }
 
-int is_ignored_file(struct search_t *current, const char *name)
+int is_ignored_file(struct search_t *search, const char *name)
 {
 	char *name_begins;
-	struct list *pointer = current->ignore;
+	struct list *pointer = search->ignore;
 
 	while (pointer) {
 		name_begins = get_file_name(name);
@@ -75,11 +75,11 @@ int is_ignored_file(struct search_t *current, const char *name)
 	return 0;
 }
 
-int is_extension_good(struct search_t *current, const char *file) {
+int is_extension_good(struct search_t *search, const char *file) {
 
 	struct list *pointer;
 
-	pointer = current->extension;
+	pointer = search->extension;
 	while (pointer) {
 		if (!strcmp(pointer->data, file + strlen(file) -
 			strlen(pointer->data)))

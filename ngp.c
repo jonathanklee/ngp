@@ -23,11 +23,11 @@ static pthread_t pid;
 static config_t cfg;
 struct search_t *global_search;
 
-static void ncurses_add_file(struct search_t *current, const char *file);
-static void ncurses_add_line(struct search_t *current, const char *line);
-static void display_entries(struct search_t *current, int *index, int *cursor);
-static void *get_parser(struct search_t *current, const char *options);
-static char *regex(struct search_t *current, const char *line, const char *pattern);
+static void ncurses_add_file(struct search_t *search, const char *file);
+static void ncurses_add_line(struct search_t *search, const char *line);
+static void display_entries(struct search_t *search, int *index, int *cursor);
+static void *get_parser(struct search_t *search, const char *options);
+static char *regex(struct search_t *search, const char *line, const char *pattern);
 
 static void usage(void)
 {
@@ -61,7 +61,7 @@ static void ncurses_stop(void)
 	endwin();
 }
 
-static struct entry_t *alloc_word(struct search_t *current, struct entry_t *list, int len, int type)
+static struct entry_t *alloc_word(struct search_t *search, struct entry_t *list, int len, int type)
 {
 	struct entry_t *new;
 
@@ -78,13 +78,13 @@ static struct entry_t *alloc_word(struct search_t *current, struct entry_t *list
 	} else {
 		/* if list is emptry,
 		set first element as start of list */
-		current->start = new;
+		search->start = new;
 	}
 
 	return new;
 }
 
-static void print_line(struct search_t *current, int *y, struct entry_t *entry)
+static void print_line(struct search_t *search, int *y, struct entry_t *entry)
 {
 	char *pos;
 	char *buf = NULL;
@@ -115,8 +115,8 @@ static void print_line(struct search_t *current, int *y, struct entry_t *entry)
 	mvprintw(*y, length, "%s", cropped_line + length);
 
 	/* highlight pattern */
-	if (current->regexp_option) {
-		regexp_matched_string = regex(current, cropped_line + length, current->pattern);
+	if (search->regexp_option) {
+		regexp_matched_string = regex(search, cropped_line + length, search->pattern);
 		if (!regexp_matched_string)
 			return;
 
@@ -124,8 +124,8 @@ static void print_line(struct search_t *current, int *y, struct entry_t *entry)
 		goto start_printing;
 	}
 
-	parser = get_parser(current, current->options);
-	pattern = parser(current, cropped_line + length, current->pattern);
+	parser = get_parser(search, search->options);
+	pattern = parser(search, cropped_line + length, search->pattern);
 
 start_printing:
 
@@ -149,11 +149,11 @@ start_printing:
 	if (!entry->opened && entry->mark)
 		attron(COLOR_PAIR(2));
 
-	if (current->regexp_option) {
+	if (search->regexp_option) {
 		length = strlen(regexp_matched_string);
 		pcre_free_substring(regexp_matched_string);
 	} else {
-		length = strlen(current->pattern);
+		length = strlen(search->pattern);
 	}
 
 	for (counter = 0; counter < length; counter++, ptr++)
@@ -162,7 +162,7 @@ start_printing:
 	attroff(A_REVERSE);
 }
 
-static void print_file(struct search_t *current, int *y, char *line)
+static void print_file(struct search_t *search, int *y, char *line)
 {
 	char filtered_line[PATH_MAX];
 	char cropped_line[PATH_MAX] = "";
@@ -178,33 +178,33 @@ static void print_file(struct search_t *current, int *y, char *line)
 		remove_double_appearance(cropped_line, '/', filtered_line));
 }
 
-static void display_entry(struct search_t *current, int *y, struct entry_t *ptr, int cursor)
+static void display_entry(struct search_t *search, int *y, struct entry_t *ptr, int cursor)
 {
 	char filtered_line[PATH_MAX];
 
 	if (!ptr->isfile) {
 		if (cursor == CURSOR_ON) {
 			attron(A_REVERSE);
-			print_line(current, y, ptr);
+			print_line(search, y, ptr);
 			attroff(A_REVERSE);
 		} else {
-			print_line(current, y, ptr);
+			print_line(search, y, ptr);
 		}
 	} else {
 		attron(A_BOLD);
-		if (strcmp(current->directory, "./") == 0)
-			print_file(current, y, remove_double_appearance(
+		if (strcmp(search->directory, "./") == 0)
+			print_file(search, y, remove_double_appearance(
 				ptr->data + 3, '/',
 				filtered_line));
 		else
-			print_file(current, y, remove_double_appearance(
+			print_file(search, y, remove_double_appearance(
 				ptr->data, '/',
 				filtered_line));
 		attroff(A_BOLD);
 	}
 }
 
-static char *regex(struct search_t *current, const char *line, const char *pattern)
+static char *regex(struct search_t *search, const char *line, const char *pattern)
 {
 	int ret;
 	const char *pcre_error;
@@ -213,19 +213,19 @@ static char *regex(struct search_t *current, const char *line, const char *patte
 	const char *matched_string;
 
 	/* check if regexp has already been compiled */
-	if (!current->pcre_compiled) {
-		current->pcre_compiled = pcre_compile(pattern, 0, &pcre_error,
+	if (!search->pcre_compiled) {
+		search->pcre_compiled = pcre_compile(pattern, 0, &pcre_error,
 			&pcre_error_offset, NULL);
-		if (!current->pcre_compiled)
+		if (!search->pcre_compiled)
 			return NULL;
 
-		current->pcre_extra =
-			pcre_study(current->pcre_compiled, 0, &pcre_error);
-		if (!current->pcre_extra)
+		search->pcre_extra =
+			pcre_study(search->pcre_compiled, 0, &pcre_error);
+		if (!search->pcre_extra)
 			return NULL;
 	}
 
-	ret = pcre_exec(current->pcre_compiled, current->pcre_extra, line,
+	ret = pcre_exec(search->pcre_compiled, search->pcre_extra, line,
 		strlen(line), 0, 0, substring_vector, 30);
 
 	if (ret < 0)
@@ -236,17 +236,17 @@ static char *regex(struct search_t *current, const char *line, const char *patte
 	return (char *) matched_string;
 }
 
-static char *strstr_wrapper(struct search_t *current, const char *line, const char *pattern)
+static char *strstr_wrapper(struct search_t *search, const char *line, const char *pattern)
 {
         return strstr(line, pattern);
 }
 
-static char *strcasestr_wrapper(struct search_t *current, const char *line, const char *pattern)
+static char *strcasestr_wrapper(struct search_t *search, const char *line, const char *pattern)
 {
         return strcasestr(line, pattern);
 }
 
-static void *get_parser(struct search_t *current, const char *options)
+static void *get_parser(struct search_t *search, const char *options)
 {
 	char * (*parser)(struct search_t *, const char *, const char*);
 
@@ -255,13 +255,13 @@ static void *get_parser(struct search_t *current, const char *options)
 	else
 		parser = strcasestr_wrapper;
 
-	if (current->regexp_option) {
+	if (search->regexp_option) {
                 parser = regex;
         }
 	return parser;
 }
 
-static int parse_file(struct search_t *current, const char *file, const char *pattern, char *options)
+static int parse_file(struct search_t *search, const char *file, const char *pattern, char *options)
 {
 	int f;
 	char full_line[LINE_MAX];
@@ -292,7 +292,7 @@ static int parse_file(struct search_t *current, const char *file, const char *pa
 
 	close(f);
 
-	parser = get_parser(current, options);
+	parser = get_parser(search, options);
 
 	first_occurrence = 1;
 	line_number = 1;
@@ -310,17 +310,17 @@ static int parse_file(struct search_t *current, const char *file, const char *pa
 		/* replace \n with \0 */
 		*endline = '\0';
 
-		if (parser(current, pointer, pattern) != NULL) {
+		if (parser(search, pointer, pattern) != NULL) {
 			if (first_occurrence) {
-				if (current->nbentry == 0)
+				if (search->nbentry == 0)
 					ncurses_init();
-				ncurses_add_file(current, file);
+				ncurses_add_file(search, file);
 				first_occurrence = 0;
 			}
 			if (pointer[strlen(pointer) - 2] == '\r')
 				pointer[strlen(pointer) - 2] = '\0';
 			snprintf(full_line, LINE_MAX, "%d:%s", line_number, pointer);
-			ncurses_add_line(current, full_line);
+			ncurses_add_line(search, full_line);
 		}
 
 		/* switch back to \n */
@@ -335,34 +335,34 @@ static int parse_file(struct search_t *current, const char *file, const char *pa
 	return 0;
 }
 
-static void lookup_file(struct search_t *current, const char *file, const char *pattern, char *options)
+static void lookup_file(struct search_t *search, const char *file, const char *pattern, char *options)
 {
 	errno = 0;
 	pthread_mutex_t *mutex;
 
-	if (is_ignored_file(current, file))
+	if (is_ignored_file(search, file))
 		return;
 
-	if (current->raw_option) {
-		synchronized(current->data_mutex)
-			parse_file(current, file, pattern, options);
-		return;
-	}
-
-	if (is_specific_file(current, file)) {
-		synchronized(current->data_mutex)
-			parse_file(current, file, pattern, options);
+	if (search->raw_option) {
+		synchronized(search->data_mutex)
+			parse_file(search, file, pattern, options);
 		return;
 	}
 
-	if (is_extension_good(current, file)) {
-		synchronized(current->data_mutex)
-			parse_file(current, file, pattern, options);
+	if (is_specific_file(search, file)) {
+		synchronized(search->data_mutex)
+			parse_file(search, file, pattern, options);
+		return;
+	}
+
+	if (is_extension_good(search, file)) {
+		synchronized(search->data_mutex)
+			parse_file(search, file, pattern, options);
 		return;
 	}
 }
 
-static void lookup_directory(struct search_t *current, const char *dir, const char *pattern,
+static void lookup_directory(struct search_t *search, const char *dir, const char *pattern,
 	char *options)
 {
 	DIR *dp;
@@ -371,7 +371,7 @@ static void lookup_directory(struct search_t *current, const char *dir, const ch
 	if (!dp)
 		return;
 
-	if (is_ignored_file(current, dir)) {
+	if (is_ignored_file(search, dir)) {
 		closedir(dp);
 		return;
 	}
@@ -389,7 +389,7 @@ static void lookup_directory(struct search_t *current, const char *dir, const ch
 				ep->d_name);
 
 			if (!is_simlink(file_path)) {
-				lookup_file(current, file_path, pattern, options);
+				lookup_file(search, file_path, pattern, options);
 			}
 		}
 
@@ -397,26 +397,26 @@ static void lookup_directory(struct search_t *current, const char *dir, const ch
 			char path_dir[PATH_MAX] = "";
 			snprintf(path_dir, PATH_MAX, "%s/%s", dir,
 				ep->d_name);
-			lookup_directory(current, path_dir, pattern, options);
+			lookup_directory(search, path_dir, pattern, options);
 		}
 	}
 	closedir(dp);
 }
 
-static void display_entries(struct search_t *current, int *index, int *cursor)
+static void display_entries(struct search_t *search, int *index, int *cursor)
 {
 	int i = 0;
-	struct entry_t *ptr = current->start;
+	struct entry_t *ptr = search->start;
 
 	for (i = 0; i < *index; i++)
 		ptr = ptr->next;
 
 	for (i = 0; i < LINES; i++) {
-		if (ptr && *index + i < current->nbentry) {
+		if (ptr && *index + i < search->nbentry) {
 			if (i == *cursor)
-				display_entry(current, &i, ptr, CURSOR_ON);
+				display_entry(search, &i, ptr, CURSOR_ON);
 			 else
-				display_entry(current, &i, ptr, CURSOR_OFF);
+				display_entry(search, &i, ptr, CURSOR_OFF);
 
 			if (ptr->next)
 				ptr = ptr->next;
@@ -424,39 +424,39 @@ static void display_entries(struct search_t *current, int *index, int *cursor)
 	}
 }
 
-static void ncurses_add_file(struct search_t *current, const char *file)
+static void ncurses_add_file(struct search_t *search, const char *file)
 {
 	int len;
 
 	len = strlen(file);
-	current->entries = alloc_word(current, current->entries, len + 1, 1);
-	strncpy(current->entries->data, file, len + 1);
-	current->nbentry++;
+	search->entries = alloc_word(search, search->entries, len + 1, 1);
+	strncpy(search->entries->data, file, len + 1);
+	search->nbentry++;
 }
 
-static void ncurses_add_line(struct search_t *current, const char *line)
+static void ncurses_add_line(struct search_t *search, const char *line)
 {
 	int len;
 
 	len = strlen(line);
-	current->entries = alloc_word(current, current->entries, len + 1, 0);
-	strncpy(current->entries->data, line, len + 1);
-	current->nbentry++;
-	if (current->nbentry <= LINES)
-		display_entries(current, &current->index, &current->cursor);
+	search->entries = alloc_word(search, search->entries, len + 1, 0);
+	strncpy(search->entries->data, line, len + 1);
+	search->nbentry++;
+	if (search->nbentry <= LINES)
+		display_entries(search, &search->index, &search->cursor);
 }
 
-static void resize(struct search_t *current, int *index, int *cursor)
+static void resize(struct search_t *search, int *index, int *cursor)
 {
 	/* right now this is a bit trivial,
 	 * but we may do more complex moving around
 	 * when the window is resized */
 	clear();
-	display_entries(current, index, cursor);
+	display_entries(search, index, cursor);
 	refresh();
 }
 
-static void page_up(struct search_t *current, int *index, int *cursor)
+static void page_up(struct search_t *search, int *index, int *cursor)
 {
 	clear();
 	refresh();
@@ -467,26 +467,26 @@ static void page_up(struct search_t *current, int *index, int *cursor)
 	*index -= LINES;
 	*index = (*index < 0 ? 0 : *index);
 
-	if (is_file(current, *index + *cursor) && *index != 0)
+	if (is_file(search, *index + *cursor) && *index != 0)
 		*cursor -= 1;
 
-	display_entries(current, index, cursor);
+	display_entries(search, index, cursor);
 }
 
-static void page_down(struct search_t *current, int *index, int *cursor)
+static void page_down(struct search_t *search, int *index, int *cursor)
 {
 	int max_index;
 
-	if (current->nbentry == 0)
+	if (search->nbentry == 0)
 		return;
 
-	if (current->nbentry % LINES == 0)
-		max_index = (current->nbentry - LINES);
+	if (search->nbentry % LINES == 0)
+		max_index = (search->nbentry - LINES);
 	else
-		max_index = (current->nbentry - (current->nbentry % LINES));
+		max_index = (search->nbentry - (search->nbentry % LINES));
 
 	if (*index == max_index)
-		*cursor = (current->nbentry - 1) % LINES;
+		*cursor = (search->nbentry - 1) % LINES;
 	else
 		*cursor = 0;
 
@@ -495,71 +495,71 @@ static void page_down(struct search_t *current, int *index, int *cursor)
 	*index += LINES;
 	*index = (*index > max_index ? max_index : *index);
 
-	if (is_file(current, *index + *cursor))
+	if (is_file(search, *index + *cursor))
 		*cursor += 1;
-	display_entries(current, index, cursor);
+	display_entries(search, index, cursor);
 }
 
-static void cursor_up(struct search_t *current, int *index, int *cursor)
+static void cursor_up(struct search_t *search, int *index, int *cursor)
 {
 	if (*cursor == 0) {
-		page_up(current, index, cursor);
+		page_up(search, index, cursor);
 		return;
 	}
 
 	if (*cursor > 0)
 		*cursor = *cursor - 1;
 
-	if (is_file(current, *index + *cursor))
+	if (is_file(search, *index + *cursor))
 		*cursor = *cursor - 1;
 
 	if (*cursor < 0) {
-		page_up(current, index, cursor);
+		page_up(search, index, cursor);
 		return;
 	}
 
-	display_entries(current, index, cursor);
+	display_entries(search, index, cursor);
 }
 
-static void cursor_down(struct search_t *current, int *index, int *cursor)
+static void cursor_down(struct search_t *search, int *index, int *cursor)
 {
 	if (*cursor == (LINES - 1)) {
-		page_down(current, index, cursor);
+		page_down(search, index, cursor);
 		return;
 	}
 
-	if (*cursor + *index < current->nbentry - 1)
+	if (*cursor + *index < search->nbentry - 1)
 		*cursor = *cursor + 1;
 
-	if (is_file(current, *index + *cursor))
+	if (is_file(search, *index + *cursor))
 		*cursor = *cursor + 1;
 
 	if (*cursor > (LINES - 1)) {
-		page_down(current, index, cursor);
+		page_down(search, index, cursor);
 		return;
 	}
 
-	display_entries(current, index, cursor);
+	display_entries(search, index, cursor);
 }
 
-static void open_entry(struct search_t *current, int index, const char *editor, const char *pattern)
+static void open_entry(struct search_t *search, int index, const char *editor, const char *pattern)
 {
 	int i;
 	struct entry_t *ptr;
-	struct entry_t *file = current->start;
+	struct entry_t *file = search->start;
 
 	char command[PATH_MAX];
 	char filtered_file_name[PATH_MAX];
 	char line_copy[PATH_MAX];
 	pthread_mutex_t *mutex;
 
-	for (i = 0, ptr = current->start; i < index; i++) {
+	for (i = 0, ptr = search->start; i < index; i++) {
 		ptr = ptr->next;
 		if (ptr->isfile)
 			file = ptr;
 	}
 
-	synchronized(current->data_mutex) {
+	synchronized(search->data_mutex) {
 		strcpy(line_copy, ptr->data);
 		snprintf(command, sizeof(command), editor,
 			extract_line_number(line_copy),
@@ -575,12 +575,12 @@ static void open_entry(struct search_t *current, int index, const char *editor, 
 	ptr->opened = 1;
 }
 
-static void mark_entry(struct search_t *current, int index)
+static void mark_entry(struct search_t *search, int index)
 {
 	int i;
 	struct entry_t *ptr;
 
-	for (i = 0, ptr = current->start; i < index; i++)
+	for (i = 0, ptr = search->start; i < index; i++)
 		ptr = ptr->next;
 
 	ptr->mark = (ptr->mark + 1) % 2;
@@ -597,9 +597,9 @@ static void clear_elements(struct list **list)
 	}
 }
 
-void clean_search(struct search_t *current)
+void clean_search(struct search_t *search)
 {
-	struct entry_t *ptr = current->start;
+	struct entry_t *ptr = search->start;
 	struct entry_t *p;
 
 	while (ptr) {
@@ -608,16 +608,16 @@ void clean_search(struct search_t *current)
 		free(p);
 	}
 
-	clear_elements(&current->extension);
-	clear_elements(&current->specific_file);
-	clear_elements(&current->ignore);
+	clear_elements(&search->extension);
+	clear_elements(&search->specific_file);
+	clear_elements(&search->ignore);
 
 	/* free pcre stuffs if needed */
-	if (current->pcre_compiled)
-		pcre_free((void *) current->pcre_compiled);
+	if (search->pcre_compiled)
+		pcre_free((void *) search->pcre_compiled);
 
-	if (current->pcre_extra)
-		pcre_free((void *) current->pcre_extra);
+	if (search->pcre_extra)
+		pcre_free((void *) search->pcre_extra);
 
 	config_destroy(&cfg);
 }
@@ -661,7 +661,7 @@ void init_searchstruct(struct search_t *searchstruct)
 	strcpy(searchstruct->directory, "./");
 }
 
-void display_status(struct search_t *current)
+void display_status(struct search_t *search)
 {
 	char *rollingwheel[] = {
 		".  ", ".  ", ".  ", ".  ",
@@ -683,7 +683,7 @@ void display_status(struct search_t *current)
 	static int i = 0;
 
 	attron(COLOR_PAIR(1));
-	if (current->status)
+	if (search->status)
 		mvaddstr(0, COLS - 3, rollingwheel[++i%60]);
 	else
 		mvaddstr(0, COLS - 5, "");
@@ -716,7 +716,7 @@ static void add_element(struct list **list, char *element)
 	}
 }
 
-static void read_config(struct search_t *current)
+static void read_config(struct search_t *search)
 {
 	const char *specific_files;
 	const char *extensions;
@@ -726,13 +726,13 @@ static void read_config(struct search_t *current)
 
 	configuration_init(&cfg);
 
-	if (!config_lookup_string(&cfg, "editor", &current->editor)) {
+	if (!config_lookup_string(&cfg, "editor", &search->editor)) {
 		fprintf(stderr, "ngprc: no editor string found!\n");
 		exit(-1);
 	}
 
 	/* only if we don't provide extension as argument */
-	if (!current->extension_option) {
+	if (!search->extension_option) {
 		if (!config_lookup_string(&cfg, "files", &specific_files)) {
 			fprintf(stderr, "ngprc: no files string found!\n");
 			exit(-1);
@@ -740,12 +740,12 @@ static void read_config(struct search_t *current)
 
 		ptr = strtok_r((char *) specific_files, " ", &buf);
 		while (ptr != NULL) {
-			add_element(&current->specific_file, ptr);
+			add_element(&search->specific_file, ptr);
 			ptr = strtok_r(NULL, " ", &buf);
 		}
 	}
 
-	if (!current->extension_option) {
+	if (!search->extension_option) {
 		/* getting files extensions from configuration */
 		if (!config_lookup_string(&cfg, "extensions", &extensions)) {
 			fprintf(stderr, "ngprc: no extensions string found!\n");
@@ -753,12 +753,12 @@ static void read_config(struct search_t *current)
 		}
 		ptr = strtok_r((char *) extensions, " ", &buf);
 		while (ptr != NULL) {
-			add_element(&current->extension, ptr);
+			add_element(&search->extension, ptr);
 			ptr = strtok_r(NULL, " ", &buf);
 		}
 	}
 
-	if (!current->ignore_option) {
+	if (!search->ignore_option) {
 		/* getting ignored files from configuration */
 		if (!config_lookup_string(&cfg, "ignore", &ignore)) {
 			fprintf(stderr, "ngprc: no ignore string found!\n");
@@ -766,13 +766,13 @@ static void read_config(struct search_t *current)
 		}
 		ptr = strtok_r((char *) ignore, " ", &buf);
 		while (ptr != NULL) {
-			add_element(&current->ignore, ptr);
+			add_element(&search->ignore, ptr);
 			ptr = strtok_r(NULL, " ", &buf);
 		}
 	}
 }
 
-static void parse_args(struct search_t *current, int argc, char *argv[])
+static void parse_args(struct search_t *search, int argc, char *argv[])
 {
 	int opt;
 	int clear_extensions = 0;
@@ -785,29 +785,29 @@ static void parse_args(struct search_t *current, int argc, char *argv[])
 			usage();
 			break;
 		case 'i':
-			strcpy(current->options, "-i");
+			strcpy(search->options, "-i");
 			break;
 		case 't':
 			if (!clear_extensions) {
-				clear_elements(&current->extension);
-				current->extension_option = 1;
+				clear_elements(&search->extension);
+				search->extension_option = 1;
 				clear_extensions = 1;
 			}
-			add_element(&current->extension, optarg);
+			add_element(&search->extension, optarg);
 			break;
 		case 'I':
 			if (!clear_ignores) {
-				clear_elements(&current->ignore);
-				current->ignore_option = 1;
+				clear_elements(&search->ignore);
+				search->ignore_option = 1;
 				clear_ignores = 1;
 			}
-			add_element(&current->ignore, optarg);
+			add_element(&search->ignore, optarg);
 			break;
 		case 'r':
-			current->raw_option = 1;
+			search->raw_option = 1;
 			break;
 		case 'e':
-			current->regexp_option = 1;
+			search->regexp_option = 1;
 			break;
 		case 'v':
 			display_version();
@@ -823,10 +823,10 @@ static void parse_args(struct search_t *current, int argc, char *argv[])
 
 	for ( ; optind < argc; optind++) {
 		if (!first) {
-			strcpy(current->pattern, argv[optind]);
+			strcpy(search->pattern, argv[optind]);
 			first = 1;
 		} else {
-			strcpy(current->directory, argv[optind]);
+			strcpy(search->directory, argv[optind]);
 		}
 	}
 }
