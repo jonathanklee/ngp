@@ -19,7 +19,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "utils.h"
 #include "themes.h"
 
-config_t cfg;
 
 /* keep a pointer on search_t for signal handler ONLY */
 struct search_t *global_search;
@@ -620,7 +619,6 @@ void clean_search(struct search_t *search)
 	if (search->pcre_extra)
 		pcre_free((void *) search->pcre_extra);
 
-	config_destroy(&cfg);
 }
 
 static void sig_handler(int signo)
@@ -722,15 +720,18 @@ static void read_config(struct search_t *search)
 	const char *specific_files;
 	const char *extensions;
 	const char *ignore;
+        const char *buffer;
 	char *ptr;
 	char *buf = NULL;
+        config_t cfg;
 
 	configuration_init(&cfg);
 
-	if (!config_lookup_string(&cfg, "editor", &search->editor)) {
+	if (!config_lookup_string(&cfg, "editor", &buffer)) {
 		fprintf(stderr, "ngprc: no editor string found!\n");
 		exit(-1);
 	}
+        strncpy(search->editor, buffer, LINE_MAX);
 
 	/* only if we don't provide extension as argument */
 	if (!search->extension_option) {
@@ -771,6 +772,7 @@ static void read_config(struct search_t *search)
 			ptr = strtok_r(NULL, " ", &buf);
 		}
 	}
+	config_destroy(&cfg);
 }
 
 static void parse_args(struct search_t *search, int argc, char *argv[])

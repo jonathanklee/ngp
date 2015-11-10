@@ -97,7 +97,7 @@ struct search_t {
 	/* search */
 	const pcre *pcre_compiled;
 	const pcre_extra *pcre_extra;
-	const char *editor;
+	char editor[LINE_MAX];
 	char directory[PATH_MAX];
 	char pattern[LINE_MAX];
 	char options[LINE_MAX];
