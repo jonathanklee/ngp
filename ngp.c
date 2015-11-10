@@ -28,7 +28,7 @@ static void ncurses_add_file(struct search_t *current, const char *file);
 static void ncurses_add_line(struct search_t *current, const char *line);
 static void display_entries(struct search_t *current, int *index, int *cursor);
 static void *get_parser(struct search_t *current, const char *options);
-static char *regex(const char *line, const char *pattern);
+static char *regex(struct search_t *current, const char *line, const char *pattern);
 
 static void usage(void)
 {
@@ -92,7 +92,7 @@ static void print_line(struct search_t *current, int *y, struct entry_t *entry)
 	char *pattern = NULL;
 	char *ptr;
 	char *regexp_matched_string = NULL;
-	char * (*parser)(const char *, const char*);
+	char * (*parser)(struct search_t *, const char *, const char*);
 	int length = 0;
 	int crop = COLS;
 	int counter = 0;
@@ -117,7 +117,7 @@ static void print_line(struct search_t *current, int *y, struct entry_t *entry)
 
 	/* highlight pattern */
 	if (current->regexp_option) {
-		regexp_matched_string = regex(cropped_line + length, current->pattern);
+		regexp_matched_string = regex(current, cropped_line + length, current->pattern);
 		if (!regexp_matched_string)
 			return;
 
@@ -126,7 +126,7 @@ static void print_line(struct search_t *current, int *y, struct entry_t *entry)
 	}
 
 	parser = get_parser(current, current->options);
-	pattern = parser(cropped_line + length, current->pattern);
+	pattern = parser(current, cropped_line + length, current->pattern);
 
 start_printing:
 
@@ -205,7 +205,7 @@ static void display_entry(struct search_t *current, int *y, struct entry_t *ptr,
 	}
 }
 
-static char *regex(const char *line, const char *pattern)
+static char *regex(struct search_t *current, const char *line, const char *pattern)
 {
 	int ret;
 	const char *pcre_error;
@@ -214,19 +214,19 @@ static char *regex(const char *line, const char *pattern)
 	const char *matched_string;
 
 	/* check if regexp has already been compiled */
-	if (!global_current->pcre_compiled) {
-		global_current->pcre_compiled = pcre_compile(pattern, 0, &pcre_error,
+	if (!current->pcre_compiled) {
+		current->pcre_compiled = pcre_compile(pattern, 0, &pcre_error,
 			&pcre_error_offset, NULL);
-		if (!global_current->pcre_compiled)
+		if (!current->pcre_compiled)
 			return NULL;
 
-		global_current->pcre_extra =
-			pcre_study(global_current->pcre_compiled, 0, &pcre_error);
-		if (!global_current->pcre_extra)
+		current->pcre_extra =
+			pcre_study(current->pcre_compiled, 0, &pcre_error);
+		if (!current->pcre_extra)
 			return NULL;
 	}
 
-	ret = pcre_exec(global_current->pcre_compiled, global_current->pcre_extra, line,
+	ret = pcre_exec(current->pcre_compiled, current->pcre_extra, line,
 		strlen(line), 0, 0, substring_vector, 30);
 
 	if (ret < 0)
@@ -237,18 +237,28 @@ static char *regex(const char *line, const char *pattern)
 	return (char *) matched_string;
 }
 
+static char *strstr_wrapper(struct search_t *current, const char *line, const char *pattern)
+{
+        return strstr(line, pattern);
+}
+
+static char *strcasestr_wrapper(struct search_t *current, const char *line, const char *pattern)
+{
+        return strcasestr(line, pattern);
+}
+
 static void *get_parser(struct search_t *current, const char *options)
 {
-	char * (*parser)(const char *, const char*);
+	char * (*parser)(struct search_t *, const char *, const char*);
 
 	if (strstr(options, "-i") == NULL)
-		parser = strstr;
+		parser = strstr_wrapper;
 	else
-		parser = strcasestr;
+		parser = strcasestr_wrapper;
 
-	if (current->regexp_option)
-		parser = regex;
-
+	if (current->regexp_option) {
+                parser = regex;
+        }
 	return parser;
 }
 
@@ -263,7 +273,7 @@ static int parse_file(struct search_t *current, const char *file, const char *pa
 	int first_occurrence;
 	struct stat sb;
 	int line_number;
-	char * (*parser)(const char *, const char*);
+	char * (*parser)(struct search_t *, const char *, const char*);
 	errno = 0;
 
 	f = open(file, O_RDONLY);
@@ -301,7 +311,7 @@ static int parse_file(struct search_t *current, const char *file, const char *pa
 		/* replace \n with \0 */
 		*endline = '\0';
 
-		if (parser(pointer, pattern) != NULL) {
+		if (parser(current, pointer, pattern) != NULL) {
 			if (first_occurrence) {
 				if (current->nbentry == 0)
 					ncurses_init();
