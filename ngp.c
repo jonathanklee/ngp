@@ -192,13 +192,11 @@ static void display_entry(struct search_t *search, int *y, struct entry_t *ptr, 
 	} else {
 		attron(A_BOLD);
 		if (strcmp(search->directory, "./") == 0)
-			print_file(search, y, remove_double_appearance(
-				ptr->data + 3, '/',
-				filtered_line));
+			remove_double_appearance(ptr->data + 3, '/', filtered_line);
 		else
-			print_file(search, y, remove_double_appearance(
-				ptr->data, '/',
-				filtered_line));
+			remove_double_appearance(ptr->data , '/', filtered_line);
+
+		print_file(search, y, filtered_line);
 		attroff(A_BOLD);
 	}
 }
