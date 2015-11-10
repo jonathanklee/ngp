@@ -426,7 +426,7 @@ static void ncurses_add_file(struct search_t *search, const char *file)
 	int len;
 
 	len = strlen(file);
-	search->entries = alloc_word(search, search->entries, len + 1, 1);
+	search->entries = alloc_word(search, search->entries, len + 1, TYPE_FILE);
 	strncpy(search->entries->data, file, len + 1);
 	search->nbentry++;
 }
@@ -436,7 +436,7 @@ static void ncurses_add_line(struct search_t *search, const char *line)
 	int len;
 
 	len = strlen(line);
-	search->entries = alloc_word(search, search->entries, len + 1, 0);
+	search->entries = alloc_word(search, search->entries, len + 1, TYPE_LINE);
 	strncpy(search->entries->data, line, len + 1);
 	search->nbentry++;
 	if (search->nbentry <= LINES)

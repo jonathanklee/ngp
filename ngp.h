@@ -66,6 +66,11 @@ enum cursor {
 	CURSOR_ON
 };
 
+enum type {
+	TYPE_LINE,
+	TYPE_FILE
+};
+
 struct entry_t {
 	struct entry_t *next;
 	int isfile;
