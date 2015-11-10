@@ -20,14 +20,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "themes.h"
 
 static struct search_t mainsearch;
-struct search_t *current;
+struct search_t *global_current;
 static pthread_t pid;
 static config_t cfg;
 
-static void ncurses_add_file(const char *file);
-static void ncurses_add_line(const char *line);
-static void display_entries(int *index, int *cursor);
-static void *get_parser(const char *options);
+static void ncurses_add_file(struct search_t *current, const char *file);
+static void ncurses_add_line(struct search_t *current, const char *line);
+static void display_entries(struct search_t *current, int *index, int *cursor);
+static void *get_parser(struct search_t *current, const char *options);
 static char *regex(const char *line, const char *pattern);
 
 static void usage(void)
@@ -62,7 +62,7 @@ static void ncurses_stop(void)
 	endwin();
 }
 
-static struct entry_t *alloc_word(struct entry_t *list, int len, int type)
+static struct entry_t *alloc_word(struct search_t *current, struct entry_t *list, int len, int type)
 {
 	struct entry_t *new;
 
@@ -85,7 +85,7 @@ static struct entry_t *alloc_word(struct entry_t *list, int len, int type)
 	return new;
 }
 
-static void print_line(int *y, struct entry_t *entry)
+static void print_line(struct search_t *current, int *y, struct entry_t *entry)
 {
 	char *pos;
 	char *buf = NULL;
@@ -125,7 +125,7 @@ static void print_line(int *y, struct entry_t *entry)
 		goto start_printing;
 	}
 
-	parser = get_parser(current->options);
+	parser = get_parser(current, current->options);
 	pattern = parser(cropped_line + length, current->pattern);
 
 start_printing:
@@ -163,7 +163,7 @@ start_printing:
 	attroff(A_REVERSE);
 }
 
-static void print_file(int *y, char *line)
+static void print_file(struct search_t *current, int *y, char *line)
 {
 	char filtered_line[PATH_MAX];
 	char cropped_line[PATH_MAX] = "";
@@ -179,26 +179,26 @@ static void print_file(int *y, char *line)
 		remove_double_appearance(cropped_line, '/', filtered_line));
 }
 
-static void display_entry(int *y, struct entry_t *ptr, int cursor)
+static void display_entry(struct search_t *current, int *y, struct entry_t *ptr, int cursor)
 {
 	char filtered_line[PATH_MAX];
 
 	if (!ptr->isfile) {
 		if (cursor == CURSOR_ON) {
 			attron(A_REVERSE);
-			print_line(y, ptr);
+			print_line(current, y, ptr);
 			attroff(A_REVERSE);
 		} else {
-			print_line(y, ptr);
+			print_line(current, y, ptr);
 		}
 	} else {
 		attron(A_BOLD);
 		if (strcmp(current->directory, "./") == 0)
-			print_file(y, remove_double_appearance(
+			print_file(current, y, remove_double_appearance(
 				ptr->data + 3, '/',
 				filtered_line));
 		else
-			print_file(y, remove_double_appearance(
+			print_file(current, y, remove_double_appearance(
 				ptr->data, '/',
 				filtered_line));
 		attroff(A_BOLD);
@@ -214,19 +214,19 @@ static char *regex(const char *line, const char *pattern)
 	const char *matched_string;
 
 	/* check if regexp has already been compiled */
-	if (!current->pcre_compiled) {
-		current->pcre_compiled = pcre_compile(pattern, 0, &pcre_error,
+	if (!global_current->pcre_compiled) {
+		global_current->pcre_compiled = pcre_compile(pattern, 0, &pcre_error,
 			&pcre_error_offset, NULL);
-		if (!current->pcre_compiled)
+		if (!global_current->pcre_compiled)
 			return NULL;
 
-		current->pcre_extra =
-			pcre_study(current->pcre_compiled, 0, &pcre_error);
-		if (!current->pcre_extra)
+		global_current->pcre_extra =
+			pcre_study(global_current->pcre_compiled, 0, &pcre_error);
+		if (!global_current->pcre_extra)
 			return NULL;
 	}
 
-	ret = pcre_exec(current->pcre_compiled, current->pcre_extra, line,
+	ret = pcre_exec(global_current->pcre_compiled, global_current->pcre_extra, line,
 		strlen(line), 0, 0, substring_vector, 30);
 
 	if (ret < 0)
@@ -237,7 +237,7 @@ static char *regex(const char *line, const char *pattern)
 	return (char *) matched_string;
 }
 
-static void *get_parser(const char *options)
+static void *get_parser(struct search_t *current, const char *options)
 {
 	char * (*parser)(const char *, const char*);
 
@@ -252,7 +252,7 @@ static void *get_parser(const char *options)
 	return parser;
 }
 
-static int parse_file(const char *file, const char *pattern, char *options)
+static int parse_file(struct search_t *current, const char *file, const char *pattern, char *options)
 {
 	int f;
 	char full_line[LINE_MAX];
@@ -283,7 +283,7 @@ static int parse_file(const char *file, const char *pattern, char *options)
 
 	close(f);
 
-	parser = get_parser(options);
+	parser = get_parser(current, options);
 
 	first_occurrence = 1;
 	line_number = 1;
@@ -305,13 +305,13 @@ static int parse_file(const char *file, const char *pattern, char *options)
 			if (first_occurrence) {
 				if (current->nbentry == 0)
 					ncurses_init();
-				ncurses_add_file(file);
+				ncurses_add_file(current, file);
 				first_occurrence = 0;
 			}
 			if (pointer[strlen(pointer) - 2] == '\r')
 				pointer[strlen(pointer) - 2] = '\0';
 			snprintf(full_line, LINE_MAX, "%d:%s", line_number, pointer);
-			ncurses_add_line(full_line);
+			ncurses_add_line(current, full_line);
 		}
 
 		/* switch back to \n */
@@ -326,7 +326,7 @@ static int parse_file(const char *file, const char *pattern, char *options)
 	return 0;
 }
 
-static void lookup_file(const char *file, const char *pattern, char *options)
+static void lookup_file(struct search_t *current, const char *file, const char *pattern, char *options)
 {
 	errno = 0;
 	pthread_mutex_t *mutex;
@@ -336,24 +336,24 @@ static void lookup_file(const char *file, const char *pattern, char *options)
 
 	if (current->raw_option) {
 		synchronized(current->data_mutex)
-			parse_file(file, pattern, options);
+			parse_file(current, file, pattern, options);
 		return;
 	}
 
 	if (is_specific_file(file)) {
 		synchronized(current->data_mutex)
-			parse_file(file, pattern, options);
+			parse_file(current, file, pattern, options);
 		return;
 	}
 
 	if (is_extension_good(file)) {
 		synchronized(current->data_mutex)
-			parse_file(file, pattern, options);
+			parse_file(current, file, pattern, options);
 		return;
 	}
 }
 
-static void lookup_directory(const char *dir, const char *pattern,
+static void lookup_directory(struct search_t *current, const char *dir, const char *pattern,
 	char *options)
 {
 	DIR *dp;
@@ -380,7 +380,7 @@ static void lookup_directory(const char *dir, const char *pattern,
 				ep->d_name);
 
 			if (!is_simlink(file_path)) {
-				lookup_file(file_path, pattern, options);
+				lookup_file(current, file_path, pattern, options);
 			}
 		}
 
@@ -388,13 +388,13 @@ static void lookup_directory(const char *dir, const char *pattern,
 			char path_dir[PATH_MAX] = "";
 			snprintf(path_dir, PATH_MAX, "%s/%s", dir,
 				ep->d_name);
-			lookup_directory(path_dir, pattern, options);
+			lookup_directory(current, path_dir, pattern, options);
 		}
 	}
 	closedir(dp);
 }
 
-static void display_entries(int *index, int *cursor)
+static void display_entries(struct search_t *current, int *index, int *cursor)
 {
 	int i = 0;
 	struct entry_t *ptr = current->start;
@@ -405,9 +405,9 @@ static void display_entries(int *index, int *cursor)
 	for (i = 0; i < LINES; i++) {
 		if (ptr && *index + i < current->nbentry) {
 			if (i == *cursor)
-				display_entry(&i, ptr, CURSOR_ON);
+				display_entry(current, &i, ptr, CURSOR_ON);
 			 else
-				display_entry(&i, ptr, CURSOR_OFF);
+				display_entry(current, &i, ptr, CURSOR_OFF);
 
 			if (ptr->next)
 				ptr = ptr->next;
@@ -415,39 +415,39 @@ static void display_entries(int *index, int *cursor)
 	}
 }
 
-static void ncurses_add_file(const char *file)
+static void ncurses_add_file(struct search_t *current, const char *file)
 {
 	int len;
 
 	len = strlen(file);
-	current->entries = alloc_word(current->entries, len + 1, 1);
+	current->entries = alloc_word(current, current->entries, len + 1, 1);
 	strncpy(current->entries->data, file, len + 1);
 	current->nbentry++;
 }
 
-static void ncurses_add_line(const char *line)
+static void ncurses_add_line(struct search_t *current, const char *line)
 {
 	int len;
 
 	len = strlen(line);
-	current->entries = alloc_word(current->entries, len + 1, 0);
+	current->entries = alloc_word(current, current->entries, len + 1, 0);
 	strncpy(current->entries->data, line, len + 1);
 	current->nbentry++;
 	if (current->nbentry <= LINES)
-		display_entries(&current->index, &current->cursor);
+		display_entries(current, &current->index, &current->cursor);
 }
 
-static void resize(int *index, int *cursor)
+static void resize(struct search_t *current, int *index, int *cursor)
 {
 	/* right now this is a bit trivial,
 	 * but we may do more complex moving around
 	 * when the window is resized */
 	clear();
-	display_entries(index, cursor);
+	display_entries(current, index, cursor);
 	refresh();
 }
 
-static void page_up(int *index, int *cursor)
+static void page_up(struct search_t *current, int *index, int *cursor)
 {
 	clear();
 	refresh();
@@ -461,10 +461,10 @@ static void page_up(int *index, int *cursor)
 	if (is_file(*index + *cursor) && *index != 0)
 		*cursor -= 1;
 
-	display_entries(index, cursor);
+	display_entries(current, index, cursor);
 }
 
-static void page_down(int *index, int *cursor)
+static void page_down(struct search_t *current, int *index, int *cursor)
 {
 	int max_index;
 
@@ -488,13 +488,13 @@ static void page_down(int *index, int *cursor)
 
 	if (is_file(*index + *cursor))
 		*cursor += 1;
-	display_entries(index, cursor);
+	display_entries(current, index, cursor);
 }
 
-static void cursor_up(int *index, int *cursor)
+static void cursor_up(struct search_t *current, int *index, int *cursor)
 {
 	if (*cursor == 0) {
-		page_up(index, cursor);
+		page_up(current, index, cursor);
 		return;
 	}
 
@@ -505,17 +505,17 @@ static void cursor_up(int *index, int *cursor)
 		*cursor = *cursor - 1;
 
 	if (*cursor < 0) {
-		page_up(index, cursor);
+		page_up(current, index, cursor);
 		return;
 	}
 
-	display_entries(index, cursor);
+	display_entries(current, index, cursor);
 }
 
-static void cursor_down(int *index, int *cursor)
+static void cursor_down(struct search_t *current, int *index, int *cursor)
 {
 	if (*cursor == (LINES - 1)) {
-		page_down(index, cursor);
+		page_down(current, index, cursor);
 		return;
 	}
 
@@ -526,11 +526,11 @@ static void cursor_down(int *index, int *cursor)
 		*cursor = *cursor + 1;
 
 	if (*cursor > (LINES - 1)) {
-		page_down(index, cursor);
+		page_down(current, index, cursor);
 		return;
 	}
 
-	display_entries(index, cursor);
+	display_entries(current, index, cursor);
 }
 
 int find_file(int index)
@@ -541,7 +541,7 @@ int find_file(int index)
 	return index;
 }
 
-static void open_entry(int index, const char *editor, const char *pattern)
+static void open_entry(struct search_t *current, int index, const char *editor, const char *pattern)
 {
 	int i;
 	struct entry_t *ptr;
@@ -574,7 +574,7 @@ static void open_entry(int index, const char *editor, const char *pattern)
 	ptr->opened = 1;
 }
 
-static void mark_entry(int index)
+static void mark_entry(struct search_t *current, int index)
 {
 	int i;
 	struct entry_t *ptr;
@@ -596,9 +596,9 @@ static void clear_elements(struct list **list)
 	}
 }
 
-void clean_search(struct search_t *search)
+void clean_search(struct search_t *current)
 {
-	struct entry_t *ptr = search->start;
+	struct entry_t *ptr = current->start;
 	struct entry_t *p;
 
 	while (ptr) {
@@ -625,12 +625,12 @@ static void sig_handler(int signo)
 {
 	if (signo == SIGINT) {
 		ncurses_stop();
-		clean_search(current);
+		clean_search(global_current);
 		exit(-1);
 	}
 }
 
-void * lookup_thread(void *arg)
+void *lookup_thread(void *arg)
 {
 	DIR *dp;
 
@@ -642,7 +642,7 @@ void * lookup_thread(void *arg)
 		exit(-1);
 	}
 
-	lookup_directory(d->directory, d->pattern, d->options);
+	lookup_directory(d, d->directory, d->pattern, d->options);
 	d->status = 0;
 	closedir(dp);
 	return (void *) NULL;
@@ -660,7 +660,7 @@ void init_searchstruct(struct search_t *searchstruct)
 	strcpy(searchstruct->directory, "./");
 }
 
-void display_status(void)
+void display_status(struct search_t *current)
 {
 	char *rollingwheel[] = {
 		".  ", ".  ", ".  ", ".  ",
@@ -715,7 +715,7 @@ static void add_element(struct list **list, char *element)
 	}
 }
 
-static void read_config(void)
+static void read_config(struct search_t *current)
 {
 	const char *specific_files;
 	const char *extensions;
@@ -771,7 +771,7 @@ static void read_config(void)
 	}
 }
 
-static void parse_args(int argc, char *argv[])
+static void parse_args(struct search_t *current, int argc, char *argv[])
 {
 	int opt;
 	int clear_extensions = 0;
@@ -836,77 +836,77 @@ int main(int argc, char *argv[])
 	void *res;
 	pthread_mutex_t *mutex;
 
-	current = &mainsearch;
-	init_searchstruct(current);
-	pthread_mutex_init(&current->data_mutex, NULL);
+	global_current = &mainsearch;
+	init_searchstruct(global_current);
+	pthread_mutex_init(&global_current->data_mutex, NULL);
 
-	parse_args(argc, argv);
-	read_config();
+	parse_args(global_current, argc, argv);
+	read_config(global_current);
 	read_theme();
 
 	signal(SIGINT, sig_handler);
-	if (pthread_create(&pid, NULL, &lookup_thread, current)) {
+	if (pthread_create(&pid, NULL, &lookup_thread, global_current)) {
 		fprintf(stderr, "ngp: cannot create thread");
-		clean_search(current);
+		clean_search(global_current);
 		exit(-1);
 	}
 
-	synchronized(current->data_mutex)
-		display_entries(&current->index, &current->cursor);
+	synchronized(global_current->data_mutex)
+		display_entries(global_current, &global_current->index, &global_current->cursor);
 
 	while ((ch = getch())) {
 		switch(ch) {
 		case KEY_RESIZE:
-			synchronized(current->data_mutex)
-				resize(&current->index, &current->cursor);
+			synchronized(global_current->data_mutex)
+				resize(global_current, &global_current->index, &global_current->cursor);
 			break;
 		case CURSOR_DOWN:
 		case KEY_DOWN:
-			synchronized(current->data_mutex)
-				cursor_down(&current->index, &current->cursor);
+			synchronized(global_current->data_mutex)
+				cursor_down(global_current, &global_current->index, &global_current->cursor);
 			break;
 		case CURSOR_UP:
 		case KEY_UP:
-			synchronized(current->data_mutex)
-				cursor_up(&current->index, &current->cursor);
+			synchronized(global_current->data_mutex)
+				cursor_up(global_current, &global_current->index, &global_current->cursor);
 			break;
 		case KEY_PPAGE:
 		case PAGE_UP:
-			synchronized(current->data_mutex)
-				page_up(&current->index, &current->cursor);
+			synchronized(global_current->data_mutex)
+				page_up(global_current, &global_current->index, &global_current->cursor);
 			break;
 		case KEY_NPAGE:
 		case PAGE_DOWN:
-			synchronized(current->data_mutex)
-				page_down(&current->index, &current->cursor);
+			synchronized(global_current->data_mutex)
+				page_down(global_current, &global_current->index, &global_current->cursor);
 			break;
 		case ENTER:
 		case '\n':
-			if (current->nbentry == 0)
+			if (global_current->nbentry == 0)
 				break;
 			ncurses_stop();
-			open_entry(current->cursor + current->index,
-				current->editor, current->pattern);
+			open_entry(global_current, global_current->cursor + global_current->index,
+				global_current->editor, global_current->pattern);
 			ncurses_init();
-			resize(&current->index, &current->cursor);
+			resize(global_current, &global_current->index, &global_current->cursor);
 			break;
 		case QUIT:
 			goto quit;
 		case MARK:
-			mark_entry(current->cursor + current->index);
+			mark_entry(global_current, global_current->cursor + global_current->index);
 			break;
 		default:
 			break;
 		}
 
 		usleep(10000);
-		synchronized(current->data_mutex) {
-			display_entries(&current->index, &current->cursor);
-			display_status();
+		synchronized(global_current->data_mutex) {
+			display_entries(global_current, &global_current->index, &global_current->cursor);
+			display_status(global_current);
 		}
 
-		synchronized(current->data_mutex) {
-			if (current->status == 0 && current->nbentry == 0) {
+		synchronized(global_current->data_mutex) {
+			if (global_current->status == 0 && global_current->nbentry == 0) {
 				goto quit;
 			}
 		}
