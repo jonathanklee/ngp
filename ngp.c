@@ -19,7 +19,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "utils.h"
 #include "themes.h"
 
-
 /* keep a pointer on search_t for signal handler ONLY */
 struct search_t *global_search;
 
@@ -238,12 +237,12 @@ static char *regex(struct search_t *search, const char *line, const char *patter
 
 static char *strstr_wrapper(struct search_t *search, const char *line, const char *pattern)
 {
-        return strstr(line, pattern);
+	return strstr(line, pattern);
 }
 
 static char *strcasestr_wrapper(struct search_t *search, const char *line, const char *pattern)
 {
-        return strcasestr(line, pattern);
+	return strcasestr(line, pattern);
 }
 
 static void *get_parser(struct search_t *search, const char *options)
@@ -255,9 +254,9 @@ static void *get_parser(struct search_t *search, const char *options)
 	else
 		parser = strcasestr_wrapper;
 
-	if (search->regexp_option) {
-                parser = regex;
-        }
+	if (search->regexp_option)
+		parser = regex;
+
 	return parser;
 }
 
@@ -624,9 +623,9 @@ void clean_search(struct search_t *search)
 static void sig_handler(int signo)
 {
 	if (signo == SIGINT) {
-                ncurses_stop();
-                clean_search(global_search);
-                exit(-1);
+		ncurses_stop();
+		clean_search(global_search);
+		exit(-1);
 	}
 }
 
@@ -839,9 +838,9 @@ int main(int argc, char *argv[])
 	int ch;
 	void *res;
 	pthread_mutex_t *mutex;
-        static struct search_t mainsearch;
-        struct search_t *current;
-        pthread_t pid;
+	static struct search_t mainsearch;
+	struct search_t *current;
+	pthread_t pid;
 
 	current = &mainsearch;
         global_search = &mainsearch;
