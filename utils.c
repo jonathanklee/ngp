@@ -89,7 +89,7 @@ int is_extension_good(struct search_t *search, const char *file) {
 	return 0;
 }
 
-char *remove_double_appearance(char *initial, char c, char *final)
+char *remove_double(char *initial, char c, char *final)
 {
 	int i, j;
 	int len = strlen(initial);

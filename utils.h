@@ -28,7 +28,7 @@ int is_ignored_file(struct search_t *search, const char *name);
 int is_extension_good(struct search_t *search, const char *file);
 int is_simlink(char *file_path);
 char *get_file_name(const char * absolute_path);
-char *remove_double_appearance(char *initial, char c, char *final);
+char *remove_double(char *initial, char c, char *final);
 char *extract_line_number(char *line);
 void configuration_init(config_t *cfg);
 

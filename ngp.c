@@ -173,8 +173,8 @@ static void print_file(struct search_t *search, int *y, char *line)
 
 	strncpy(cropped_line, line, crop);
 	attron(COLOR_PAIR(5));
-	mvprintw(*y, 0, "%s", cropped_line,
-		remove_double_appearance(cropped_line, '/', filtered_line));
+	remove_double(cropped_line, '/', filtered_line);
+	mvprintw(*y, 0, "%s", cropped_line, filtered_line);
 }
 
 static void display_entry(struct search_t *search, int *y, struct entry_t *ptr, int cursor)
@@ -192,9 +192,9 @@ static void display_entry(struct search_t *search, int *y, struct entry_t *ptr, 
 	} else {
 		attron(A_BOLD);
 		if (strcmp(search->directory, "./") == 0)
-			remove_double_appearance(ptr->data + 3, '/', filtered_line);
+			remove_double(ptr->data + 3, '/', filtered_line);
 		else
-			remove_double_appearance(ptr->data , '/', filtered_line);
+			remove_double(ptr->data , '/', filtered_line);
 
 		print_file(search, y, filtered_line);
 		attroff(A_BOLD);
@@ -558,11 +558,10 @@ static void open_entry(struct search_t *search, int index, const char *editor, c
 
 	synchronized(search->data_mutex) {
 		strcpy(line_copy, ptr->data);
+		remove_double(file->data, '/', filtered_file_name);
 		snprintf(command, sizeof(command), editor,
 			extract_line_number(line_copy),
-			remove_double_appearance(
-				file->data, '/',
-				filtered_file_name),
+			filtered_file_name,
 			pattern);
 	}
 
