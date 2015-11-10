@@ -836,7 +836,6 @@ static void parse_args(struct search_t *search, int argc, char *argv[])
 int main(int argc, char *argv[])
 {
 	int ch;
-	void *res;
 	pthread_mutex_t *mutex;
 	static struct search_t mainsearch;
 	struct search_t *current;
@@ -920,8 +919,6 @@ int main(int argc, char *argv[])
 	}
 
 quit:
-	pthread_cancel(pid);
-	pthread_join(pid, &res);
 	ncurses_stop();
 	clean_search(&mainsearch);
 	return 0;
