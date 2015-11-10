@@ -19,7 +19,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "utils.h"
 #include "themes.h"
 
-static config_t cfg;
+config_t cfg;
 
 /* keep a pointer on search_t for signal handler ONLY */
 struct search_t *global_search;
