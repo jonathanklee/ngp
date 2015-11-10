@@ -20,6 +20,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "themes.h"
 
 static config_t cfg;
+
+/* keep a pointer on search_t for signal handler ONLY */
 struct search_t *global_search;
 
 static void ncurses_add_file(struct search_t *search, const char *file);
