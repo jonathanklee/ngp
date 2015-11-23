@@ -21,7 +21,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <libconfig.h>
 #include "ngp.h"
 
-int is_file(struct search_t *search ,int index);
+int get_type(struct search_t *search ,int index);
 int is_dir_good(char *dir);
 int is_specific_file(struct search_t *search, const char *name);
 int is_ignored_file(struct search_t *search, const char *name);

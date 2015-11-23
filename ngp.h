@@ -73,7 +73,7 @@ enum type {
 
 struct entry_t {
 	struct entry_t *next;
-	int isfile;
+	int type;
 	int len;
 	int opened;
 	int mark;

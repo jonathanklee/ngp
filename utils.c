@@ -17,7 +17,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "ngp.h"
 
-int is_file(struct search_t *search, int index)
+int get_type(struct search_t *search, int index)
 {
 	int i;
 	struct entry_t *ptr = search->start;
@@ -25,7 +25,7 @@ int is_file(struct search_t *search, int index)
 	for (i = 0; i < index; i++)
 		ptr = ptr->next;
 
-	return ptr->isfile;
+	return ptr->type;
 }
 
 int is_dir_good(char *dir)

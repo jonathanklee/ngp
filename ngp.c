@@ -66,7 +66,7 @@ static struct entry_t *alloc_word(struct search_t *search, struct entry_t *list,
 
 	new = calloc(1, sizeof(struct entry_t) + len);
 	new->len = len;
-	new->isfile = type;
+	new->type = type;
 	new->next = NULL;
 	new->opened = 0;
 	new->mark = 0;
@@ -161,43 +161,49 @@ start_printing:
 	attroff(A_REVERSE);
 }
 
-static void print_file(struct search_t *search, int *y, char *line)
+static void print_file(struct search_t *search, int *y, struct entry_t *entry)
 {
-	char filtered_line[PATH_MAX];
-	char cropped_line[PATH_MAX] = "";
-	int crop = COLS;
+        char filtered_line[PATH_MAX];
+        char cropped_line[PATH_MAX] = "";
+        int crop = COLS;
 
-	/* first clear line */
-	move(*y, 0);
-	clrtoeol();
+        /* first clear line */
+        move(*y, 0);
+        clrtoeol();
 
-	strncpy(cropped_line, line, crop);
-	attron(COLOR_PAIR(5));
-	remove_double(cropped_line, '/', filtered_line);
-	mvprintw(*y, 0, "%s", cropped_line, filtered_line);
+        attron(A_BOLD);
+
+        if (strcmp(search->directory, "./") == 0)
+                remove_double(entry->data + 3, '/', filtered_line);
+        else
+                remove_double(entry->data , '/', filtered_line);
+
+        strncpy(cropped_line, filtered_line, crop);
+        attron(COLOR_PAIR(5));
+        remove_double(cropped_line, '/', filtered_line);
+        mvprintw(*y, 0, "%s", filtered_line);
+
+        attroff(A_BOLD);
 }
 
 static void display_entry(struct search_t *search, int *y, struct entry_t *ptr, int cursor)
 {
-	char filtered_line[PATH_MAX];
+	switch (ptr->type) {
+		case TYPE_LINE:
+			if (cursor == CURSOR_ON) {
+				attron(A_REVERSE);
+				print_line(search, y, ptr);
+				attroff(A_REVERSE);
+			} else {
+				print_line(search, y, ptr);
+			}
+			break;
 
-	if (!ptr->isfile) {
-		if (cursor == CURSOR_ON) {
-			attron(A_REVERSE);
-			print_line(search, y, ptr);
-			attroff(A_REVERSE);
-		} else {
-			print_line(search, y, ptr);
-		}
-	} else {
-		attron(A_BOLD);
-		if (strcmp(search->directory, "./") == 0)
-			remove_double(ptr->data + 3, '/', filtered_line);
-		else
-			remove_double(ptr->data , '/', filtered_line);
+		case TYPE_FILE:
+			print_file(search, y, ptr);
 
-		print_file(search, y, filtered_line);
-		attroff(A_BOLD);
+		default:
+			break;
 	}
 }
 
@@ -462,7 +468,7 @@ static void page_up(struct search_t *search, int *index, int *cursor)
 	*index -= LINES;
 	*index = (*index < 0 ? 0 : *index);
 
-	if (is_file(search, *index + *cursor) && *index != 0)
+	if (get_type(search, *index + *cursor) && *index != 0)
 		*cursor -= 1;
 
 	display_entries(search, index, cursor);
@@ -490,7 +496,7 @@ static void page_down(struct search_t *search, int *index, int *cursor)
 	*index += LINES;
 	*index = (*index > max_index ? max_index : *index);
 
-	if (is_file(search, *index + *cursor))
+	if (get_type(search, *index + *cursor))
 		*cursor += 1;
 	display_entries(search, index, cursor);
 }
@@ -505,7 +511,7 @@ static void cursor_up(struct search_t *search, int *index, int *cursor)
 	if (*cursor > 0)
 		*cursor = *cursor - 1;
 
-	if (is_file(search, *index + *cursor))
+	if (get_type(search, *index + *cursor))
 		*cursor = *cursor - 1;
 
 	if (*cursor < 0) {
@@ -526,7 +532,7 @@ static void cursor_down(struct search_t *search, int *index, int *cursor)
 	if (*cursor + *index < search->nbentry - 1)
 		*cursor = *cursor + 1;
 
-	if (is_file(search, *index + *cursor))
+	if (get_type(search, *index + *cursor))
 		*cursor = *cursor + 1;
 
 	if (*cursor > (LINES - 1)) {
@@ -550,7 +556,7 @@ static void open_entry(struct search_t *search, int index, const char *editor, c
 
 	for (i = 0, ptr = search->start; i < index; i++) {
 		ptr = ptr->next;
-		if (ptr->isfile)
+		if (ptr->type == TYPE_FILE)
 			file = ptr;
 	}
 
