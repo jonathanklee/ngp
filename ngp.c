@@ -190,13 +190,13 @@ static void display_entry(struct search_t *search, int *y, struct entry_t *ptr, 
 {
 	switch (ptr->type) {
 		case TYPE_LINE:
-			if (cursor == CURSOR_ON) {
+			if (cursor == CURSOR_ON)
 				attron(A_REVERSE);
-				print_line(search, y, ptr);
+
+			print_line(search, y, ptr);
+
+			if (cursor == CURSOR_ON)
 				attroff(A_REVERSE);
-			} else {
-				print_line(search, y, ptr);
-			}
 			break;
 
 		case TYPE_FILE:
