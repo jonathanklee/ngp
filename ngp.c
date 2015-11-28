@@ -651,7 +651,7 @@ void *lookup_thread(void *arg)
 void init_searchstruct(struct search_t *search)
 {
 	search->index = 0;
-	search->cursor = 0;
+	search->cursor = 1;
 	search->nbentry = 0;
 	search->status = 1;
 	search->raw_option = 0;
