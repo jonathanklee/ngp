@@ -1,0 +1,4 @@
+bin_PROGRAMS = ngp
+ngp_SOURCES = ngp.c ngp.h utils.c utils.h themes.c themes.h
+ngp_CFLAGS = -Wall -Werror
+ngp_LDFLAGS = -lpcre -lconfig -lncurses -lpthread

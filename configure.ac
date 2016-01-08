@@ -1,15 +1,25 @@
-AC_INIT([ngp], [0.1], [klee.jonathan@gmail.com])
-AM_INIT_AUTOMAKE
+#                                               -*- Autoconf -*-
+# Process this file with autoconf to produce a configure script.
+
+AC_PREREQ([2.69])
+AC_INIT([ngp], [0.4], [klee.jonathan@gmail.com])
+
+# Checks for programs.
 AC_PROG_CC
-CFLAGS="-Wall -Werror"
-AC_CHECK_HEADERS(libconfig.h,,AC_MSG_ERROR(oops no libconfig.h ?))
-AC_CHECK_HEADERS(regex.h,,AC_MSG_ERROR(oops no regex.h ?))
-AC_CHECK_HEADERS(pcre.h,,AC_MSG_ERROR(oops no pcre.h ?))
-AC_CHECK_LIB(pthread, pthread_create,,AC_MSG_ERROR(oops no lib pthread ?))
-AC_CHECK_LIB(ncurses, initscr,,AC_MSG_ERROR(oops no lib ncurses ?))
-AC_CHECK_LIB(config, config_read_file,,AC_MSG_ERROR(oops no lib config ?))
-AC_CHECK_LIB(pcre, pcre_compile,,AC_MSG_ERROR(oops no lib pcre ?))
-AC_CONFIG_FILES([
-Makefile
-])
+
+# Checks for libraries.
+
+# Checks for header files.
+AC_CHECK_HEADERS([fcntl.h limits.h stdlib.h string.h unistd.h pcre.h])
+
+# Checks for typedefs, structures, and compiler characteristics.
+
+# Checks for library functions.
+AC_FUNC_LSTAT_FOLLOWS_SLASHED_SYMLINK
+AC_FUNC_MMAP
+AC_CHECK_FUNCS([munmap strchr strrchr strstr])
+
+AC_CONFIG_FILES([Makefile
+                 src/Makefile])
+AM_INIT_AUTOMAKE([-Wall -Werror])
 AC_OUTPUT
