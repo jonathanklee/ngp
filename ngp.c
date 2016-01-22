@@ -186,16 +186,16 @@ static void print_file(struct search_t *search, int *y, struct entry_t *entry)
         attroff(A_BOLD);
 }
 
-static void display_entry(struct search_t *search, int *y, struct entry_t *ptr, int cursor)
+static void display_entry(struct search_t *search, int *y, struct entry_t *ptr, enum cursor c)
 {
 	switch (ptr->type) {
 		case TYPE_LINE:
-			if (cursor == CURSOR_ON)
+			if (c == CURSOR_ON)
 				attron(A_REVERSE);
 
 			print_line(search, y, ptr);
 
-			if (cursor == CURSOR_ON)
+			if (c == CURSOR_ON)
 				attroff(A_REVERSE);
 			break;
 
