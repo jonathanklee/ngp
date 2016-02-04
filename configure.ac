@@ -10,14 +10,18 @@ AC_PROG_CC
 # Checks for libraries.
 
 # Checks for header files.
-AC_CHECK_HEADERS([fcntl.h limits.h stdlib.h string.h unistd.h pcre.h])
+AC_CHECK_HEADER(libconfig.h,, AC_MSG_ERROR(oops no libconfig.h ?))
+AC_CHECK_HEADER(regex.h,, AC_MSG_ERROR(oops no regex.h ?))
+AC_CHECK_HEADER(pcre.h,, AC_MSG_ERROR(oops no pcre.h ?))
+AC_CHECK_LIB(pthread, pthread_create, ,AC_MSG_ERROR(oops no pthread ?))
+AC_CHECK_LIB(ncurses, initscr, ,AC_MSG_ERROR(oops no ncurses ?))
+AC_CHECK_LIB(pcre, pcre_compile, ,AC_MSG_ERROR(oops no pcre ?))
 
 # Checks for typedefs, structures, and compiler characteristics.
 
 # Checks for library functions.
 AC_FUNC_LSTAT_FOLLOWS_SLASHED_SYMLINK
 AC_FUNC_MMAP
-AC_CHECK_FUNCS([munmap strchr strrchr strstr])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile])
