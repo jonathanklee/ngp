@@ -60,7 +60,7 @@ static void ncurses_stop(void)
 	endwin();
 }
 
-static struct entry_t *alloc_word(struct search_t *search, struct entry_t *list, int len, int type)
+static struct entry_t *create_entry(struct search_t *search, struct entry_t *list, int len, int type)
 {
 	struct entry_t *new;
 
@@ -430,7 +430,7 @@ static void ncurses_add_file(struct search_t *search, const char *file)
 	int len;
 
 	len = strlen(file);
-	search->entries = alloc_word(search, search->entries, len + 1, TYPE_FILE);
+	search->entries = create_entry(search, search->entries, len + 1, TYPE_FILE);
 	strncpy(search->entries->data, file, len + 1);
 	search->nbentry++;
 }
@@ -440,7 +440,7 @@ static void ncurses_add_line(struct search_t *search, const char *line)
 	int len;
 
 	len = strlen(line);
-	search->entries = alloc_word(search, search->entries, len + 1, TYPE_LINE);
+	search->entries = create_entry(search, search->entries, len + 1, TYPE_LINE);
 	strncpy(search->entries->data, line, len + 1);
 	search->nbentry++;
 	if (search->nbentry <= LINES)
