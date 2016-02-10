@@ -159,8 +159,7 @@ void display_line(struct search_t *search, int *y, struct entry_t *entry)
 		goto start_printing;
 	}
 
-	/* TODO why the fuck we are passing search twice ? */
-	parser = get_parser(search, search->options);
+	parser = get_parser(search);
 	pattern = parser(search, cropped_line, search->pattern);
 
 start_printing:

@@ -59,7 +59,7 @@ static void ncurses_stop(void)
 	endwin();
 }
 
-static int parse_file(struct search_t *search, const char *file, const char *pattern, char *options)
+static int parse_file(struct search_t *search, const char *file, const char *pattern)
 {
 	int f;
 	char *pointer;
@@ -89,7 +89,7 @@ static int parse_file(struct search_t *search, const char *file, const char *pat
 
 	close(f);
 
-	parser = get_parser(search, options);
+	parser = get_parser(search);
 
 	first_occurrence = 1;
 	line_number = 1;
@@ -141,19 +141,19 @@ static void lookup_file(struct search_t *search, const char *file, const char *p
 
 	if (search->raw_option) {
 		synchronized(search->data_mutex)
-			parse_file(search, file, pattern, options);
+			parse_file(search, file, pattern);
 		return;
 	}
 
 	if (is_specific_file(search, file)) {
 		synchronized(search->data_mutex)
-			parse_file(search, file, pattern, options);
+			parse_file(search, file, pattern);
 		return;
 	}
 
 	if (is_extension_good(search, file)) {
 		synchronized(search->data_mutex)
-			parse_file(search, file, pattern, options);
+			parse_file(search, file, pattern);
 		return;
 	}
 }

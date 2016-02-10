@@ -183,11 +183,11 @@ char *regex(struct search_t *search, const char *line, const char *pattern)
 	return (char *) matched_string;
 }
 
-void *get_parser(struct search_t *search, const char *options)
+void *get_parser(struct search_t *search)
 {
 	char * (*parser)(struct search_t *, const char *, const char*);
 
-	if (strstr(options, "-i") == NULL)
+	if (strstr(search->options, "-i") == NULL)
 		parser = strstr_wrapper;
 	else
 		parser = strcasestr_wrapper;

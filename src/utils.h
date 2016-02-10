@@ -32,7 +32,7 @@ char *remove_double(char *initial, char c, char *final);
 char *extract_line_number(char *line);
 void configuration_init(config_t *cfg);
 char *regex(struct search_t *search, const char *line, const char *pattern);
-void *get_parser(struct search_t *search, const char *options);
+void *get_parser(struct search_t *search);
 char *strstr_wrapper(struct search_t *search, const char *line, const char *pattern);
 char *strcasestr_wrapper(struct search_t *search, const char *line, const char *pattern);
 
