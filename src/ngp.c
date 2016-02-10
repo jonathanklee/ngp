@@ -18,15 +18,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "ngp.h"
 #include "utils.h"
 #include "themes.h"
+#include "entry.h"
 
 /* keep a pointer on search_t for signal handler ONLY */
 struct search_t *global_search;
 
 static void ncurses_add_file(struct search_t *search, const char *file);
-static void ncurses_add_line(struct search_t *search, const char *line);
+static void ncurses_add_line(struct search_t *search, const char *line, int line_number);
 static void display_entries(struct search_t *search, int *index, int *cursor);
-static void *get_parser(struct search_t *search, const char *options);
-static char *regex(struct search_t *search, const char *line, const char *pattern);
 
 static void usage(void)
 {
@@ -60,214 +59,9 @@ static void ncurses_stop(void)
 	endwin();
 }
 
-static struct entry_t *create_entry(struct search_t *search, struct entry_t *list, int len, int type)
-{
-	struct entry_t *new;
-
-	new = calloc(1, sizeof(struct entry_t) + len);
-	new->len = len;
-	new->type = type;
-	new->next = NULL;
-	new->opened = 0;
-	new->mark = 0;
-
-	if (list) {
-		/* if list not empty, add new element at end */
-		list->next = new;
-	} else {
-		/* if list is emptry,
-		set first element as start of list */
-		search->start = new;
-	}
-
-	return new;
-}
-
-static void print_line(struct search_t *search, int *y, struct entry_t *entry)
-{
-	char *pos;
-	char *buf = NULL;
-	char *pattern = NULL;
-	char *ptr;
-	char *regexp_matched_string = NULL;
-	char * (*parser)(struct search_t *, const char *, const char*);
-	int length = 0;
-	int crop = COLS;
-	int counter = 0;
-	char cropped_line[PATH_MAX] = "";
-	char *line = entry->data;
-
-	strncpy(cropped_line, line, crop);
-
-	/* first clear line */
-	move(*y, 0);
-	clrtoeol();
-
-	/* display line number */
-	pos = strtok_r(cropped_line, ":", &buf);
-	attron(COLOR_PAIR(2));
-	mvprintw(*y, 0, "%s:", pos);
-
-	/* display rest of line */
-	length = strlen(pos) + 1;
-	attron(COLOR_PAIR(1));
-	mvprintw(*y, length, "%s", cropped_line + length);
-
-	/* highlight pattern */
-	if (search->regexp_option) {
-		regexp_matched_string = regex(search, cropped_line + length, search->pattern);
-		if (!regexp_matched_string)
-			return;
-
-		pattern = strstr(cropped_line + length, regexp_matched_string);
-		goto start_printing;
-	}
-
-	parser = get_parser(search, search->options);
-	pattern = parser(search, cropped_line + length, search->pattern);
-
-start_printing:
-
-	if (!pattern)
-		return;
-
-	ptr = cropped_line + length;
-	move(*y, length);
-	while (ptr != pattern) {
-		addch(*ptr);
-		ptr++;
-	}
-
-	/* switch color to red or cyan */
-	attron(A_REVERSE);
-	if (entry->opened)
-		attron(COLOR_PAIR(3));
-	else
-		attron(COLOR_PAIR(4));
-
-	if (!entry->opened && entry->mark)
-		attron(COLOR_PAIR(2));
-
-	if (search->regexp_option) {
-		length = strlen(regexp_matched_string);
-		pcre_free_substring(regexp_matched_string);
-	} else {
-		length = strlen(search->pattern);
-	}
-
-	for (counter = 0; counter < length; counter++, ptr++)
-		addch(*ptr);
-
-	attroff(A_REVERSE);
-}
-
-static void print_file(struct search_t *search, int *y, struct entry_t *entry)
-{
-        char filtered_line[PATH_MAX];
-        char cropped_line[PATH_MAX] = "";
-        int crop = COLS;
-
-        /* first clear line */
-        move(*y, 0);
-        clrtoeol();
-
-        attron(A_BOLD);
-
-        if (strcmp(search->directory, "./") == 0)
-                remove_double(entry->data + 3, '/', filtered_line);
-        else
-                remove_double(entry->data , '/', filtered_line);
-
-        strncpy(cropped_line, filtered_line, crop);
-        attron(COLOR_PAIR(5));
-        remove_double(cropped_line, '/', filtered_line);
-        mvprintw(*y, 0, "%s", filtered_line);
-
-        attroff(A_BOLD);
-}
-
-static void display_entry(struct search_t *search, int *y, struct entry_t *ptr, enum cursor c)
-{
-	switch (ptr->type) {
-		case TYPE_LINE:
-			if (c == CURSOR_ON)
-				attron(A_REVERSE);
-
-			print_line(search, y, ptr);
-
-			if (c == CURSOR_ON)
-				attroff(A_REVERSE);
-			break;
-
-		case TYPE_FILE:
-			print_file(search, y, ptr);
-
-		default:
-			break;
-	}
-}
-
-static char *regex(struct search_t *search, const char *line, const char *pattern)
-{
-	int ret;
-	const char *pcre_error;
-	int pcre_error_offset;
-	int substring_vector[30];
-	const char *matched_string;
-
-	/* check if regexp has already been compiled */
-	if (!search->pcre_compiled) {
-		search->pcre_compiled = pcre_compile(pattern, 0, &pcre_error,
-			&pcre_error_offset, NULL);
-		if (!search->pcre_compiled)
-			return NULL;
-
-		search->pcre_extra =
-			pcre_study(search->pcre_compiled, 0, &pcre_error);
-		if (!search->pcre_extra)
-			return NULL;
-	}
-
-	ret = pcre_exec(search->pcre_compiled, search->pcre_extra, line,
-		strlen(line), 0, 0, substring_vector, 30);
-
-	if (ret < 0)
-		return NULL;
-
-	pcre_get_substring(line, substring_vector, ret, 0, &matched_string);
-
-	return (char *) matched_string;
-}
-
-static char *strstr_wrapper(struct search_t *search, const char *line, const char *pattern)
-{
-	return strstr(line, pattern);
-}
-
-static char *strcasestr_wrapper(struct search_t *search, const char *line, const char *pattern)
-{
-	return strcasestr(line, pattern);
-}
-
-static void *get_parser(struct search_t *search, const char *options)
-{
-	char * (*parser)(struct search_t *, const char *, const char*);
-
-	if (strstr(options, "-i") == NULL)
-		parser = strstr_wrapper;
-	else
-		parser = strcasestr_wrapper;
-
-	if (search->regexp_option)
-		parser = regex;
-
-	return parser;
-}
-
 static int parse_file(struct search_t *search, const char *file, const char *pattern, char *options)
 {
 	int f;
-	char full_line[LINE_MAX];
 	char *pointer;
 	char *start;
 	char *end;
@@ -322,8 +116,7 @@ static int parse_file(struct search_t *search, const char *file, const char *pat
 			}
 			if (pointer[strlen(pointer) - 2] == '\r')
 				pointer[strlen(pointer) - 2] = '\0';
-			snprintf(full_line, LINE_MAX, "%d:%s", line_number, pointer);
-			ncurses_add_line(search, full_line);
+			ncurses_add_line(search, pointer, line_number);
 		}
 
 		/* switch back to \n */
@@ -415,9 +208,9 @@ static void display_entries(struct search_t *search, int *index, int *cursor)
 	for (i = 0; i < LINES; i++) {
 		if (ptr && *index + i < search->nbentry) {
 			if (i == *cursor)
-				display_entry(search, &i, ptr, CURSOR_ON);
+				display_entry_with_cursor(search, &i, ptr);
 			 else
-				display_entry(search, &i, ptr, CURSOR_OFF);
+				display_entry(search, &i, ptr);
 
 			if (ptr->next)
 				ptr = ptr->next;
@@ -427,22 +220,12 @@ static void display_entries(struct search_t *search, int *index, int *cursor)
 
 static void ncurses_add_file(struct search_t *search, const char *file)
 {
-	int len;
-
-	len = strlen(file);
-	search->entries = create_entry(search, search->entries, len + 1, TYPE_FILE);
-	strncpy(search->entries->data, file, len + 1);
-	search->nbentry++;
+	search->entries = create_file(search, (char *)file);
 }
 
-static void ncurses_add_line(struct search_t *search, const char *line)
+static void ncurses_add_line(struct search_t *search, const char *line, int line_number)
 {
-	int len;
-
-	len = strlen(line);
-	search->entries = create_entry(search, search->entries, len + 1, TYPE_LINE);
-	strncpy(search->entries->data, line, len + 1);
-	search->nbentry++;
+	search->entries = create_line(search, (char *)line, line_number);
 	if (search->nbentry <= LINES)
 		display_entries(search, &search->index, &search->cursor);
 }
@@ -468,7 +251,7 @@ static void page_up(struct search_t *search, int *index, int *cursor)
 	*index -= LINES;
 	*index = (*index < 0 ? 0 : *index);
 
-	if (get_type(search, *index + *cursor) && *index != 0)
+	if (!is_selectionable(search, *index + *cursor) && *index != 0)
 		*cursor -= 1;
 
 	display_entries(search, index, cursor);
@@ -496,7 +279,7 @@ static void page_down(struct search_t *search, int *index, int *cursor)
 	*index += LINES;
 	*index = (*index > max_index ? max_index : *index);
 
-	if (get_type(search, *index + *cursor))
+	if (!is_selectionable(search, *index + *cursor))
 		*cursor += 1;
 	display_entries(search, index, cursor);
 }
@@ -511,7 +294,7 @@ static void cursor_up(struct search_t *search, int *index, int *cursor)
 	if (*cursor > 0)
 		*cursor = *cursor - 1;
 
-	if (get_type(search, *index + *cursor))
+	if (!is_selectionable(search, *index + *cursor))
 		*cursor = *cursor - 1;
 
 	if (*cursor < 0) {
@@ -532,7 +315,7 @@ static void cursor_down(struct search_t *search, int *index, int *cursor)
 	if (*cursor + *index < search->nbentry - 1)
 		*cursor = *cursor + 1;
 
-	if (get_type(search, *index + *cursor))
+	if (!is_selectionable(search, *index + *cursor))
 		*cursor = *cursor + 1;
 
 	if (*cursor > (LINES - 1)) {
@@ -551,39 +334,26 @@ static void open_entry(struct search_t *search, int index, const char *editor, c
 
 	char command[PATH_MAX];
 	char filtered_file_name[PATH_MAX];
-	char line_copy[PATH_MAX];
 	pthread_mutex_t *mutex;
 
 	for (i = 0, ptr = search->start; i < index; i++) {
 		ptr = ptr->next;
-		if (ptr->type == TYPE_FILE)
+		if (!is_entry_selectionable(ptr))
 			file = ptr;
 	}
 
+	struct line_t *line = container_of(ptr, struct line_t, entry);
+
 	synchronized(search->data_mutex) {
-		strcpy(line_copy, ptr->data);
 		remove_double(file->data, '/', filtered_file_name);
 		snprintf(command, sizeof(command), editor,
-			extract_line_number(line_copy),
+			line->line,
 			filtered_file_name,
 			pattern);
 	}
 
 	if (system(command) < 0)
 		return;
-
-	ptr->opened = 1;
-}
-
-static void mark_entry(struct search_t *search, int index)
-{
-	int i;
-	struct entry_t *ptr;
-
-	for (i = 0, ptr = search->start; i < index; i++)
-		ptr = ptr->next;
-
-	ptr->mark = (ptr->mark + 1) % 2;
 }
 
 static void clear_elements(struct list **list)
@@ -605,7 +375,7 @@ void clean_search(struct search_t *search)
 	while (ptr) {
 		p = ptr;
 		ptr = ptr->next;
-		free(p);
+		free_entry(p);
 	}
 
 	clear_elements(&search->extension);
@@ -850,6 +620,7 @@ int main(int argc, char *argv[])
 	parse_args(current, argc, argv);
 	read_config(current);
 	read_theme();
+	ncurses_init();
 
 	signal(SIGINT, sig_handler);
 	if (pthread_create(&pid, NULL, &lookup_thread, current)) {
@@ -899,9 +670,6 @@ int main(int argc, char *argv[])
 			break;
 		case QUIT:
 			goto quit;
-		case MARK:
-			mark_entry(current, current->cursor + current->index);
-			break;
 		default:
 			break;
 		}
@@ -924,3 +692,9 @@ quit:
 	clean_search(&mainsearch);
 	return 0;
 }
+
+void print_wrapper(int *y, char *string)
+{
+	mvprintw(*y, 0, "%s", string);
+}
+

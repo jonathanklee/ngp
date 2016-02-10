@@ -16,8 +16,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include "ngp.h"
+#include "entry.h"
+#include "utils.h"
 
-int get_type(struct search_t *search, int index)
+int is_selectionable(struct search_t *search, int index)
 {
 	int i;
 	struct entry_t *ptr = search->start;
@@ -25,7 +27,7 @@ int get_type(struct search_t *search, int index)
 	for (i = 0; i < index; i++)
 		ptr = ptr->next;
 
-	return ptr->type;
+	return is_entry_selectionable(ptr);
 }
 
 int is_dir_good(char *dir)
@@ -147,5 +149,62 @@ void configuration_init(config_t *cfg)
 		config_destroy(cfg);
 		exit(1);
 	}
+}
+
+char *regex(struct search_t *search, const char *line, const char *pattern)
+{
+	int ret;
+	const char *pcre_error;
+	int pcre_error_offset;
+	int substring_vector[30];
+	const char *matched_string;
+
+	/* check if regexp has already been compiled */
+	if (!search->pcre_compiled) {
+		search->pcre_compiled = pcre_compile(pattern, 0, &pcre_error,
+			&pcre_error_offset, NULL);
+		if (!search->pcre_compiled)
+			return NULL;
+
+		search->pcre_extra =
+			pcre_study(search->pcre_compiled, 0, &pcre_error);
+		if (!search->pcre_extra)
+			return NULL;
+	}
+
+	ret = pcre_exec(search->pcre_compiled, search->pcre_extra, line,
+		strlen(line), 0, 0, substring_vector, 30);
+
+	if (ret < 0)
+		return NULL;
+
+	pcre_get_substring(line, substring_vector, ret, 0, &matched_string);
+
+	return (char *) matched_string;
+}
+
+void *get_parser(struct search_t *search, const char *options)
+{
+	char * (*parser)(struct search_t *, const char *, const char*);
+
+	if (strstr(options, "-i") == NULL)
+		parser = strstr_wrapper;
+	else
+		parser = strcasestr_wrapper;
+
+	if (search->regexp_option)
+		parser = regex;
+
+	return parser;
+}
+
+char *strstr_wrapper(struct search_t *search, const char *line, const char *pattern)
+{
+	return strstr(line, pattern);
+}
+
+char *strcasestr_wrapper(struct search_t *search, const char *line, const char *pattern)
+{
+	return strcasestr(line, pattern);
 }
 

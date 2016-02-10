@@ -66,14 +66,6 @@ enum cursor {
 	CURSOR_ON
 };
 
-struct entry_t {
-	struct entry_t *next;
-	enum { TYPE_LINE, TYPE_FILE } type;
-	int len;
-	int opened;
-	int mark;
-	char data[];
-};
 
 struct list {
 	struct list *next;
@@ -110,5 +102,7 @@ struct search_t {
 	int ignore_option;
 	int regexp_is_ok;
 };
+
+void print_wrapper(int *y, char *string);
 
 #endif /* NGP_H */
