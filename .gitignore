@@ -17,6 +17,7 @@
 *.app
 *.in
 ngp
+tags
 
 Makefile
 configure
