@@ -19,6 +19,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "utils.h"
 #include "themes.h"
 #include "entry.h"
+#include "file.h"
+#include "line.h"
 
 /* keep a pointer on search_t for signal handler ONLY */
 struct search_t *global_search;
