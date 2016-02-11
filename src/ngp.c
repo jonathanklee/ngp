@@ -251,7 +251,7 @@ static void page_up(struct search_t *search, int *index, int *cursor)
 	*index -= LINES;
 	*index = (*index < 0 ? 0 : *index);
 
-	if (!is_selectionable(search, *index + *cursor) && *index != 0)
+	if (!is_selectionable(search, *index + *cursor))
 		*cursor -= 1;
 
 	display_entries(search, index, cursor);
