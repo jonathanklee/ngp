@@ -21,12 +21,11 @@ struct entry_vtable line_vtable = {
 
 struct entry_t *create_file(struct search_t *search, char *file)
 {
-	int len = strlen(file);
+	int len = strlen(file) + 1;
 	struct file_t *new;
 
-	new = calloc(1, sizeof(struct file_t));
-	new->entry.data = malloc(((len + 1) * sizeof(char)));
-	strncpy(new->entry.data, file, len + 1);
+	new = calloc(1, sizeof(struct file_t) + len);
+	strncpy(new->entry.data, file, len);
 	new->entry.vtable = &file_vtable;
 	search->nbentry++;
 
@@ -41,12 +40,11 @@ struct entry_t *create_file(struct search_t *search, char *file)
 
 struct entry_t *create_line(struct search_t *search, char *line, int line_number)
 {
-	int len = strlen(line);
+	int len = strlen(line) + 1;
 	struct line_t *new;
 
-	new = calloc(1, sizeof(struct line_t));
-	new->entry.data = malloc(((len + 1) * sizeof(char *)));
-	strncpy(new->entry.data, line, len + 1);
+	new = calloc(1, sizeof(struct line_t) + len);
+	strncpy(new->entry.data, line, len);
 	new->opened = 0;
 	new->mark = 0;
 	new->line = line_number;
@@ -118,7 +116,6 @@ bool is_file_selectionable(struct entry_t *entry)
 void free_file(struct entry_t *entry)
 {
 	struct file_t *ptr = container_of(entry, struct file_t, entry);
-	free(entry->data);
 	free(ptr);
 }
 
@@ -208,7 +205,6 @@ bool is_line_selectionable(struct entry_t *entry)
 void free_line(struct entry_t *entry)
 {
 	struct line_t *ptr = container_of(entry, struct line_t, entry);
-	free(entry->data);
 	free(ptr);
 }
 
