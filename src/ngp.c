@@ -692,9 +692,3 @@ quit:
 	clean_search(&mainsearch);
 	return 0;
 }
-
-void print_wrapper(int *y, char *string)
-{
-	mvprintw(*y, 0, "%s", string);
-}
-

@@ -16,7 +16,7 @@ struct entry_vtable {
 struct entry_t {
 	struct entry_vtable *vtable;
 	struct entry_t *next;
-	char data[1024];
+	char *data;
 };
 
 void display_entry(struct search_t *search, int *y, struct entry_t *entry);
