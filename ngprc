@@ -4,8 +4,8 @@ arg #1 = line number
 arg #2 = file path
 arg #3 = pattern to search */
 
-editor = "vim -c '/%3$s' -c '%1$s' '%2$s'";
-/* editor = "emacs +'%1$s' '%2$s'"; */
+editor = "vim -c '/%3$s' -c '%1$d' '%2$s'";
+/* editor = "emacs +'%1$d' '%2$s'"; */
 files = "Makefile rules control";
 ignore = "";
 extensions = ".c .h .cpp .py .S .pl";
