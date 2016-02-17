@@ -21,6 +21,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "entry.h"
 #include "file.h"
 #include "line.h"
+#include "list.h"
 
 /* keep a pointer on search_t for signal handler ONLY */
 struct search_t *global_search;
@@ -358,17 +359,6 @@ static void open_entry(struct search_t *search, int index, const char *editor, c
 		return;
 }
 
-static void clear_elements(struct list **list)
-{
-	struct list *pointer = *list;
-
-	while (*list) {
-		pointer = *list;
-		*list = (*list)->next;
-		free(pointer);
-	}
-}
-
 void clean_search(struct search_t *search)
 {
 	struct entry_t *ptr = search->start;
@@ -380,9 +370,9 @@ void clean_search(struct search_t *search)
 		free_entry(p);
 	}
 
-	clear_elements(&search->extension);
-	clear_elements(&search->specific_file);
-	clear_elements(&search->ignore);
+	free_list(&search->extension);
+	free_list(&search->specific_file);
+	free_list(&search->ignore);
 
 	/* free pcre stuffs if needed */
 	if (search->pcre_compiled)
@@ -465,28 +455,6 @@ static void display_version(void)
 	printf("version %s\n", NGP_VERSION);
 }
 
-static void add_element(struct list **list, char *element)
-{
-	struct list *new, *pointer;
-	int len;
-
-	len = strlen(element) + 1;
-	new = calloc(1, sizeof(struct list) + len);
-	strncpy(new->data, element, len);
-
-	if (*list) {
-		/* list not empty */
-		pointer = *list;
-		while (pointer->next)
-			pointer = pointer->next;
-
-		pointer->next = new;
-	} else {
-		/* list empty */
-		*list = new;
-	}
-}
-
 static void read_config(struct search_t *search)
 {
 	const char *specific_files;
@@ -512,6 +480,7 @@ static void read_config(struct search_t *search)
 			exit(-1);
 		}
 
+		search->specific_file = create_list();
 		ptr = strtok_r((char *) specific_files, " ", &buf);
 		while (ptr != NULL) {
 			add_element(&search->specific_file, ptr);
@@ -525,6 +494,8 @@ static void read_config(struct search_t *search)
 			fprintf(stderr, "ngprc: no extensions string found!\n");
 			exit(-1);
 		}
+
+		search->extension = create_list();
 		ptr = strtok_r((char *) extensions, " ", &buf);
 		while (ptr != NULL) {
 			add_element(&search->extension, ptr);
@@ -538,6 +509,8 @@ static void read_config(struct search_t *search)
 			fprintf(stderr, "ngprc: no ignore string found!\n");
 			exit(-1);
 		}
+
+		search->ignore = create_list();
 		ptr = strtok_r((char *) ignore, " ", &buf);
 		while (ptr != NULL) {
 			add_element(&search->ignore, ptr);
@@ -564,7 +537,7 @@ static void parse_args(struct search_t *search, int argc, char *argv[])
 			break;
 		case 't':
 			if (!clear_extensions) {
-				clear_elements(&search->extension);
+				free_list(&search->extension);
 				search->extension_option = 1;
 				clear_extensions = 1;
 			}
@@ -572,7 +545,7 @@ static void parse_args(struct search_t *search, int argc, char *argv[])
 			break;
 		case 'I':
 			if (!clear_ignores) {
-				clear_elements(&search->ignore);
+				free_list(&search->ignore);
 				search->ignore_option = 1;
 				clear_ignores = 1;
 			}

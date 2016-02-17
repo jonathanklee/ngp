@@ -18,6 +18,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "ngp.h"
 #include "entry.h"
 #include "utils.h"
+#include "list.h"
 
 int is_selectionable(struct search_t *search, int index)
 {

@@ -66,12 +66,6 @@ enum cursor {
 	CURSOR_ON
 };
 
-
-struct list {
-	struct list *next;
-	char data[];
-};
-
 struct search_t {
 	/* screen */
 	int index;
