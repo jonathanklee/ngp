@@ -357,6 +357,8 @@ static void open_entry(struct search_t *search, int index, const char *editor, c
 
 	if (system(command) < 0)
 		return;
+
+        line->opened = 1;
 }
 
 void clean_search(struct search_t *search)

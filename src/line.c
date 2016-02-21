@@ -87,7 +87,12 @@ start_printing:
 
        /* switch color to cyan */
        attron(A_REVERSE);
-       attron(COLOR_PAIR(4));
+
+       if (container->opened)
+           attron(COLOR_PAIR(3));
+       else
+           attron(COLOR_PAIR(4));
+
        if (search->regexp_option) {
                length = strlen(regexp_matched_string);
                pcre_free_substring(regexp_matched_string);
