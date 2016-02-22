@@ -134,7 +134,7 @@ static int parse_file(struct search_t *search, const char *file, const char *pat
 	return 0;
 }
 
-static void lookup_file(struct search_t *search, const char *file, const char *pattern, char *options)
+static void lookup_file(struct search_t *search, const char *file, const char *pattern)
 {
 	errno = 0;
 	pthread_mutex_t *mutex;
@@ -161,8 +161,7 @@ static void lookup_file(struct search_t *search, const char *file, const char *p
 	}
 }
 
-static void lookup_directory(struct search_t *search, const char *dir, const char *pattern,
-	char *options)
+static void lookup_directory(struct search_t *search, const char *dir, const char *pattern)
 {
 	DIR *dp;
 
@@ -187,14 +186,14 @@ static void lookup_directory(struct search_t *search, const char *dir, const cha
 			snprintf(file_path, PATH_MAX, "%s/%s", dir, ep->d_name);
 
 			if (!is_simlink(file_path)) {
-				lookup_file(search, file_path, pattern, options);
+				lookup_file(search, file_path, pattern);
 			}
 		}
 
 		if (ep->d_type & DT_DIR && is_dir_good(ep->d_name)) {
 			char path_dir[PATH_MAX] = "";
 			snprintf(path_dir, PATH_MAX, "%s/%s", dir, ep->d_name);
-			lookup_directory(search, path_dir, pattern, options);
+			lookup_directory(search, path_dir, pattern);
 		}
 	}
 	closedir(dp);
@@ -406,7 +405,7 @@ void *lookup_thread(void *arg)
 		exit(-1);
 	}
 
-	lookup_directory(d, d->directory, d->pattern, d->options);
+	lookup_directory(d, d->directory, d->pattern);
 	d->status = 0;
 	closedir(dp);
 	return (void *) NULL;
