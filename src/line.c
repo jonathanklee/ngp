@@ -15,7 +15,6 @@ struct entry_t *create_line(struct search_t *search, char *line, int line_number
 	new = calloc(1, sizeof(struct line_t) + len);
 	strncpy(new->entry.data, line, len);
 	new->opened = 0;
-	new->mark = 0;
 	new->line = line_number;
 	search->nbentry++;
 

@@ -8,7 +8,6 @@
 struct line_t {
 	int line;
 	int opened;
-	int mark;
 	struct entry_t entry;
 };
 
