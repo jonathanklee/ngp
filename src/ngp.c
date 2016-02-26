@@ -576,6 +576,10 @@ static void parse_args(struct search_t *search, int argc, char *argv[])
 			first = 1;
 		} else {
 			strcpy(search->directory, argv[optind]);
+                        if (!opendir(search->directory)) {
+                                fprintf(stderr, "error: could not open directory \"%s\"\n", search->directory);
+                                exit(-1);
+                        }
 		}
 	}
 }
