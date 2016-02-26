@@ -1,5 +1,6 @@
 #include "file.h"
 #include "utils.h"
+#include "theme.h"
 
 struct entry_vtable file_vtable = {
 	display_file,
@@ -45,7 +46,7 @@ void display_file(struct search_t *search, int *y, struct entry_t *entry)
                 remove_double(entry->data , '/', filtered_line);
 
         strncpy(cropped_line, filtered_line, crop);
-        attron(COLOR_PAIR(5));
+        attron(COLOR_PAIR(COLOR_FILE));
         remove_double(cropped_line, '/', filtered_line);
         mvprintw(*y, 0, "%s", cropped_line);
 

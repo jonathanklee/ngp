@@ -2,7 +2,7 @@
 #include "string.h"
 #include "utils.h"
 #include "ngp.h"
-#include "themes.h"
+#include "theme.h"
 #include "file.h"
 #include "line.h"
 

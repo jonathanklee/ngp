@@ -17,7 +17,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "ngp.h"
 #include "utils.h"
-#include "themes.h"
+#include "theme.h"
 #include "entry.h"
 #include "file.h"
 #include "line.h"
@@ -45,6 +45,8 @@ static void usage(void)
 
 static void ncurses_init(void)
 {
+	struct theme_t *theme;
+
 	initscr();
 	cbreak();
 	noecho();
@@ -53,7 +55,9 @@ static void ncurses_init(void)
 	start_color();
 	use_default_colors();
 	init_pair(1, -1, -1);
-	apply_theme();
+	theme = read_theme();
+	apply_theme(theme);
+	destroy_theme(theme);
 	curs_set(0);
 }
 
@@ -444,7 +448,7 @@ void display_status(struct search_t *search)
 		};
 	static int i = 0;
 
-	attron(COLOR_PAIR(1));
+	attron(COLOR_PAIR(COLOR_FILE));
 	if (search->status)
 		mvaddstr(0, COLS - 3, rollingwheel[++i%60]);
 	else
@@ -599,7 +603,6 @@ int main(int argc, char *argv[])
 
 	parse_args(current, argc, argv);
 	read_config(current);
-	read_theme();
 	ncurses_init();
 
 	signal(SIGINT, sig_handler);

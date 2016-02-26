@@ -1,4 +1,5 @@
 #include "line.h"
+#include "theme.h"
 
 struct entry_vtable line_vtable = {
 	display_line,
@@ -47,7 +48,7 @@ void display_line(struct search_t *search, int *y, struct entry_t *entry)
 	clrtoeol();
 
 	/* display line number */
-	attron(COLOR_PAIR(2));
+	attron(COLOR_PAIR(COLOR_LINE_NUMBER));
 	struct line_t *container = container_of(entry, struct line_t, entry);
 	mvprintw(*y, 0, "%d:", container->line);
 
@@ -55,7 +56,7 @@ void display_line(struct search_t *search, int *y, struct entry_t *entry)
 	char line_begin[16];
 	sprintf(line_begin, "%d", container->line);
 	length = strlen(line_begin) + 1;
-	attron(COLOR_PAIR(1));
+	attron(COLOR_PAIR(COLOR_LINE));
 	strncpy(cropped_line, line, crop - length);
 	mvprintw(*y, length, "%s", cropped_line);
 
@@ -88,9 +89,9 @@ start_printing:
        attron(A_REVERSE);
 
        if (container->opened)
-           attron(COLOR_PAIR(3));
+           attron(COLOR_PAIR(COLOR_OPENED_LINE));
        else
-           attron(COLOR_PAIR(4));
+           attron(COLOR_PAIR(COLOR_HIGHLIGHT));
 
        if (search->regexp_option) {
                length = strlen(regexp_matched_string);
