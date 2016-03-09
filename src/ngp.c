@@ -603,7 +603,6 @@ int main(int argc, char *argv[])
 
 	parse_args(current, argc, argv);
 	read_config(current);
-	ncurses_init();
 
 	signal(SIGINT, sig_handler);
 	if (pthread_create(&pid, NULL, &lookup_thread, current)) {
