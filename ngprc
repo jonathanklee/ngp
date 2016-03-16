@@ -14,8 +14,8 @@ extensions = ".c .h .cpp .py .S .pl";
    colors available: cyan, yellow, red, green,
    black, white, blue, magenta */
 
-lines_color = "white";
-line_numbers_color = "yellow";
-pattern_color = "cyan";
-files_color = "green";
-parsed_pattern_color = "red";
+line_color = "white";
+line_number_color = "yellow";
+highlight_color = "cyan";
+file_color = "green";
+opened_line_color = "red";
