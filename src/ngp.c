@@ -353,9 +353,9 @@ static void open_entry(struct search_t *search, int index, const char *editor, c
 	synchronized(search->data_mutex) {
 		remove_double(file->data, '/', filtered_file_name);
 		snprintf(command, sizeof(command), editor,
+			pattern,
 			line->line,
-			filtered_file_name,
-			pattern);
+			filtered_file_name);
 	}
 
 	if (system(command) < 0)
