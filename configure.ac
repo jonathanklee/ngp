@@ -13,9 +13,9 @@ AC_PROG_CC
 AC_CHECK_HEADER(libconfig.h,, AC_MSG_ERROR(oops no libconfig.h ?))
 AC_CHECK_HEADER(regex.h,, AC_MSG_ERROR(oops no regex.h ?))
 AC_CHECK_HEADER(pcre.h,, AC_MSG_ERROR(oops no pcre.h ?))
-AC_CHECK_LIB(pthread, pthread_create, ,AC_MSG_ERROR(oops no pthread ?))
-AC_CHECK_LIB(ncurses, initscr, ,AC_MSG_ERROR(oops no ncurses ?))
-AC_CHECK_LIB(pcre, pcre_compile, ,AC_MSG_ERROR(oops no pcre ?))
+AC_CHECK_LIB(pthread, pthread_create, ,AC_MSG_ERROR(oops no libpthread ?))
+AC_CHECK_LIB(ncurses, initscr, ,AC_MSG_ERROR(oops no libncurses ?))
+AC_CHECK_LIB(pcre, pcre_compile, ,AC_MSG_ERROR(oops no libpcre ?))
 AC_CHECK_LIB(config, config_lookup_string, ,AC_MSG_ERROR(oops no libconfig ?))
 
 # Checks for typedefs, structures, and compiler characteristics.
