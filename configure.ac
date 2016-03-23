@@ -16,6 +16,7 @@ AC_CHECK_HEADER(pcre.h,, AC_MSG_ERROR(oops no pcre.h ?))
 AC_CHECK_LIB(pthread, pthread_create, ,AC_MSG_ERROR(oops no pthread ?))
 AC_CHECK_LIB(ncurses, initscr, ,AC_MSG_ERROR(oops no ncurses ?))
 AC_CHECK_LIB(pcre, pcre_compile, ,AC_MSG_ERROR(oops no pcre ?))
+AC_CHECK_LIB(config, config_lookup_string, ,AC_MSG_ERROR(oops no libconfig ?))
 
 # Checks for typedefs, structures, and compiler characteristics.
 
