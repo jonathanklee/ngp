@@ -26,11 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 /* keep a pointer on search_t for signal handler ONLY */
 struct search_t *global_search;
 
-static void ncurses_add_file(struct search_t *search, const char *file);
-static void ncurses_add_line(struct search_t *search, const char *line, int line_number);
-static void display_entries(struct search_t *search, int *index, int *cursor);
-
-static void usage(void)
+void usage(void)
 {
 	fprintf(stderr, "usage: ngp [options]... pattern [directory]\n\n");
 	fprintf(stderr, "options:\n");
@@ -43,7 +39,7 @@ static void usage(void)
 	exit(-1);
 }
 
-static void ncurses_init(void)
+void ncurses_init(void)
 {
 	struct theme_t *theme;
 
@@ -61,12 +57,12 @@ static void ncurses_init(void)
 	curs_set(0);
 }
 
-static void ncurses_stop(void)
+void ncurses_stop(void)
 {
 	endwin();
 }
 
-static int parse_file(struct search_t *search, const char *file, const char *pattern)
+int parse_file(struct search_t *search, const char *file, const char *pattern)
 {
 	int f;
 	char *pointer;
@@ -138,7 +134,7 @@ static int parse_file(struct search_t *search, const char *file, const char *pat
 	return 0;
 }
 
-static void lookup_file(struct search_t *search, const char *file, const char *pattern)
+void lookup_file(struct search_t *search, const char *file, const char *pattern)
 {
 	errno = 0;
 	pthread_mutex_t *mutex;
@@ -165,7 +161,7 @@ static void lookup_file(struct search_t *search, const char *file, const char *p
 	}
 }
 
-static void lookup_directory(struct search_t *search, const char *dir, const char *pattern)
+void lookup_directory(struct search_t *search, const char *dir, const char *pattern)
 {
 	DIR *dp;
 
@@ -203,7 +199,7 @@ static void lookup_directory(struct search_t *search, const char *dir, const cha
 	closedir(dp);
 }
 
-static void display_entries(struct search_t *search, int *index, int *cursor)
+void display_entries(struct search_t *search, int *index, int *cursor)
 {
 	int i = 0;
 	struct entry_t *ptr = search->start;
@@ -224,19 +220,19 @@ static void display_entries(struct search_t *search, int *index, int *cursor)
 	}
 }
 
-static void ncurses_add_file(struct search_t *search, const char *file)
+void ncurses_add_file(struct search_t *search, const char *file)
 {
 	search->entries = create_file(search, (char *)file);
 }
 
-static void ncurses_add_line(struct search_t *search, const char *line, int line_number)
+void ncurses_add_line(struct search_t *search, const char *line, int line_number)
 {
 	search->entries = create_line(search, (char *)line, line_number);
 	if (search->nbentry <= LINES)
 		display_entries(search, &search->index, &search->cursor);
 }
 
-static void resize(struct search_t *search, int *index, int *cursor)
+void resize(struct search_t *search, int *index, int *cursor)
 {
 	/* right now this is a bit trivial,
 	 * but we may do more complex moving around
@@ -246,7 +242,7 @@ static void resize(struct search_t *search, int *index, int *cursor)
 	refresh();
 }
 
-static void page_up(struct search_t *search, int *index, int *cursor)
+void page_up(struct search_t *search, int *index, int *cursor)
 {
 	clear();
 	refresh();
@@ -263,7 +259,7 @@ static void page_up(struct search_t *search, int *index, int *cursor)
 	display_entries(search, index, cursor);
 }
 
-static void page_down(struct search_t *search, int *index, int *cursor)
+void page_down(struct search_t *search, int *index, int *cursor)
 {
 	int max_index;
 
@@ -290,7 +286,7 @@ static void page_down(struct search_t *search, int *index, int *cursor)
 	display_entries(search, index, cursor);
 }
 
-static void cursor_up(struct search_t *search, int *index, int *cursor)
+void cursor_up(struct search_t *search, int *index, int *cursor)
 {
 	if (*cursor == 0) {
 		page_up(search, index, cursor);
@@ -311,7 +307,7 @@ static void cursor_up(struct search_t *search, int *index, int *cursor)
 	display_entries(search, index, cursor);
 }
 
-static void cursor_down(struct search_t *search, int *index, int *cursor)
+void cursor_down(struct search_t *search, int *index, int *cursor)
 {
 	if (*cursor == (LINES - 1)) {
 		page_down(search, index, cursor);
@@ -332,7 +328,7 @@ static void cursor_down(struct search_t *search, int *index, int *cursor)
 	display_entries(search, index, cursor);
 }
 
-static void open_entry(struct search_t *search, int index, const char *editor, const char *pattern)
+void open_entry(struct search_t *search, int index, const char *editor, const char *pattern)
 {
 	int i;
 	struct entry_t *ptr;
@@ -388,7 +384,7 @@ void clean_search(struct search_t *search)
 
 }
 
-static void sig_handler(int signo)
+void sig_handler(int signo)
 {
 	if (signo == SIGINT) {
 		ncurses_stop();
@@ -455,12 +451,12 @@ void display_status(struct search_t *search)
 		mvaddstr(0, COLS - 5, "");
 }
 
-static void display_version(void)
+void display_version(void)
 {
 	printf("version %s\n", NGP_VERSION);
 }
 
-static void read_config(struct search_t *search)
+void read_config(struct search_t *search)
 {
 	const char *specific_files;
 	const char *extensions;
@@ -525,7 +521,7 @@ static void read_config(struct search_t *search)
 	config_destroy(&cfg);
 }
 
-static void parse_args(struct search_t *search, int argc, char *argv[])
+void parse_args(struct search_t *search, int argc, char *argv[])
 {
 	int opt;
 	int clear_extensions = 0;

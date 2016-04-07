@@ -98,5 +98,8 @@ struct search_t {
 };
 
 void print_wrapper(int *y, char *string);
+void ncurses_add_file(struct search_t *search, const char *file);
+void ncurses_add_line(struct search_t *search, const char *line, int line_number);
+void display_entries(struct search_t *search, int *index, int *cursor);
 
 #endif /* NGP_H */

@@ -33,7 +33,7 @@ int is_selectionable(struct search_t *search, int index)
 
 int is_dir_good(char *dir)
 {
-	return  *dir != '.' &&
+	return strcmp(dir, ".") != 0 &&
 		strcmp(dir, "..") != 0 &&
 		strcmp(dir, ".git") != 0 ? 1 : 0;
 }
