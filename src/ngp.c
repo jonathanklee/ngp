@@ -247,7 +247,7 @@ void page_up(struct search_t *search, int *index, int *cursor)
 	clear();
 	refresh();
 	if (*index == 0)
-		*cursor = 0;
+		*cursor = 1;
 	else
 		*cursor = LINES - 1;
 	*index -= LINES;
@@ -288,6 +288,11 @@ void page_down(struct search_t *search, int *index, int *cursor)
 
 void cursor_up(struct search_t *search, int *index, int *cursor)
 {
+	/* when cursor is on the first page and on the 2nd line,
+	   do not move the cursor up */
+	if (*index == 0 && *cursor == 1)
+		return;
+
 	if (*cursor == 0) {
 		page_up(search, index, cursor);
 		return;
