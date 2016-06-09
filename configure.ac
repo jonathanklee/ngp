@@ -26,5 +26,5 @@ AC_FUNC_MMAP
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile])
-AM_INIT_AUTOMAKE([-Wall -Werror])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_OUTPUT
