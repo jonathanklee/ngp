@@ -41,20 +41,20 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <ctype.h>
 #include <pcre.h>
 
-#define NGP_VERSION 	"1.4"
+#define NGP_VERSION     "1.4"
 
-#define CURSOR_UP 	'k'
-#define CURSOR_DOWN 	'j'
-#define PAGE_UP		'K'
-#define PAGE_DOWN	'J'
-#define ENTER	 	'p'
-#define QUIT	 	'q'
-#define MARK	 	'm'
+#define CURSOR_UP     'k'
+#define CURSOR_DOWN     'j'
+#define PAGE_UP        'K'
+#define PAGE_DOWN    'J'
+#define ENTER         'p'
+#define QUIT         'q'
+#define MARK         'm'
 
 #ifdef LINE_MAX
-	#undef LINE_MAX
+    #undef LINE_MAX
 #endif
-#define LINE_MAX	512
+#define LINE_MAX    512
 
 #define synchronized(MUTEX) \
 for(mutex = &MUTEX; \
@@ -62,39 +62,39 @@ mutex && !pthread_mutex_lock(mutex); \
 pthread_mutex_unlock(mutex), mutex = 0)
 
 enum cursor {
-	CURSOR_OFF,
-	CURSOR_ON
+    CURSOR_OFF,
+    CURSOR_ON
 };
 
 struct search_t {
-	/* screen */
-	int index;
-	int cursor;
+    /* screen */
+    int index;
+    int cursor;
 
-	/* data */
-	struct entry_t *entries;
-	struct entry_t *start;
-	int nbentry;
+    /* data */
+    struct entry_t *entries;
+    struct entry_t *start;
+    int nbentry;
 
-	/* thread */
-	pthread_mutex_t data_mutex;
-	int status;
+    /* thread */
+    pthread_mutex_t data_mutex;
+    int status;
 
-	/* search */
-	const pcre *pcre_compiled;
-	const pcre_extra *pcre_extra;
-	char editor[LINE_MAX];
-	char directory[PATH_MAX];
-	char pattern[LINE_MAX];
-	char options[LINE_MAX];
-	struct list *specific_file;
-	struct list *extension;
-	struct list *ignore;
-	int raw_option;
-	int regexp_option;
-	int extension_option;
-	int ignore_option;
-	int regexp_is_ok;
+    /* search */
+    const pcre *pcre_compiled;
+    const pcre_extra *pcre_extra;
+    char editor[LINE_MAX];
+    char directory[PATH_MAX];
+    char pattern[LINE_MAX];
+    char options[LINE_MAX];
+    struct list *specific_file;
+    struct list *extension;
+    struct list *ignore;
+    int raw_option;
+    int regexp_option;
+    int extension_option;
+    int ignore_option;
+    int regexp_is_ok;
 };
 
 void print_wrapper(int *y, char *string);

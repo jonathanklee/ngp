@@ -5,7 +5,7 @@
 #include "entry.h"
 
 struct file_t {
-	struct entry_t entry;
+    struct entry_t entry;
 };
 
 struct entry_t *create_file(struct search_t *search, char *file);

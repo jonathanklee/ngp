@@ -5,8 +5,8 @@
 #include <string.h>
 
 struct list {
-	struct list *next;
-	char data[];
+    struct list *next;
+    char data[];
 };
 
 struct list* create_list();

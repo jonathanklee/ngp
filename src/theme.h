@@ -7,21 +7,21 @@
 #include <ncurses.h>
 
 struct theme_t {
-	int line_color;
-	int file_color;
-	int line_number_color;
-	int highlight_color;
-	int opened_line_color;
+    int line_color;
+    int file_color;
+    int line_number_color;
+    int highlight_color;
+    int opened_line_color;
 
 };
 
 enum color_t {
-	NO_COLOR,
-	COLOR_LINE,
-	COLOR_LINE_NUMBER,
-	COLOR_OPENED_LINE,
-	COLOR_HIGHLIGHT,
-	COLOR_FILE
+    NO_COLOR,
+    COLOR_LINE,
+    COLOR_LINE_NUMBER,
+    COLOR_OPENED_LINE,
+    COLOR_HIGHLIGHT,
+    COLOR_FILE
 };
 
 struct theme_t *read_theme();
