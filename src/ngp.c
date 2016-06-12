@@ -406,7 +406,7 @@ void *lookup_thread(void *arg)
     dp = opendir(d->directory);
 
     if (!dp) {
-        fprintf(stderr, "error: coult not open directory \"%s\"\n", d->directory);
+        fprintf(stderr, "error: could not open directory \"%s\"\n", d->directory);
         exit(-1);
     }
 
