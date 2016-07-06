@@ -103,7 +103,7 @@ int parse_file(struct search_t *search, const char *file, const char *pattern)
         if (pointer == end)
             break;
 
-        endline = strchr(pointer, '\n');
+        endline = memchr(pointer, '\n', end - pointer);
         if (endline == NULL)
             break;
 
