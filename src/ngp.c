@@ -593,63 +593,61 @@ int main(int argc, char *argv[])
 {
     int ch;
     pthread_mutex_t *mutex;
-    static struct search_t mainsearch;
-    struct search_t *current;
+    static struct search_t search;
     pthread_t pid;
 
-    current = &mainsearch;
-    global_search = &mainsearch;
-    init_searchstruct(current);
-    pthread_mutex_init(&current->data_mutex, NULL);
+    global_search = &search;
+    init_searchstruct(&search);
+    pthread_mutex_init(&search.data_mutex, NULL);
 
-    parse_args(current, argc, argv);
-    read_config(current);
+    parse_args(&search, argc, argv);
+    read_config(&search);
 
     signal(SIGINT, sig_handler);
-    if (pthread_create(&pid, NULL, &lookup_thread, current)) {
+    if (pthread_create(&pid, NULL, &lookup_thread, &search)) {
         fprintf(stderr, "ngp: cannot create thread");
-        clean_search(current);
+        clean_search(&search);
         exit(-1);
     }
 
-    lock(current->data_mutex)
-        display_entries(current, &current->index, &current->cursor);
+    lock(search.data_mutex)
+        display_entries(&search, &search.index, &search.cursor);
 
     while ((ch = getch())) {
         switch(ch) {
         case KEY_RESIZE:
-            lock(current->data_mutex)
-                resize(current, &current->index, &current->cursor);
+            lock(search.data_mutex)
+                resize(&search, &search.index, &search.cursor);
             break;
         case CURSOR_DOWN:
         case KEY_DOWN:
-            lock(current->data_mutex)
-                cursor_down(current, &current->index, &current->cursor);
+            lock(search.data_mutex)
+                cursor_down(&search, &search.index, &search.cursor);
             break;
         case CURSOR_UP:
         case KEY_UP:
-            lock(current->data_mutex)
-                cursor_up(current, &current->index, &current->cursor);
+            lock(search.data_mutex)
+                cursor_up(&search, &search.index, &search.cursor);
             break;
         case KEY_PPAGE:
         case PAGE_UP:
-            lock(current->data_mutex)
-                page_up(current, &current->index, &current->cursor);
+            lock(search.data_mutex)
+                page_up(&search, &search.index, &search.cursor);
             break;
         case KEY_NPAGE:
         case PAGE_DOWN:
-            lock(current->data_mutex)
-                page_down(current, &current->index, &current->cursor);
+            lock(search.data_mutex)
+                page_down(&search, &search.index, &search.cursor);
             break;
         case ENTER:
         case '\n':
-            if (current->nbentry == 0)
+            if (search.nbentry == 0)
                 break;
             ncurses_stop();
-            open_entry(current, current->cursor + current->index,
-                current->editor, current->pattern);
+            open_entry(&search, search.cursor + search.index,
+                search.editor, search.pattern);
             ncurses_init();
-            resize(current, &current->index, &current->cursor);
+            resize(&search, &search.index, &search.cursor);
             break;
         case QUIT:
             goto quit;
@@ -658,13 +656,13 @@ int main(int argc, char *argv[])
         }
 
         usleep(10000);
-        lock(current->data_mutex) {
-            display_entries(current, &current->index, &current->cursor);
-            display_status(current);
+        lock(search.data_mutex) {
+            display_entries(&search, &search.index, &search.cursor);
+            display_status(&search);
         }
 
-        lock(current->data_mutex) {
-            if (current->status == 0 && current->nbentry == 0) {
+        lock(search.data_mutex) {
+            if (search.status == 0 && search.nbentry == 0) {
                 goto quit;
             }
         }
@@ -672,6 +670,6 @@ int main(int argc, char *argv[])
 
 quit:
     ncurses_stop();
-    clean_search(&mainsearch);
+    clean_search(&search);
     return 0;
 }
