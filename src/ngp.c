@@ -598,7 +598,7 @@ int main(int argc, char *argv[])
     pthread_t pid;
 
     current = &mainsearch;
-        global_search = &mainsearch;
+    global_search = &mainsearch;
     init_searchstruct(current);
     pthread_mutex_init(&current->data_mutex, NULL);
 
