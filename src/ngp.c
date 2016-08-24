@@ -143,19 +143,19 @@ void lookup_file(struct search_t *search, const char *file, const char *pattern)
         return;
 
     if (search->raw_option) {
-        synchronized(search->data_mutex)
+        lock(search->data_mutex)
             parse_file(search, file, pattern);
         return;
     }
 
     if (is_specific_file(search, file)) {
-        synchronized(search->data_mutex)
+        lock(search->data_mutex)
             parse_file(search, file, pattern);
         return;
     }
 
     if (is_extension_good(search, file)) {
-        synchronized(search->data_mutex)
+        lock(search->data_mutex)
             parse_file(search, file, pattern);
         return;
     }
@@ -351,7 +351,7 @@ void open_entry(struct search_t *search, int index, const char *editor, const ch
 
     struct line_t *line = container_of(ptr, struct line_t, entry);
 
-    synchronized(search->data_mutex) {
+    lock(search->data_mutex) {
         remove_double(file->data, '/', filtered_file_name);
         snprintf(command, sizeof(command), editor,
             pattern,
@@ -612,33 +612,33 @@ int main(int argc, char *argv[])
         exit(-1);
     }
 
-    synchronized(current->data_mutex)
+    lock(current->data_mutex)
         display_entries(current, &current->index, &current->cursor);
 
     while ((ch = getch())) {
         switch(ch) {
         case KEY_RESIZE:
-            synchronized(current->data_mutex)
+            lock(current->data_mutex)
                 resize(current, &current->index, &current->cursor);
             break;
         case CURSOR_DOWN:
         case KEY_DOWN:
-            synchronized(current->data_mutex)
+            lock(current->data_mutex)
                 cursor_down(current, &current->index, &current->cursor);
             break;
         case CURSOR_UP:
         case KEY_UP:
-            synchronized(current->data_mutex)
+            lock(current->data_mutex)
                 cursor_up(current, &current->index, &current->cursor);
             break;
         case KEY_PPAGE:
         case PAGE_UP:
-            synchronized(current->data_mutex)
+            lock(current->data_mutex)
                 page_up(current, &current->index, &current->cursor);
             break;
         case KEY_NPAGE:
         case PAGE_DOWN:
-            synchronized(current->data_mutex)
+            lock(current->data_mutex)
                 page_down(current, &current->index, &current->cursor);
             break;
         case ENTER:
@@ -658,12 +658,12 @@ int main(int argc, char *argv[])
         }
 
         usleep(10000);
-        synchronized(current->data_mutex) {
+        lock(current->data_mutex) {
             display_entries(current, &current->index, &current->cursor);
             display_status(current);
         }
 
-        synchronized(current->data_mutex) {
+        lock(current->data_mutex) {
             if (current->status == 0 && current->nbentry == 0) {
                 goto quit;
             }
