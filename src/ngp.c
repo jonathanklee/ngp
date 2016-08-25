@@ -62,42 +62,21 @@ void ncurses_stop(void)
     endwin();
 }
 
-int parse_file(struct search_t *search, const char *file, const char *pattern)
+void parse_text(struct search_t *search, const char *file_name, const char *text,
+                int text_size, const char *pattern)
 {
-    int f;
-    char *pointer;
-    char *start;
     char *end;
     char *endline;
     int first_occurrence;
-    struct stat sb;
     int line_number;
     char * (*parser)(struct search_t *, const char *, const char*);
-    errno = 0;
-
-    f = open(file, O_RDONLY);
-    if (f < 0)
-        return -1;
-
-    if (fstat(f, &sb) < 0) {
-        close(f);
-        return -1;
-    }
-
-    pointer = mmap(0, sb.st_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, f, 0);
-    if (pointer == MAP_FAILED) {
-        close(f);
-        return -1;
-    }
-
-    close(f);
+    char *pointer = (char *)text;
 
     parser = get_parser(search);
-
     first_occurrence = 1;
     line_number = 1;
-    start = pointer;
-    end = pointer + sb.st_size;
+    end = pointer + text_size;
+
     while (1) {
 
         if (pointer == end)
@@ -114,7 +93,7 @@ int parse_file(struct search_t *search, const char *file, const char *pattern)
             if (first_occurrence) {
                 if (search->nbentry == 0)
                     ncurses_init();
-                ncurses_add_file(search, file);
+                ncurses_add_file(search, file_name);
                 first_occurrence = 0;
             }
             if (pointer[strlen(pointer) - 2] == '\r')
@@ -127,6 +106,36 @@ int parse_file(struct search_t *search, const char *file, const char *pattern)
         pointer = endline + 1;
         line_number++;
     }
+
+}
+
+int parse_file(struct search_t *search, const char *file, const char *pattern)
+{
+    int f;
+    char *pointer;
+    char *start;
+    struct stat sb;
+    errno = 0;
+
+    f = open(file, O_RDONLY);
+    if (f < 0)
+        return -1;
+
+    if (fstat(f, &sb) < 0) {
+        close(f);
+        return -1;
+    }
+
+    pointer = mmap(0, sb.st_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, f, 0);
+    start = pointer;
+    if (pointer == MAP_FAILED) {
+        close(f);
+        return -1;
+    }
+
+    close(f);
+
+    parse_text(search, file, start, sb.st_size, pattern);
 
     if (munmap(start, sb.st_size) < 0)
         return -1;
