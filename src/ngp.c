@@ -65,8 +65,8 @@ void ncurses_stop(void)
     endwin();
 }
 
-void parse_text(struct search_t *search, const char *file_name, const char *text,
-                int text_size, const char *pattern)
+void parse_text(struct search_t *search, const char *file_name, int file_size,
+                const char *text, const char *pattern)
 {
     char *end;
     char *endline;
@@ -78,7 +78,7 @@ void parse_text(struct search_t *search, const char *file_name, const char *text
     parser = get_parser(search);
     first_occurrence = 1;
     line_number = 1;
-    end = pointer + text_size;
+    end = pointer + file_size;
 
     while (1) {
 
@@ -138,7 +138,7 @@ int parse_file(struct search_t *search, const char *file, const char *pattern)
 
     close(f);
 
-    parse_text(search, file, start, sb.st_size, pattern);
+    parse_text(search, file, sb.st_size, start, pattern);
 
     if (munmap(start, sb.st_size) < 0)
         return -1;
