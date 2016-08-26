@@ -97,4 +97,7 @@ struct search_t {
     int regexp_is_ok;
 };
 
+void parse_text(struct search_t *search, const char *file_name, const char *text,
+                int text_size, const char *pattern);
+
 #endif /* NGP_H */
