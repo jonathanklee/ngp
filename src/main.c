@@ -15,19 +15,44 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include "ngp.h"
 #include "utils.h"
 #include "theme.h"
 #include "entry.h"
 #include "file.h"
 #include "line.h"
 #include "list.h"
+#include "entry.h"
+#include "search.h"
+
+#include <errno.h>
+#include <dirent.h>
+#include <signal.h>
+#include <getopt.h>
+#include <unistd.h>
+
+#define _GNU_SOURCE
+#define NGP_VERSION   "1.4"
+
+#define CURSOR_UP     'k'
+#define CURSOR_DOWN   'j'
+#define PAGE_UP       'K'
+#define PAGE_DOWN     'J'
+#define ENTER         'p'
+#define QUIT          'q'
+#define MARK          'm'
+
+#define lock(MUTEX) \
+for(mutex = &MUTEX; \
+mutex && !pthread_mutex_lock(mutex); \
+pthread_mutex_unlock(mutex), mutex = 0)
+
+enum cursor {
+    CURSOR_OFF,
+    CURSOR_ON
+};
 
 /* keep a pointer on search_t for signal handler ONLY */
 struct search_t *global_search;
-
-void ncurses_add_file(struct search_t *search, const char *file);
-void ncurses_add_line(struct search_t *search, const char *line, int line_number);
 
 void usage(void)
 {
@@ -63,87 +88,6 @@ void ncurses_init(void)
 void ncurses_stop(void)
 {
     endwin();
-}
-
-void parse_text(struct search_t *search, const char *file_name, int file_size,
-                const char *text, const char *pattern)
-{
-    char *end;
-    char *endline;
-    int first_occurrence;
-    int line_number;
-    char * (*parser)(struct search_t *, const char *, const char*);
-    char *pointer = (char *)text;
-
-    parser = get_parser(search);
-    first_occurrence = 1;
-    line_number = 1;
-    end = pointer + file_size;
-
-    while (1) {
-
-        if (pointer == end)
-            break;
-
-        endline = memchr(pointer, '\n', end - pointer);
-        if (endline == NULL)
-            break;
-
-        /* replace \n with \0 */
-        *endline = '\0';
-
-        if (parser(search, pointer, pattern) != NULL) {
-            if (first_occurrence) {
-                if (search->nbentry == 0)
-                    ncurses_init();
-                ncurses_add_file(search, file_name);
-                first_occurrence = 0;
-            }
-            if (pointer[strlen(pointer) - 2] == '\r')
-                pointer[strlen(pointer) - 2] = '\0';
-            ncurses_add_line(search, pointer, line_number);
-        }
-
-        /* switch back to \n */
-        *endline = '\n';
-        pointer = endline + 1;
-        line_number++;
-    }
-
-}
-
-int parse_file(struct search_t *search, const char *file, const char *pattern)
-{
-    int f;
-    char *pointer;
-    char *start;
-    struct stat sb;
-    errno = 0;
-
-    f = open(file, O_RDONLY);
-    if (f < 0)
-        return -1;
-
-    if (fstat(f, &sb) < 0) {
-        close(f);
-        return -1;
-    }
-
-    pointer = mmap(0, sb.st_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, f, 0);
-    start = pointer;
-    if (pointer == MAP_FAILED) {
-        close(f);
-        return -1;
-    }
-
-    close(f);
-
-    parse_text(search, file, sb.st_size, start, pattern);
-
-    if (munmap(start, sb.st_size) < 0)
-        return -1;
-
-    return 0;
 }
 
 void lookup_file(struct search_t *search, const char *file, const char *pattern)
@@ -232,16 +176,11 @@ void display_entries(struct search_t *search, int *index, int *cursor)
     }
 }
 
-void ncurses_add_file(struct search_t *search, const char *file)
-{
-    search->entries = create_file(search, (char *)file);
-}
-
 void ncurses_add_line(struct search_t *search, const char *line, int line_number)
 {
     search->entries = create_line(search, (char *)line, line_number);
-    if (search->nbentry <= LINES)
-        display_entries(search, &search->index, &search->cursor);
+    //if (search->nbentry <= LINES)
+        //display_entries(search, &index, &cursor);
 }
 
 void resize(struct search_t *search, int *index, int *cursor)
@@ -377,35 +316,11 @@ void open_entry(struct search_t *search, int index, const char *editor, const ch
         line->opened = 1;
 }
 
-void clean_search(struct search_t *search)
-{
-    struct entry_t *ptr = search->start;
-    struct entry_t *p;
-
-    while (ptr) {
-        p = ptr;
-        ptr = ptr->next;
-        free_entry(p);
-    }
-
-    free_list(&search->extension);
-    free_list(&search->specific_file);
-    free_list(&search->ignore);
-
-    /* free pcre stuffs if needed */
-    if (search->pcre_compiled)
-        pcre_free((void *) search->pcre_compiled);
-
-    if (search->pcre_extra)
-        pcre_free((void *) search->pcre_extra);
-
-}
-
 void sig_handler(int signo)
 {
     if (signo == SIGINT) {
         ncurses_stop();
-        clean_search(global_search);
+        free_search(global_search);
         exit(-1);
     }
 }
@@ -426,18 +341,6 @@ void *lookup_thread(void *arg)
     d->status = 0;
     closedir(dp);
     return (void *) NULL;
-}
-
-void init_searchstruct(struct search_t *search)
-{
-    search->index = 0;
-    search->cursor = 1;
-    search->nbentry = 0;
-    search->status = 1;
-    search->raw_option = 0;
-    search->entries = NULL;
-    search->start = search->entries;
-    strcpy(search->directory, "./");
 }
 
 void display_status(struct search_t *search)
@@ -543,7 +446,6 @@ void parse_args(struct search_t *search, int argc, char *argv[])
     int opt;
     int clear_extensions = 0;
     int clear_ignores = 0;
-    int first = 0;
 
     while ((opt = getopt(argc, argv, "heit:rI:v")) != -1) {
         switch (opt) {
@@ -588,15 +490,14 @@ void parse_args(struct search_t *search, int argc, char *argv[])
         usage();
 
     for ( ; optind < argc; optind++) {
-        if (!first) {
+        if (optind == 1) {
             strcpy(search->pattern, argv[optind]);
-            first = 1;
         } else {
             strcpy(search->directory, argv[optind]);
-                        if (!opendir(search->directory)) {
-                                fprintf(stderr, "error: could not open directory \"%s\"\n", search->directory);
-                                exit(-1);
-                        }
+            if (!opendir(search->directory)) {
+                fprintf(stderr, "error: could not open directory \"%s\"\n", search->directory);
+                exit(-1);
+            }
         }
     }
 }
@@ -605,61 +506,70 @@ int main(int argc, char *argv[])
 {
     int ch;
     pthread_mutex_t *mutex;
-    static struct search_t search;
+    static struct search_t *search;
     pthread_t pid;
 
-    global_search = &search;
-    init_searchstruct(&search);
-    pthread_mutex_init(&search.data_mutex, NULL);
+    int is_ncurses_init;
 
-    parse_args(&search, argc, argv);
-    read_config(&search);
+    global_search = search;
+    search = create_search();
+    pthread_mutex_init(&search->data_mutex, NULL);
+
+    parse_args(search, argc, argv);
+    read_config(search);
+
+    int index;
+    int cursor;
+
+    index = 0;
+    cursor = 1;
+    is_ncurses_init = 0;
 
     signal(SIGINT, sig_handler);
-    if (pthread_create(&pid, NULL, &lookup_thread, &search)) {
+    if (pthread_create(&pid, NULL, &lookup_thread, search)) {
         fprintf(stderr, "ngp: cannot create thread");
-        clean_search(&search);
+        free_search(search);
         exit(-1);
     }
 
-    lock(search.data_mutex)
-        display_entries(&search, &search.index, &search.cursor);
+    lock(search->data_mutex)
+        display_entries(search, &index, &cursor);
 
     while ((ch = getch())) {
         switch(ch) {
         case KEY_RESIZE:
-            lock(search.data_mutex)
-                resize(&search, &search.index, &search.cursor);
+            lock(search->data_mutex)
+                resize(search, &index, &cursor);
             break;
         case CURSOR_DOWN:
         case KEY_DOWN:
-            lock(search.data_mutex)
-                cursor_down(&search, &search.index, &search.cursor);
+            lock(search->data_mutex)
+                cursor_down(search, &index, &cursor);
             break;
         case CURSOR_UP:
         case KEY_UP:
-            lock(search.data_mutex)
-                cursor_up(&search, &search.index, &search.cursor);
+            lock(search->data_mutex)
+                cursor_up(search, &index, &cursor);
             break;
         case KEY_PPAGE:
         case PAGE_UP:
-            lock(search.data_mutex)
-                page_up(&search, &search.index, &search.cursor);
+            lock(search->data_mutex)
+                page_up(search, &index, &cursor);
             break;
         case KEY_NPAGE:
         case PAGE_DOWN:
-            lock(search.data_mutex)
-                page_down(&search, &search.index, &search.cursor);
+            lock(search->data_mutex)
+                page_down(search, &index, &cursor);
             break;
         case ENTER:
         case '\n':
-            if (search.nbentry == 0)
+            if (search->nbentry == 0)
                 break;
             ncurses_stop();
-            open_entry(&search, search.cursor + search.index,
-                search.editor, search.pattern);
+            open_entry(search, cursor + index,
+                       search->editor, search->pattern);
             ncurses_init();
-            resize(&search, &search.index, &search.cursor);
+            resize(search, &index, &cursor);
             break;
         case QUIT:
             goto quit;
@@ -668,13 +578,17 @@ int main(int argc, char *argv[])
         }
 
         usleep(10000);
-        lock(search.data_mutex) {
-            display_entries(&search, &search.index, &search.cursor);
-            display_status(&search);
+        lock(search->data_mutex) {
+            display_entries(search, &index, &cursor);
+            display_status(search);
+            if (search->nbentry != 0 && !is_ncurses_init) {
+                ncurses_init();
+                is_ncurses_init = 1;
+            }
         }
 
-        lock(search.data_mutex) {
-            if (search.status == 0 && search.nbentry == 0) {
+        lock(search->data_mutex) {
+            if (search->status == 0 && search->nbentry == 0) {
                 goto quit;
             }
         }
@@ -682,6 +596,6 @@ int main(int argc, char *argv[])
 
 quit:
     ncurses_stop();
-    clean_search(&search);
+    free_search(search);
     return 0;
 }

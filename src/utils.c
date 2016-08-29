@@ -15,10 +15,14 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include "ngp.h"
+#define _GNU_SOURCE
+
 #include "entry.h"
 #include "utils.h"
 #include "list.h"
+
+#include <string.h>
+#include <sys/stat.h>
 
 int is_selectionable(struct search_t *search, int index)
 {

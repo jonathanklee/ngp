@@ -1,7 +1,6 @@
 #ifndef FILE_H
 #define FILE_H
 
-#include "ngp.h"
 #include "entry.h"
 
 struct file_t {

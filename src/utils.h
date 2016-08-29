@@ -18,8 +18,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef UTILS_H
 #define UTILS_H
 
+#include "search.h"
 #include <libconfig.h>
-#include "ngp.h"
 
 int is_selectionable(struct search_t *search, int index);
 int is_dir_good(char *dir);

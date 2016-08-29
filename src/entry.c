@@ -1,10 +1,11 @@
 #include "entry.h"
 #include "string.h"
 #include "utils.h"
-#include "ngp.h"
 #include "theme.h"
 #include "file.h"
 #include "line.h"
+
+#include <sys/stat.h>
 
 void display_entry(struct search_t *search, int *y, struct entry_t *entry)
 {

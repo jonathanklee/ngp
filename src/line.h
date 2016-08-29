@@ -1,7 +1,6 @@
 #ifndef LINE_H
 #define LINE_H
 
-#include "ngp.h"
 #include "entry.h"
 #include "utils.h"
 
