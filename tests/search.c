@@ -66,12 +66,40 @@ static char * test_two_entries() {
     return 0;
 }
 
+static char * test_regexp_start_of_line() {
+
+    struct search_t *search;
+    search = create_search();
+    search->regexp_option = 1;
+    char text[] = "this is a the first line\nthis is the second line\n";
+    const char *pattern = "^this is";
+    parse_text(search, "fake_file", strlen(text), text, pattern);
+    mu_assert("error in number of entry", search->nbentry == 3);
+    free_search(search);
+    return 0;
+}
+
+static char * test_wrong_regexp() {
+
+    struct search_t *search;
+    search = create_search();
+    search->regexp_option = 1;
+    char text[] = "this is a the first line\nthis is the second line\n";
+    const char *pattern = "the.*file";
+    parse_text(search, "fake_file", strlen(text), text, pattern);
+    mu_assert("error in number of entry", search->nbentry == 0);
+    free_search(search);
+    return 0;
+}
+
 static char * all_tests() {
     mu_run_test(test_no_entry);
     mu_run_test(test_one_entry_on_the_first_line);
     mu_run_test(test_one_entry_on_the_second_line);
     mu_run_test(test_one_entry_incase);
     mu_run_test(test_two_entries);
+    mu_run_test(test_regexp_start_of_line);
+    mu_run_test(test_wrong_regexp);
     return 0;
 }
 
