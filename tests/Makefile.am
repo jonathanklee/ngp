@@ -1,8 +1,8 @@
-TESTS = check_ngp
-check_PROGRAMS = check_ngp
-check_ngp_SOURCES = search.c
-check_ngp_CFLAGS = -I../src/
-check_ngp_LDADD = $(top_builddir)/src/ngp-search.o \
+TESTS = unit_tests
+check_PROGRAMS = unit_tests
+unit_tests_SOURCES = search.c
+unit_tests_CFLAGS = -I../src/
+unit_tests_LDADD = $(top_builddir)/src/ngp-search.o \
                   $(top_builddir)/src/ngp-utils.o \
                   $(top_builddir)/src/ngp-line.o \
                   $(top_builddir)/src/ngp-file.o \
