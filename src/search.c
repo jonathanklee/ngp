@@ -20,6 +20,7 @@ struct search_t * create_search()
     search->nbentry = 0;
     search->status = 1;
     search->raw_option = 0;
+    search->incase_option = 0;
     search->entries = NULL;
     search->start = search->entries;
     strcpy(search->directory, "./");

@@ -453,7 +453,7 @@ void parse_args(struct search_t *search, int argc, char *argv[])
             usage();
             break;
         case 'i':
-            strcpy(search->options, "-i");
+            search->incase_option = 1;
             break;
         case 't':
             if (!clear_extensions) {

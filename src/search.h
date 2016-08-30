@@ -27,13 +27,13 @@ struct search_t {
     char editor[LINE_MAX];
     char directory[PATH_MAX];
     char pattern[LINE_MAX];
-    char options[LINE_MAX];
     struct list *specific_file;
     struct list *extension;
     struct list *ignore;
     int raw_option;
     int regexp_option;
     int extension_option;
+    int incase_option;
     int ignore_option;
     int regexp_is_ok;
 };

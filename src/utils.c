@@ -192,7 +192,7 @@ void *get_parser(struct search_t *search)
 {
     char * (*parser)(struct search_t *, const char *, const char*);
 
-    if (strstr(search->options, "-i") == NULL)
+    if (!search->incase_option)
         parser = strstr_wrapper;
     else
         parser = strcasestr_wrapper;
