@@ -446,6 +446,7 @@ void parse_args(struct search_t *search, int argc, char *argv[])
     int opt;
     int clear_extensions = 0;
     int clear_ignores = 0;
+    int first_argument = 0;
 
     while ((opt = getopt(argc, argv, "heit:rI:v")) != -1) {
         switch (opt) {
@@ -490,8 +491,9 @@ void parse_args(struct search_t *search, int argc, char *argv[])
         usage();
 
     for ( ; optind < argc; optind++) {
-        if (optind == 1) {
+        if (!first_argument) {
             strcpy(search->pattern, argv[optind]);
+            first_argument = 1;
         } else {
             strcpy(search->directory, argv[optind]);
             if (!opendir(search->directory)) {
