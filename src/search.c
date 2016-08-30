@@ -85,7 +85,6 @@ void parse_text(struct search_t *search, const char *file_name, int file_size,
         if (endline == NULL)
             break;
 
-        /* replace \n with \0 */
         *endline = '\0';
 
         if (parser(search, pointer, pattern) != NULL) {
@@ -93,12 +92,9 @@ void parse_text(struct search_t *search, const char *file_name, int file_size,
                 search->entries = create_file(search, (char *)file_name);
                 first_occurrence = 0;
             }
-            if (pointer[strlen(pointer) - 2] == '\r')
-                pointer[strlen(pointer) - 2] = '\0';
             search->entries = create_line(search, pointer, line_number);
         }
 
-        /* switch back to \n */
         *endline = '\n';
         pointer = endline + 1;
         line_number++;
