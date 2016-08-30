@@ -511,8 +511,8 @@ int main(int argc, char *argv[])
 
     int is_ncurses_init;
 
-    global_search = search;
     search = create_search();
+    global_search = search;
     pthread_mutex_init(&search->data_mutex, NULL);
 
     parse_args(search, argc, argv);
