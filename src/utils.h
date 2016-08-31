@@ -23,9 +23,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 int is_selectionable(struct search_t *search, int index);
 int is_dir_good(char *dir);
-int is_specific_file(struct search_t *search, const char *name);
-int is_ignored_file(struct search_t *search, const char *name);
-int is_extension_good(struct search_t *search, const char *file);
 int is_simlink(char *file_path);
 char *get_file_name(const char * absolute_path);
 char *remove_double(char *initial, char c, char *final);

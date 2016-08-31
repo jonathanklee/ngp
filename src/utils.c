@@ -54,48 +54,6 @@ char *get_file_name(const char * absolute_path)
     return ret;
 }
 
-int is_specific_file(struct search_t *search, const char *name)
-{
-    char *name_begins;
-    struct list *pointer = search->specific_file;
-
-    while (pointer) {
-        name_begins = get_file_name(name);
-        if (!strcmp(name_begins, pointer->data))
-            return 1;
-        pointer = pointer->next;
-    }
-    return 0;
-}
-
-int is_ignored_file(struct search_t *search, const char *name)
-{
-    char *name_begins;
-    struct list *pointer = search->ignore;
-
-    while (pointer) {
-        name_begins = get_file_name(name);
-        if (!strcmp(name_begins, pointer->data))
-            return 1;
-        pointer = pointer->next;
-    }
-    return 0;
-}
-
-int is_extension_good(struct search_t *search, const char *file) {
-
-    struct list *pointer;
-
-    pointer = search->extension;
-    while (pointer) {
-        if (!strcmp(pointer->data, file + strlen(file) -
-            strlen(pointer->data)))
-            return 1;
-        pointer = pointer->next;
-    }
-    return 0;
-}
-
 char *remove_double(char *initial, char c, char *final)
 {
     int i, j;

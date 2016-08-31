@@ -42,6 +42,9 @@ struct search_t * create_search();
 int parse_file(struct search_t *search, const char *file, const char *pattern);
 void parse_text(struct search_t *search, const char *file_name, int file_size,
                 const char *text, const char *pattern);
+int is_specific_file(struct search_t *search, const char *name);
+int is_extension_good(struct search_t *search, const char *file);
+int is_ignored_file(struct search_t *search, const char *name);
 void free_search(struct search_t *search);
 
 #endif
