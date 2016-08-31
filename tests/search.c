@@ -6,8 +6,8 @@
 
 int tests_run = 0;
 
-static char * test_no_entry() {
-
+static char * test_no_entry()
+{
     struct search_t *search;
     search = create_search();
     char text[] = "this is a the first line\nthis is the second line\n";
@@ -18,8 +18,8 @@ static char * test_no_entry() {
     return 0;
 }
 
-static char * test_one_entry_on_the_first_line() {
-
+static char * test_one_entry_on_the_first_line()
+{
     struct search_t *search;
     search = create_search();
     char text[] = "this is a the first line\nthis is the second line\n";
@@ -30,8 +30,8 @@ static char * test_one_entry_on_the_first_line() {
     return 0;
 }
 
-static char * test_one_entry_on_the_second_line() {
-
+static char * test_one_entry_on_the_second_line()
+{
     struct search_t *search;
     search = create_search();
     char text[] = "this is a the first line\nthis is the second line\n";
@@ -42,8 +42,8 @@ static char * test_one_entry_on_the_second_line() {
     return 0;
 }
 
-static char * test_one_entry_incase() {
-
+static char * test_one_entry_incase()
+{
     struct search_t *search;
     search = create_search();
     search->incase_option = 1;
@@ -55,8 +55,8 @@ static char * test_one_entry_incase() {
     return 0;
 }
 
-static char * test_two_entries() {
-
+static char * test_two_entries()
+{
     struct search_t *search;
     search = create_search();
     char text[] = "this is a the first line\nthis is the second line\n";
@@ -67,8 +67,8 @@ static char * test_two_entries() {
     return 0;
 }
 
-static char * test_regexp_start_of_line() {
-
+static char * test_regexp_start_of_line()
+{
     struct search_t *search;
     search = create_search();
     search->regexp_option = 1;
@@ -80,8 +80,8 @@ static char * test_regexp_start_of_line() {
     return 0;
 }
 
-static char * test_wrong_regexp() {
-
+static char * test_wrong_regexp()
+{
     struct search_t *search;
     search = create_search();
     search->regexp_option = 1;
@@ -93,8 +93,8 @@ static char * test_wrong_regexp() {
     return 0;
 }
 
-static char * test_is_specific_file_ok() {
-
+static char * test_is_specific_file_ok()
+{
     struct search_t *search;
     search = create_search();
     add_element(&search->specific_file, "Makefile");
@@ -103,8 +103,8 @@ static char * test_is_specific_file_ok() {
     return 0;
 }
 
-static char * test_is_specific_file_ko() {
-
+static char * test_is_specific_file_ko()
+{
     struct search_t *search;
     search = create_search();
     add_element(&search->specific_file, "Makefile");
@@ -113,8 +113,8 @@ static char * test_is_specific_file_ko() {
     return 0;
 }
 
-static char * test_is_ignored_file_ok() {
-
+static char * test_is_ignored_file_ok()
+{
     struct search_t *search;
     search = create_search();
     add_element(&search->ignore, "rules");
@@ -123,8 +123,8 @@ static char * test_is_ignored_file_ok() {
     return 0;
 }
 
-static char * test_is_ignored_file_ko() {
-
+static char * test_is_ignored_file_ko()
+{
     struct search_t *search;
     search = create_search();
     add_element(&search->ignore, "rules");
@@ -133,8 +133,8 @@ static char * test_is_ignored_file_ko() {
     return 0;
 }
 
-static char * test_is_extension_good_ok() {
-
+static char * test_is_extension_good_ok()
+{
     struct search_t *search;
     search = create_search();
     add_element(&search->extension, ".cpp");
@@ -143,8 +143,8 @@ static char * test_is_extension_good_ok() {
     return 0;
 }
 
-static char * test_is_extension_good_ko() {
-
+static char * test_is_extension_good_ko()
+{
     struct search_t *search;
     search = create_search();
     add_element(&search->extension, ".cpp");
