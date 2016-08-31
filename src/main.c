@@ -134,13 +134,6 @@ void lookup_directory(struct search_t *search, const char *dir, const char *patt
     closedir(dp);
 }
 
-void ncurses_add_line(struct search_t *search, const char *line, int line_number)
-{
-    search->entries = create_line(search, (char *)line, line_number);
-    //if (search->nbentry <= LINES)
-        //display_entries(search, &index, &cursor);
-}
-
 void open_entry(struct search_t *search, int index, const char *editor, const char *pattern)
 {
     int i;
