@@ -41,7 +41,7 @@ void stop_ncurses(struct display_t *display)
     endwin();
 }
 
-void display_results(struct display_t *display, struct search_t *search)
+void display_results(struct display_t *display, struct search_t *search, int terminal_line_nb)
 {
     int i = 0;
     struct entry_t *ptr = search->start;
@@ -49,7 +49,7 @@ void display_results(struct display_t *display, struct search_t *search)
     for (i = 0; i < display->index; i++)
         ptr = ptr->next;
 
-    for (i = 0; i < LINES; i++) {
+    for (i = 0; i < terminal_line_nb; i++) {
         if (ptr && display->index + i < search->nbentry) {
             if (i == display->cursor)
                 display_entry_with_cursor(search, &i, ptr);
@@ -62,24 +62,20 @@ void display_results(struct display_t *display, struct search_t *search)
     }
 }
 
-void move_page_up(struct display_t *display, struct search_t *search)
+void move_page_up(struct display_t *display, struct search_t *search, int terminal_line_nb)
 {
-    clear();
-    refresh();
     if (display->index == 0)
         display->cursor = 1;
     else
-        display->cursor = LINES - 1;
-    display->index -= LINES;
+        display->cursor = terminal_line_nb - 1;
+    display->index -= terminal_line_nb;
     display->index = (display->index < 0 ? 0 : display->index);
 
     if (!is_selectionable(search, display->index + display->cursor))
         display->cursor -= 1;
-
-    display_results(display, search);
 }
 
-void move_page_down(struct display_t *display, struct search_t *search)
+void move_page_down(struct display_t *display, struct search_t *search, int terminal_line_nb)
 {
     int max_index;
 
@@ -103,10 +99,25 @@ void move_page_down(struct display_t *display, struct search_t *search)
 
     if (!is_selectionable(search, display->index + display->cursor))
         display->cursor += 1;
-    display_results(display, search);
 }
 
-void move_cursor_up(struct display_t *display, struct search_t *search)
+void move_page_up_and_refresh(struct display_t *display, struct search_t *search)
+{
+    int terminal_line_nb = LINES;
+    clear();
+    refresh();
+    move_page_up(display, search, terminal_line_nb);
+    display_results(display, search, terminal_line_nb);
+}
+
+void move_page_down_and_refresh(struct display_t *display, struct search_t *search)
+{
+    int terminal_line_nb = LINES;
+    move_page_down(display, search, terminal_line_nb);
+    display_results(display, search, terminal_line_nb);
+}
+
+void move_cursor_up(struct display_t *display, struct search_t *search, int terminal_line_nb)
 {
     /* when cursor is on the first page and on the 2nd line,
        do not move the cursor up */
@@ -114,7 +125,7 @@ void move_cursor_up(struct display_t *display, struct search_t *search)
         return;
 
     if (display->cursor == 0) {
-        move_page_up(display, search);
+        move_page_up(display, search, terminal_line_nb);
         return;
     }
 
@@ -125,41 +136,45 @@ void move_cursor_up(struct display_t *display, struct search_t *search)
         display->cursor = display->cursor - 1;
 
     if (display->cursor < 0) {
-        move_page_up(display, search);
+        move_page_up(display, search, terminal_line_nb);
         return;
     }
-
-    display_results(display, search);
 }
 
-void move_cursor_down(struct display_t *display, struct search_t *search)
+void move_cursor_down(struct display_t *display, struct search_t *search, int terminal_line_nb)
 {
-    if (display->cursor == (LINES - 1)) {
-        move_page_down(display, search);
-        return;
-    }
-
     if (display->cursor + display->index < search->nbentry - 1)
         display->cursor = display->cursor + 1;
 
     if (!is_selectionable(search, display->index + display->cursor))
         display->cursor = display->cursor + 1;
 
-    if (display->cursor > (LINES - 1)) {
-        move_page_down(display, search);
-        return;
+    if (display->cursor > (terminal_line_nb - 1)) {
+        move_page_down(display, search, terminal_line_nb);
     }
-
-    display_results(display, search);
 }
 
-void resize_display(struct display_t *display, struct search_t *search)
+void move_cursor_up_and_refresh(struct display_t *display, struct search_t *search)
+{
+    int terminal_line_nb = LINES;
+    move_cursor_up(display, search, terminal_line_nb);
+    display_results(display, search, terminal_line_nb);
+}
+
+void move_cursor_down_and_refresh(struct display_t *display, struct search_t *search)
+{
+    int terminal_line_nb = LINES;
+    move_cursor_down(display, search, terminal_line_nb);
+    display_results(display, search, terminal_line_nb);
+}
+
+void resize_display(struct display_t *display, struct search_t *search, int terminal_line_nb)
 {
     /* right now this is a bit trivial,
      * but we may do more complex moving around
      * when the window is resized */
     clear();
-    display_results(display, search);
+    display_results(display, search, terminal_line_nb);
     refresh();
 }
 

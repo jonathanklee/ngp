@@ -380,33 +380,33 @@ int main(int argc, char *argv[])
     }
 
     lock(search->data_mutex)
-        display_results(display, search);
+        display_results(display, search, LINES);
 
     while ((ch = getch())) {
         switch(ch) {
         case KEY_RESIZE:
             lock(search->data_mutex)
-                resize_display(display, search);
+                resize_display(display, search, LINES);
             break;
         case CURSOR_DOWN:
         case KEY_DOWN:
             lock(search->data_mutex)
-                move_cursor_down(display, search);
+                move_cursor_down_and_refresh(display, search);
             break;
         case CURSOR_UP:
         case KEY_UP:
             lock(search->data_mutex)
-                move_cursor_up(display, search);
+                move_cursor_up_and_refresh(display, search);
             break;
         case KEY_PPAGE:
         case PAGE_UP:
             lock(search->data_mutex)
-                move_page_up(display, search);
+                move_page_up_and_refresh(display, search);
             break;
         case KEY_NPAGE:
         case PAGE_DOWN:
             lock(search->data_mutex)
-                move_page_down(display, search);
+                move_page_down_and_refresh(display, search);
             break;
         case ENTER:
         case '\n':
@@ -416,7 +416,7 @@ int main(int argc, char *argv[])
             open_entry(search, display->cursor + display->index,
                        search->editor, search->pattern);
             start_ncurses(display);
-            resize_display(display, search);
+            resize_display(display, search, LINES);
             break;
         case QUIT:
             goto quit;
@@ -426,7 +426,7 @@ int main(int argc, char *argv[])
 
         usleep(10000);
         lock(search->data_mutex) {
-            display_results(display, search);
+            display_results(display, search, LINES);
             display_status(search);
             if (search->nbentry != 0 && !display->ncurses_initialized) {
                 start_ncurses(display);

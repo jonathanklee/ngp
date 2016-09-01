@@ -3,6 +3,7 @@
 #include "minunit.h"
 #include "search.h"
 #include "list.h"
+#include "display.h"
 
 int tests_run = 0;
 
@@ -153,6 +154,48 @@ static char * test_is_extension_good_ko()
     return 0;
 }
 
+static char * test_cursor_down()
+{
+    struct display_t *display;
+    struct search_t *search;
+    int terminal_line_nb;
+    char text[] = "this is a the first line\nthis is the second line\n";
+    const char *pattern = "line";
+
+    display = create_display();
+    search = create_search();
+    terminal_line_nb = 10;
+
+    parse_text(search, "fake_file", strlen(text), text, pattern);
+    move_cursor_down(display, search, terminal_line_nb);
+    mu_assert("test_cursor_down failed", display->cursor == 2);
+    free_search(search);
+    free_display(display);
+
+    return 0;
+}
+
+static char * test_cursor_down_end_of_entries()
+{
+    struct display_t *display;
+    struct search_t *search;
+    int terminal_line_nb;
+    char text[] = "this is a the first line\n";
+    const char *pattern = "line";
+
+    display = create_display();
+    search = create_search();
+    terminal_line_nb = 10;
+
+    parse_text(search, "fake_file", strlen(text), text, pattern);
+    move_cursor_down(display, search, terminal_line_nb);
+    mu_assert("test_cursor_down_end_of_entries failed", display->cursor == 1);
+    free_search(search);
+    free_display(display);
+
+    return 0;
+}
+
 static char * all_tests() {
     mu_run_test(test_no_entry);
     mu_run_test(test_one_entry_on_the_first_line);
@@ -167,6 +210,8 @@ static char * all_tests() {
     mu_run_test(test_is_ignored_file_ko);
     mu_run_test(test_is_extension_good_ok);
     mu_run_test(test_is_extension_good_ko);
+    mu_run_test(test_cursor_down);
+    mu_run_test(test_cursor_down_end_of_entries);
     return 0;
 }
 
