@@ -163,7 +163,7 @@ void open_entry(struct search_t *search, int index, const char *editor, const ch
     if (system(command) < 0)
         return;
 
-        line->opened = 1;
+    line->opened = 1;
 }
 
 void sig_handler(int signo)
