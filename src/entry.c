@@ -7,12 +7,12 @@
 
 #include <sys/stat.h>
 
-void display_entry(struct search_t *search, int *y, struct entry_t *entry)
+void display_entry(struct search_t *search, int y, struct entry_t *entry)
 {
     entry->vtable->display(search, y, entry);
 }
 
-void display_entry_with_cursor(struct search_t *search, int *y, struct entry_t *entry)
+void display_entry_with_cursor(struct search_t *search, int y, struct entry_t *entry)
 {
     entry->vtable->display_with_cursor(search, y, entry);
 }

@@ -52,9 +52,9 @@ void display_results(struct display_t *display, struct search_t *search, int ter
     for (i = 0; i < terminal_line_nb; i++) {
         if (ptr && display->index + i < search->nbentry) {
             if (i == display->cursor)
-                display_entry_with_cursor(search, &i, ptr);
+                display_entry_with_cursor(search, i, ptr);
              else
-                display_entry(search, &i, ptr);
+                display_entry(search, i, ptr);
 
             if (ptr->next)
                 ptr = ptr->next;

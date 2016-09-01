@@ -30,7 +30,7 @@ struct entry_t *create_line(struct search_t *search, char *line, int line_number
     return &new->entry;
 }
 
-void display_line(struct search_t *search, int *y, struct entry_t *entry)
+void display_line(struct search_t *search, int y, struct entry_t *entry)
 {
     char *pattern = NULL;
     char *ptr;
@@ -44,13 +44,13 @@ void display_line(struct search_t *search, int *y, struct entry_t *entry)
 
 
     /* first clear line */
-    move(*y, 0);
+    move(y, 0);
     clrtoeol();
 
     /* display line number */
     attron(COLOR_PAIR(COLOR_LINE_NUMBER));
     struct line_t *container = container_of(entry, struct line_t, entry);
-    mvprintw(*y, 0, "%d:", container->line);
+    mvprintw(y, 0, "%d:", container->line);
 
     /* display rest of line */
     char line_begin[16];
@@ -58,7 +58,7 @@ void display_line(struct search_t *search, int *y, struct entry_t *entry)
     length = strlen(line_begin) + 1;
     attron(COLOR_PAIR(COLOR_LINE));
     strncpy(cropped_line, line, crop - length);
-    mvprintw(*y, length, "%s", cropped_line);
+    mvprintw(y, length, "%s", cropped_line);
 
     /* highlight pattern */
     if (search->regexp_option) {
@@ -79,7 +79,7 @@ start_printing:
            return;
 
     ptr = cropped_line;
-    move(*y, length);
+    move(y, length);
     while (ptr != pattern) {
         addch(*ptr);
         ptr++;
@@ -106,7 +106,7 @@ start_printing:
     attroff(A_REVERSE);
 }
 
-void display_line_with_cursor(struct search_t *search, int *y, struct entry_t *entry)
+void display_line_with_cursor(struct search_t *search, int y, struct entry_t *entry)
 {
     attron(A_REVERSE);
     display_line(search, y, entry);
