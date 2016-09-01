@@ -196,6 +196,29 @@ static char * test_cursor_down_end_of_entries()
     return 0;
 }
 
+static char * test_cursor_down_skip_file()
+{
+    struct display_t *display;
+    struct search_t *search;
+    int terminal_line_nb;
+    char text[] = "this is a the first line\n";
+    char text2[] = "this is a the first line\n";
+    const char *pattern = "line";
+
+    display = create_display();
+    search = create_search();
+    terminal_line_nb = 10;
+
+    parse_text(search, "fake_file", strlen(text), text, pattern);
+    parse_text(search, "fake_file2", strlen(text), text, pattern);
+    move_cursor_down(display, search, terminal_line_nb);
+    mu_assert("test_cursor_down_end_of_entries_before_next_file_entries failed", display->cursor == 3);
+    free_search(search);
+    free_display(display);
+
+    return 0;
+}
+
 static char * all_tests() {
     mu_run_test(test_no_entry);
     mu_run_test(test_one_entry_on_the_first_line);
@@ -212,6 +235,7 @@ static char * all_tests() {
     mu_run_test(test_is_extension_good_ko);
     mu_run_test(test_cursor_down);
     mu_run_test(test_cursor_down_end_of_entries);
+    mu_run_test(test_cursor_down_skip_file);
     return 0;
 }
 

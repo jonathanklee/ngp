@@ -149,9 +149,8 @@ void move_cursor_down(struct display_t *display, struct search_t *search, int te
     if (!is_selectionable(search, display->index + display->cursor))
         display->cursor = display->cursor + 1;
 
-    if (display->cursor > (terminal_line_nb - 1)) {
+    if (display->cursor > (terminal_line_nb - 1))
         move_page_down(display, search, terminal_line_nb);
-    }
 }
 
 void move_cursor_up_and_refresh(struct display_t *display, struct search_t *search)
