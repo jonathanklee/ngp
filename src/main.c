@@ -358,7 +358,7 @@ int main(int argc, char *argv[])
 {
     int ch;
     pthread_mutex_t *mutex;
-    static struct search_t *search;
+    struct search_t *search;
     struct display_t *display;
     pthread_t pid;
 
