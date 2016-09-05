@@ -28,7 +28,7 @@ struct entry_t *create_file(struct search_t *search, char *file)
     return &new->entry;
 }
 
-void display_file(struct search_t *search, int y, struct entry_t *entry)
+void display_file(struct entry_t *entry, struct search_t *search, int y)
 {
     char filtered_line[PATH_MAX];
     char cropped_line[PATH_MAX] = "";
@@ -53,7 +53,7 @@ void display_file(struct search_t *search, int y, struct entry_t *entry)
     attroff(A_BOLD);
 }
 
-void display_file_with_cursor(struct search_t *search, int y, struct entry_t *entry) { }
+void display_file_with_cursor(struct entry_t *entry, struct search_t *search, int y) { }
 
 bool is_file_selectionable(struct entry_t *entry)
 {

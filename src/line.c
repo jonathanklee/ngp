@@ -30,7 +30,7 @@ struct entry_t *create_line(struct search_t *search, char *line, int line_number
     return &new->entry;
 }
 
-void display_line(struct search_t *search, int y, struct entry_t *entry)
+void display_line(struct entry_t *entry, struct search_t *search, int y)
 {
     char *pattern = NULL;
     char *ptr;
@@ -106,10 +106,10 @@ start_printing:
     attroff(A_REVERSE);
 }
 
-void display_line_with_cursor(struct search_t *search, int y, struct entry_t *entry)
+void display_line_with_cursor(struct entry_t *entry, struct search_t *search, int y)
 {
     attron(A_REVERSE);
-    display_line(search, y, entry);
+    display_line(entry, search, y);
     attroff(A_REVERSE);
 }
 
