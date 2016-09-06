@@ -30,55 +30,36 @@ struct entry_t *create_line(struct search_t *search, char *line, int line_number
     return &new->entry;
 }
 
-void display_line(struct entry_t *entry, struct search_t *search, int y)
+static void hilight_pattern(struct entry_t *entry, char *line, struct search_t *search, int y)
 {
-    char *pattern = NULL;
+    int length;
+    int counter;
     char *ptr;
     char *regexp_matched_string = NULL;
+    char *pattern = NULL;
     char * (*parser)(struct search_t *, const char *, const char*);
-    int length = 0;
-    int crop = COLS;
-    int counter = 0;
-    char cropped_line[PATH_MAX] = "";
-    char *line = entry->data;
-
-
-    /* first clear line */
-    move(y, 0);
-    clrtoeol();
-
-    /* display line number */
-    attron(COLOR_PAIR(COLOR_LINE_NUMBER));
     struct line_t *container = container_of(entry, struct line_t, entry);
-    mvprintw(y, 0, "%d:", container->line);
+    char buffer[32];
 
-    /* display rest of line */
-    char line_begin[16];
-    sprintf(line_begin, "%d", container->line);
-    length = strlen(line_begin) + 1;
-    attron(COLOR_PAIR(COLOR_LINE));
-    strncpy(cropped_line, line, crop - length);
-    mvprintw(y, length, "%s", cropped_line);
-
-    /* highlight pattern */
     if (search->regexp_option) {
-        regexp_matched_string = regex(search, cropped_line, search->pattern);
+        regexp_matched_string = regex(search, line, search->pattern);
         if (!regexp_matched_string)
             return;
 
-        pattern = strstr(cropped_line, regexp_matched_string);
+        pattern = strstr(line, regexp_matched_string);
         goto start_printing;
     }
 
     parser = get_parser(search);
-    pattern = parser(search, cropped_line, search->pattern);
+    pattern = parser(search, line, search->pattern);
 
 start_printing:
 
     if (!pattern)
            return;
 
-    ptr = cropped_line;
+    ptr = (char *)line;
+    length = get_integer_as_string(container->line, buffer);
     move(y, length);
     while (ptr != pattern) {
         addch(*ptr);
@@ -104,6 +85,32 @@ start_printing:
         addch(*ptr);
 
     attroff(A_REVERSE);
+}
+
+void display_line(struct entry_t *entry, struct search_t *search, int y)
+{
+    int length = 0;
+    char cropped_line[PATH_MAX] = "";
+    char *line = entry->data;
+
+    /* first clear line */
+    move(y, 0);
+    clrtoeol();
+
+    /* display line number */
+    attron(COLOR_PAIR(COLOR_LINE_NUMBER));
+    struct line_t *container = container_of(entry, struct line_t, entry);
+    mvprintw(y, 0, "%d:", container->line);
+
+    /* display rest of line */
+    char line_begin[16];
+    sprintf(line_begin, "%d", container->line);
+    length = strlen(line_begin) + 1;
+    attron(COLOR_PAIR(COLOR_LINE));
+    strncpy(cropped_line, line, COLS - length);
+    mvprintw(y, length, "%s", cropped_line);
+
+    hilight_pattern(entry, cropped_line, search, y);
 }
 
 void display_line_with_cursor(struct entry_t *entry, struct search_t *search, int y)

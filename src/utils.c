@@ -171,3 +171,9 @@ char *strcasestr_wrapper(struct search_t *search, const char *line, const char *
     return strcasestr(line, pattern);
 }
 
+int get_integer_as_string(int integer, char *string)
+{
+    sprintf(string, "%d", integer);
+    return strlen(string) + 1;
+}
+
