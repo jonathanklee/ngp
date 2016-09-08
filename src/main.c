@@ -41,6 +41,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define ENTER         'p'
 #define QUIT          'q'
 #define MARK          'm'
+#define CTRL_D         4
+#define CTRL_U        21
 
 #define lock(MUTEX) \
 for(mutex = &MUTEX; \
@@ -400,11 +402,13 @@ int main(int argc, char *argv[])
             break;
         case KEY_PPAGE:
         case PAGE_UP:
+        case CTRL_U:
             lock(search->data_mutex)
                 move_page_up_and_refresh(display, search);
             break;
         case KEY_NPAGE:
         case PAGE_DOWN:
+        case CTRL_D:
             lock(search->data_mutex)
                 move_page_down_and_refresh(display, search);
             break;
