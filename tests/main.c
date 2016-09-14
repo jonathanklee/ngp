@@ -241,6 +241,30 @@ static char * test_cursor_down_end_of_page()
     return 0;
 }
 
+static char * test_cursor_down_end_of_page_skip_file()
+{
+    struct display_t *display;
+    struct search_t *search;
+    int terminal_line_nb;
+    char text[] = "this is the first line\n this is the second line\n";
+    char text2[] = "this is the first line\n";
+    const char *pattern = "line";
+
+    display = create_display();
+    search = create_search();
+    terminal_line_nb = 3;
+
+    parse_text(search, "fake_file", strlen(text), text, pattern);
+    parse_text(search, "fake_file2", strlen(text), text, pattern);
+    move_cursor_down(display, search, terminal_line_nb);
+    move_cursor_down(display, search, terminal_line_nb);
+    mu_assert("test_cursor_down_end_of_page_skip_file failed", display->cursor == 1);
+    free_search(search);
+    free_display(display);
+
+    return 0;
+}
+
 static char * all_tests() {
     mu_run_test(test_no_entry);
     mu_run_test(test_one_entry_on_the_first_line);
@@ -259,6 +283,7 @@ static char * all_tests() {
     mu_run_test(test_cursor_down_end_of_entries);
     mu_run_test(test_cursor_down_skip_file);
     mu_run_test(test_cursor_down_end_of_page);
+    mu_run_test(test_cursor_down_end_of_page_skip_file);
     return 0;
 }
 
