@@ -212,7 +212,29 @@ static char * test_cursor_down_skip_file()
     parse_text(search, "fake_file", strlen(text), text, pattern);
     parse_text(search, "fake_file2", strlen(text), text, pattern);
     move_cursor_down(display, search, terminal_line_nb);
-    mu_assert("test_cursor_down_end_of_entries_before_next_file_entries failed", display->cursor == 3);
+    mu_assert("test_cursor_down_skip_file failed", display->cursor == 3);
+    free_search(search);
+    free_display(display);
+
+    return 0;
+}
+
+static char * test_cursor_down_end_of_page()
+{
+    struct display_t *display;
+    struct search_t *search;
+    int terminal_line_nb;
+    char text[] = "this is the first line\n this is the second line\n this is the third line\n this is the fourth line \n ";
+    const char *pattern = "line";
+
+    display = create_display();
+    search = create_search();
+    terminal_line_nb = 3;
+
+    parse_text(search, "fake_file", strlen(text), text, pattern);
+    move_cursor_down(display, search, terminal_line_nb);
+    move_cursor_down(display, search, terminal_line_nb);
+    mu_assert("test_cursor_down_end_of_page failed", display->cursor == 0);
     free_search(search);
     free_display(display);
 
@@ -236,6 +258,7 @@ static char * all_tests() {
     mu_run_test(test_cursor_down);
     mu_run_test(test_cursor_down_end_of_entries);
     mu_run_test(test_cursor_down_skip_file);
+    mu_run_test(test_cursor_down_end_of_page);
     return 0;
 }
 

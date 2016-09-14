@@ -82,19 +82,19 @@ void move_page_down(struct display_t *display, struct search_t *search, int term
     if (search->nbentry == 0)
         return;
 
-    if (search->nbentry % LINES == 0)
-        max_index = (search->nbentry - LINES);
+    if (search->nbentry % terminal_line_nb == 0)
+        max_index = (search->nbentry - terminal_line_nb);
     else
-        max_index = (search->nbentry - (search->nbentry % LINES));
+        max_index = (search->nbentry - (search->nbentry % terminal_line_nb));
 
     if (display->index == max_index)
-        display->cursor = (search->nbentry - 1) % LINES;
+        display->cursor = (search->nbentry - 1) % terminal_line_nb;
     else
         display->cursor = 0;
 
     clear();
     refresh();
-    display->index += LINES;
+    display->index += terminal_line_nb;
     display->index = (display->index > max_index ? max_index : display->index);
 
     if (!is_selectionable(search, display->index + display->cursor))
