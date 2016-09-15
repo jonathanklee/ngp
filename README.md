@@ -13,8 +13,7 @@ Installation
 ------------
 
 - install build dependencies : libconfig, libpcre & ncurses
-- ./autogen.sh
-- ./configure
+- cmake .
 - make
 - make install
 - enjoy !
