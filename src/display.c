@@ -68,6 +68,7 @@ void move_page_up(struct display_t *display, struct search_t *search, int termin
         display->cursor = 1;
     else
         display->cursor = terminal_line_nb - 1;
+
     display->index -= terminal_line_nb;
     display->index = (display->index < 0 ? 0 : display->index);
 
@@ -89,8 +90,6 @@ void move_page_down(struct display_t *display, struct search_t *search, int term
     else
         display->cursor = 0;
 
-    clear();
-    refresh();
     display->index += terminal_line_nb;
     display->index = (display->index > max_index ? max_index : display->index);
 
@@ -110,6 +109,8 @@ void move_page_up_and_refresh(struct display_t *display, struct search_t *search
 void move_page_down_and_refresh(struct display_t *display, struct search_t *search)
 {
     int terminal_line_nb = LINES;
+    clear();
+    refresh();
     move_page_down(display, search, terminal_line_nb);
     display_results(display, search, terminal_line_nb);
 }
@@ -141,8 +142,11 @@ void move_cursor_down(struct display_t *display, struct search_t *search, int te
     if (!is_selectionable(search, display->index + display->cursor))
         display->cursor = display->cursor + 1;
 
-    if (display->cursor > (terminal_line_nb - 1))
+    if (display->cursor > (terminal_line_nb - 1)) {
         move_page_down(display, search, terminal_line_nb);
+        clear();
+        refresh();
+    }
 }
 
 void move_cursor_up_and_refresh(struct display_t *display, struct search_t *search)
