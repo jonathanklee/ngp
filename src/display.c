@@ -79,9 +79,6 @@ void move_page_down(struct display_t *display, struct search_t *search, int term
 {
     int max_index;
 
-    if (search->nbentry == 0)
-        return;
-
     if (search->nbentry % terminal_line_nb == 0)
         max_index = (search->nbentry - terminal_line_nb);
     else
