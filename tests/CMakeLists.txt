@@ -26,5 +26,5 @@ find_library(LIBPCRE_LIBRARY libpcre.so)
 include_directories(${CURSES_INCLUDE_DIRS})
 
 # libs
-target_link_libraries(tests ${CURSES_LIBRARIES} ${LIBPCRE_LIBRARY} ${LIBCONFIG_LIBRARY} objects)
+target_link_libraries(tests objects ${CURSES_LIBRARIES} ${LIBPCRE_LIBRARY} ${LIBCONFIG_LIBRARY})
 
