@@ -233,10 +233,10 @@ void read_config(struct search_t *search)
     const char *specific_files;
     const char *extensions;
     const char *ignore;
-        const char *buffer;
+    const char *buffer;
     char *ptr;
     char *buf = NULL;
-        config_t cfg;
+    config_t cfg;
 
     configuration_init(&cfg);
 
