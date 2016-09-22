@@ -122,7 +122,8 @@ void move_cursor_up(struct display_t *display, struct search_t *search, int term
     if (display->index == 0 && display->cursor == 1)
         return;
 
-    if (display->cursor <= 0) {
+    if (display->cursor <= 0 ||
+            (!is_selectionable(search, display->index && display->cursor == 1))) {
         move_page_up(display, search, terminal_line_nb);
         return;
     }
