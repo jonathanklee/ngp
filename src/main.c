@@ -376,7 +376,7 @@ int main(int argc, char *argv[])
     global_display = display;
 
     signal(SIGINT, sig_handler);
-    if (pthread_create(&pid, NULL, &lookup_thread, search)) {
+    if (pthread_create(&pid, NULL, lookup_thread, search)) {
         fprintf(stderr, "ngp: cannot create thread");
         free_search(search);
         exit(-1);

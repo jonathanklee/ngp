@@ -228,7 +228,7 @@ static char * test_cursor_down_skip_file()
     terminal_line_nb = 10;
 
     parse_text(search, "fake_file", strlen(text), text, pattern);
-    parse_text(search, "fake_file2", strlen(text), text, pattern);
+    parse_text(search, "fake_file2", strlen(text2), text, pattern);
     move_cursor_down(display, search, terminal_line_nb);
     mu_assert("test_cursor_down_skip_file failed", display->cursor == 3);
     free_search(search);
@@ -273,7 +273,7 @@ static char * test_cursor_down_end_of_page_skip_file()
     terminal_line_nb = 3;
 
     parse_text(search, "fake_file", strlen(text), text, pattern);
-    parse_text(search, "fake_file2", strlen(text), text, pattern);
+    parse_text(search, "fake_file2", strlen(text2), text2, pattern);
     move_cursor_down(display, search, terminal_line_nb);
     move_cursor_down(display, search, terminal_line_nb);
     mu_assert("test_cursor_down_end_of_page_skip_file failed", display->cursor == 1);
