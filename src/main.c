@@ -58,6 +58,7 @@ enum cursor {
 /* keep a pointer on search_t & display_t for signal handler ONLY */
 struct search_t *global_search;
 struct display_t *global_display;
+pthread_t pid;
 
 void usage(void)
 {
@@ -172,6 +173,8 @@ void open_entry(struct search_t *search, int index, const char *editor, const ch
 void sig_handler(int signo)
 {
     if (signo == SIGINT) {
+        pthread_cancel(pid);
+        pthread_join(pid, NULL);
         stop_ncurses(global_display);
         free_search(global_search);
         exit(-1);
@@ -363,7 +366,6 @@ int main(int argc, char *argv[])
     pthread_mutex_t *mutex;
     struct search_t *search;
     struct display_t *display;
-    pthread_t pid;
 
     search = create_search();
     global_search = search;
@@ -447,6 +449,8 @@ int main(int argc, char *argv[])
     }
 
 quit:
+    pthread_cancel(pid);
+    pthread_join(pid, NULL);
     stop_ncurses(display);
     free_search(search);
     return 0;
