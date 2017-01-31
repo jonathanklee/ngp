@@ -56,9 +56,9 @@ enum cursor {
 };
 
 /* keep a pointer on search_t & display_t for signal handler ONLY */
-struct search_t *global_search;
-struct display_t *global_display;
-pthread_t pid;
+static struct search_t *global_search;
+static struct display_t *global_display;
+static pthread_t pid;
 
 void usage(void)
 {
