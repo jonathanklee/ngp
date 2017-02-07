@@ -50,11 +50,6 @@ for(mutex = &MUTEX; \
 mutex && !pthread_mutex_lock(mutex); \
 pthread_mutex_unlock(mutex), mutex = 0)
 
-enum cursor {
-    CURSOR_OFF,
-    CURSOR_ON
-};
-
 /* keep a pointer on search_t & display_t for signal handler ONLY */
 static struct search_t *global_search;
 static struct display_t *global_display;
