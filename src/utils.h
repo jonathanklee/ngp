@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2016  Jonathan Klee
+/* Copyright (c) 2013 Jonathan Klee
 
 This file is part of ngp.
 
