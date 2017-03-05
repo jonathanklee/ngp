@@ -12,7 +12,7 @@ arg #1 = pattern to search
 arg #2 = line number
 arg #3 = file path */
 
-editor = "vim -c \"/%1$s\" -c '%2$d' '%3$s'"
+editor = "vim -c \"silent /%1$s\" -c '%2$d' '%3$s'"
 // editor = "emacs +'%2$d' '%3$s'";
 
 
