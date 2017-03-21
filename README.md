@@ -21,5 +21,5 @@ Installation
 
 Looking for "is_..." regexp in ngp source code.
 
-![gif] (/ngp.gif)
+![gif](/ngp.gif)
 
