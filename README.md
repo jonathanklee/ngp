@@ -22,7 +22,11 @@ make
 make install
 ```
 
-3. That's it. You can now enjoy !
+3. That's it. You can now open a terminal and enjoy !
+
+```
+ngp my_pattern
+```
 
 Example
 -------
