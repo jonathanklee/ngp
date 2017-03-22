@@ -27,7 +27,6 @@ make install
 Example
 -------
 
-Looking for "is_..." regexp in ngp source code.
+Looking for "create" pattern in ngp source code.
 
-![gif](/ngp.gif)
-
+[![asciicast](https://asciinema.org/a/04853gv2npnqk0rjxs3krzwll.png)](https://asciinema.org/a/04853gv2npnqk0rjxs3krzwll)
