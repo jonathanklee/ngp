@@ -43,8 +43,6 @@ void display_entry(struct entry_t *entry, struct search_t *search, int y, bool i
 
 void free_entry(struct entry_t *entry);
 
-struct entry_t *create_line(struct search_t *search, char *line, int line_numer);
-
 bool is_entry_selectionable(struct entry_t *entry);
 
 #endif
