@@ -33,4 +33,4 @@ Example
 
 Looking for "create" pattern in ngp source code.
 
-[![asciicast](https://asciinema.org/a/04853gv2npnqk0rjxs3krzwll.png)](https://asciinema.org/a/04853gv2npnqk0rjxs3krzwll)
+[![asciicast](https://asciinema.org/a/2r4kmqt572knj5m271z6o7b0y.png)](https://asciinema.org/a/2r4kmqt572knj5m271z6o7b0y)
