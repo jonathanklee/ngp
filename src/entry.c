@@ -25,14 +25,9 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <sys/stat.h>
 
-void display_entry(struct entry_t *entry, struct search_t *search, int y)
+void display_entry(struct entry_t *entry, struct search_t *search, int y, bool is_cursor_on_entry)
 {
-    entry->vtable->display(entry, search, y);
-}
-
-void display_entry_with_cursor(struct entry_t *entry, struct search_t *search, int y)
-{
-    entry->vtable->display_with_cursor(entry, search, y);
+    entry->vtable->display(entry, search, y, is_cursor_on_entry);
 }
 
 void free_entry(struct entry_t *entry)

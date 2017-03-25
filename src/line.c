@@ -21,7 +21,6 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 
 struct entry_vtable line_vtable = {
     display_line,
-    display_line_with_cursor,
     is_line_selectionable,
     free_line
 };
@@ -105,11 +104,14 @@ start_printing:
     attroff(A_REVERSE);
 }
 
-void display_line(struct entry_t *entry, struct search_t *search, int y)
+void display_line(struct entry_t *entry, struct search_t *search, int y, bool is_cursor_on_entry)
 {
     int length = 0;
     char cropped_line[PATH_MAX] = "";
     char *line = entry->data;
+
+    if (is_cursor_on_entry)
+        attron(A_REVERSE);
 
     /* first clear line */
     move(y, 0);
@@ -129,13 +131,9 @@ void display_line(struct entry_t *entry, struct search_t *search, int y)
     mvprintw(y, length, "%s", cropped_line);
 
     hilight_pattern(entry, cropped_line, search, y);
-}
 
-void display_line_with_cursor(struct entry_t *entry, struct search_t *search, int y)
-{
-    attron(A_REVERSE);
-    display_line(entry, search, y);
-    attroff(A_REVERSE);
+    if (is_cursor_on_entry)
+        attroff(A_REVERSE);
 }
 
 bool is_line_selectionable(struct entry_t *entry)

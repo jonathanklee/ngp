@@ -22,7 +22,6 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 
 struct entry_vtable file_vtable = {
     display_file,
-    display_file_with_cursor,
     is_file_selectionable,
     free_file
 };
@@ -46,7 +45,7 @@ struct entry_t *create_file(struct search_t *search, char *file)
     return &new->entry;
 }
 
-void display_file(struct entry_t *entry, struct search_t *search, int y)
+void display_file(struct entry_t *entry, struct search_t *search, int y, bool is_cursor_on_entry)
 {
     char filtered_line[PATH_MAX];
     char cropped_line[PATH_MAX] = "";
@@ -70,8 +69,6 @@ void display_file(struct entry_t *entry, struct search_t *search, int y)
 
     attroff(A_BOLD);
 }
-
-void display_file_with_cursor(struct entry_t *entry, struct search_t *search, int y) { }
 
 bool is_file_selectionable(struct entry_t *entry)
 {
