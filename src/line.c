@@ -104,7 +104,7 @@ start_printing:
     attroff(A_REVERSE);
 }
 
-void display_line(struct entry_t *entry, struct search_t *search, int y, bool is_cursor_on_entry)
+void display_line(struct entry_t *entry, struct search_t *search, int y, int is_cursor_on_entry)
 {
     int length = 0;
     char cropped_line[PATH_MAX] = "";
@@ -136,7 +136,7 @@ void display_line(struct entry_t *entry, struct search_t *search, int y, bool is
         attroff(A_REVERSE);
 }
 
-bool is_line_selectionable(struct entry_t *entry)
+int is_line_selectionable(struct entry_t *entry)
 {
     return true;
 }
