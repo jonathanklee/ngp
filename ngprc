@@ -12,8 +12,9 @@ arg #1 = pattern to search
 arg #2 = line number
 arg #3 = file path */
 
-editor = "vim -c 'set hls' -c 'silent /%1$s' -c '%2$d' '%3$s'"
-// editor = "emacs +'%2$d' '%3$s'";
+editor = "vim -c 'set hls' -c 'silent /%1$s' -c %2$d %3$s"
+//editor = "emacs +%2$d %3$s &";
+//editor = "subl %3$s:%2$d 1>/dev/null 2>&1";
 
 
 /* themes
