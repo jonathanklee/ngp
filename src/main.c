@@ -73,7 +73,7 @@ void lookup_file(struct search_t *search, const char *file, const char *pattern)
     errno = 0;
     pthread_mutex_t *mutex;
 
-    if (is_ignored_file(search, file))
+    if (is_ignored_file(search, file) && !search->raw_option)
         return;
 
     if (search->raw_option) {
