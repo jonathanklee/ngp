@@ -12,18 +12,22 @@ add_executable(tests ${SRC_TESTS} ${HEADERS_TESTS})
 
 include_directories(../src)
 
+# ncurses
 find_package(Curses REQUIRED)
 
 # config
-find_path(LIBCONFIG_INCLUDE_DIR libconfig.h)
-find_library(LIBCONFIG_LIBRARY libconfig.so)
+find_package(PkgConfig REQUIRED)
+
+# libconfig
+pkg_check_modules(LIBCONFIG REQUIRED libconfig>=1.0)
+find_library(LIBCONFIG_LIBRARY NAMES config libconfig HINTS ${LIBCONFIG_LIBDIR})
 
 # pcre
-find_path(LIBPCRE_INCLUDE_DIR libpcre.h)
-find_library(LIBPCRE_LIBRARY libpcre.so)
+pkg_check_modules(LIBPCRE REQUIRED libpcre>=1.0)
+find_library(LIBPCRE_LIBRARY NAMES pcre libpcre HINTS ${LIBPCRE_LIBDIR})
 
 # headers
-include_directories(${CURSES_INCLUDE_DIRS})
+include_directories(${CURSES_INCLUDE_DIRS} ${LIBCONFIG_INCLUDE_DIRS} ${LIBPCRE_INCLUDE_DIRS})
 
 # libs
 target_link_libraries(tests objects ${CURSES_LIBRARIES} ${LIBPCRE_LIBRARY} ${LIBCONFIG_LIBRARY})
