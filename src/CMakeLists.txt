@@ -28,11 +28,11 @@ add_library(objects STATIC
 
 add_executable(ngp ${SRCS} ${HEADERS})
 
-# ncurses
-find_package(Curses REQUIRED)
-
 # config
 find_package(PkgConfig REQUIRED)
+
+# ncurses
+pkg_check_modules(CURSES REQUIRED ncurses)
 
 # libconfig
 pkg_check_modules(LIBCONFIG REQUIRED libconfig)
