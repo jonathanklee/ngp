@@ -12,5 +12,5 @@ enable_testing()
 add_test(UNITTESTS, tests/tests)
 
 if(UNIX AND NOT APPLE)
-    install(FILES ngp.1 DESTINATION /usr/share/man/man1)
+    install(FILES ngp.1 DESTINATION usr/share/man/man1)
 endif()

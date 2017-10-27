@@ -49,4 +49,4 @@ include_directories(${CURSES_INCLUDE_DIRS} ${LIBCONFIG_INCLUDE_DIRS} ${LIBPCRE_I
 target_link_libraries(ngp objects ${CURSES_LIBRARIES} ${LIBPCRE_LIBRARY} ${LIBCONFIG_LIBRARY} pthread)
 
 install(TARGETS ngp DESTINATION bin)
-install(FILES ../ngprc DESTINATION /etc)
+install(FILES ../ngprc DESTINATION etc)
