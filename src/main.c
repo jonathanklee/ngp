@@ -133,6 +133,80 @@ void lookup_directory(struct search_t *search, const char *dir, const char *patt
     closedir(dp);
 }
 
+void external_lookup(struct search_t *search, const char *dir, const char *pattern)
+{
+    char command[PATH_MAX] = {'\0'};
+    snprintf(command, sizeof(command),
+        search->parser_cmd,
+        pattern,
+        dir);
+
+    /* open the command for reading. */
+    FILE *fp = popen(command, "r");
+    if (fp == NULL) {
+        printf("Failed to run command: %s \n", command);
+        exit(1);
+    }
+
+    /* parse the output a line at a time. */
+    char output[PATH_MAX] = {'\0'};
+    while (fgets(output, sizeof(output)-1, fp) != NULL) {
+
+        /* empty line */
+        size_t line_length = strlen(output) - 1;
+        if (line_length == 0) {
+            continue;
+        }
+
+        /* only '--' */
+        char* match = regex(search, output, "^--$");
+        search->pcre_compiled = 0;
+        if (match) {
+            pcre_free_substring(match);
+            continue;
+        }
+
+        /* file names */
+        match = regex(search, output, "^(?!(\\d+?[-:=])|(--)).+$");
+        search->pcre_compiled = 0;
+        if (match) {
+            search->entries = create_file(search, match);
+            pcre_free_substring(match);
+            continue;
+        }
+
+        /* line number */
+        size_t line_number = 0;
+        match = regex(search, output, "^\\d+?(?=[-:=])");
+        search->pcre_compiled = 0;
+        if (match) {
+            line_number = atoi(match);
+            pcre_free_substring(match);
+        }
+
+        /* line content */
+        if (line_number > 0) {
+            match = regex(search, output, "(?<=\\d[-:=]).+");
+            search->pcre_compiled = 0;
+            if (match) {
+                search->entries = create_line(search, match, line_number);
+                pcre_free_substring(match);
+            } else {
+                match = calloc(1, sizeof('\0'));
+                search->entries = create_line(search, match, line_number);
+                free(match);
+            }
+            continue;
+        }
+
+        fprintf(stderr, "error: unmatched output line:\n%s\n", output);
+        exit(-1);
+    }
+
+    /* close */
+    pclose(fp);
+}
+
 void open_entry(struct search_t *search, int index, const char *editor, const char *pattern)
 {
     int i;
@@ -188,7 +262,11 @@ void *lookup_thread(void *arg)
         exit(-1);
     }
 
-    lookup_directory(d, d->directory, d->pattern);
+    if (d->external_parser)
+        external_lookup(d, d->directory, d->pattern);
+    else
+        lookup_directory(d, d->directory, d->pattern);
+
     d->status = 0;
     closedir(dp);
     return (void *) NULL;
@@ -244,6 +322,11 @@ void read_config(struct search_t *search)
         exit(-1);
     }
         strncpy(search->editor, buffer, LINE_MAX);
+
+    if (config_lookup_string(&cfg, "parser_cmd", &buffer)) {
+        search->external_parser = 1;
+        strncpy(search->parser_cmd, buffer, LINE_MAX);
+    }
 
     /* only if we don't provide extension as argument */
     if (!search->extension_option) {

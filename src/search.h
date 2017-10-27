@@ -54,6 +54,9 @@ struct search_t {
     int incase_option;
     int ignore_option;
     int regexp_is_ok;
+
+    int external_parser;
+    char parser_cmd[LINE_MAX];
 };
 
 struct search_t * create_search();
