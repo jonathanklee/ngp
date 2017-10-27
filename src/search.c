@@ -42,7 +42,7 @@ struct search_t * create_search()
     search->incase_option = 0;
     search->entries = NULL;
     search->start = search->entries;
-    strcpy(search->directory, "./");
+    strcpy(search->directory, ".");
 
     return search;
 }

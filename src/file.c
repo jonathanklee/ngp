@@ -57,10 +57,7 @@ void display_file(struct entry_t *entry, struct search_t *search, int y, int is_
 
     attron(A_BOLD);
 
-    if (strcmp(search->directory, "./") == 0)
-        remove_double(entry->data + 3, '/', filtered_line);
-    else
-        remove_double(entry->data , '/', filtered_line);
+    remove_double(entry->data , '/', filtered_line);
 
     strncpy(cropped_line, filtered_line, crop);
     attron(COLOR_PAIR(COLOR_FILE));
