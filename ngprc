@@ -1,11 +1,11 @@
 // extensions your want to look into
-extensions = ".c .h .cpp .hpp .py .S .pl .qml .pro .pri .rb .java";
+extensions = ".c .h .cpp .hpp .py .S .pl .qml .pro .pri .rb .java"
 
 // files you want to look into
-files = "Makefile rules control";
+files = "Makefile rules control"
 
 // files you want to ignore
-ignore = "";
+ignore = ""
 
 /* editor command :
 arg #1 = pattern to search
@@ -13,16 +13,16 @@ arg #2 = line number
 arg #3 = file path */
 
 editor = "vim -c 'set hls' -c 'silent /%1$s' -c %2$d %3$s"
-//editor = "emacs +%2$d %3$s &";
-//editor = "subl %3$s:%2$d 1>/dev/null 2>&1";
+//editor = "emacs +%2$d %3$s &"
+//editor = "subl %3$s:%2$d 1>/dev/null 2>&1"
 
 
 /* themes
    colors available: cyan, yellow, red, green,
    black, white, blue, magenta */
 
-line_color = "white";
-line_number_color = "yellow";
-highlight_color = "cyan";
-file_color = "green";
-opened_line_color = "red";
+line_color = "white"
+line_number_color = "yellow"
+highlight_color = "cyan"
+file_color = "green"
+opened_line_color = "red"
