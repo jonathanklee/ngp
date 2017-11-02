@@ -28,18 +28,18 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #endif
 #define LINE_MAX    512
 
-struct search_t {
+typedef enum {
+    NGP_SEARCH = 0,
+    EXTERNAL_SEARCH = 1
+} SearchType;
 
-    /* data */
+struct result_t {
     struct entry_t *entries;
     struct entry_t *start;
     int nbentry;
+};
 
-    /* thread */
-    pthread_mutex_t data_mutex;
-    int status;
-
-    /* search */
+struct options_t {
     const pcre *pcre_compiled;
     const pcre_extra *pcre_extra;
     char editor[LINE_MAX];
@@ -55,17 +55,26 @@ struct search_t {
     int ignore_option;
     int regexp_is_ok;
 
-    int external_parser;
+    SearchType search_type;
     char parser_cmd[LINE_MAX];
 };
 
-struct search_t * create_search();
-int parse_file(struct search_t *search, const char *file, const char *pattern);
-void parse_text(struct search_t *search, const char *file_name, int file_size,
-                const char *text, const char *pattern);
-int is_specific_file(struct search_t *search, const char *name);
-int is_extension_good(struct search_t *search, const char *file);
-int is_ignored_file(struct search_t *search, const char *name);
+struct search_t {
+
+    SearchType type;
+
+    struct result_t* result;
+
+    /* thread */
+    pthread_mutex_t data_mutex;
+    int status;
+
+    struct options_t* options;
+};
+
+struct options_t * create_options();
+struct search_t * create_search(struct options_t* options);
+void do_search(struct search_t *search);
 void free_search(struct search_t *search);
 
 #endif

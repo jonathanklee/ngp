@@ -28,7 +28,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 int is_selectionable(struct search_t *search, int index)
 {
     int i;
-    struct entry_t *ptr = search->start;
+    struct entry_t *ptr = search->result->start;
 
     for (i = 0; i < index; i++)
         ptr = ptr->next;
@@ -115,7 +115,7 @@ void configuration_init(config_t *cfg)
     }
 }
 
-char *regex(struct search_t *search, const char *line, const char *pattern)
+char *regex(struct options_t *options, const char *line, const char *pattern)
 {
     int ret;
     const char *pcre_error;
@@ -124,19 +124,19 @@ char *regex(struct search_t *search, const char *line, const char *pattern)
     const char *matched_string;
 
     /* check if regexp has already been compiled */
-    if (!search->pcre_compiled) {
-        search->pcre_compiled = pcre_compile(pattern, 0, &pcre_error,
+    if (!options->pcre_compiled) {
+        options->pcre_compiled = pcre_compile(pattern, 0, &pcre_error,
             &pcre_error_offset, NULL);
-        if (!search->pcre_compiled)
+        if (!options->pcre_compiled)
             return NULL;
 
-        search->pcre_extra =
-            pcre_study(search->pcre_compiled, 0, &pcre_error);
-        if (!search->pcre_extra)
+        options->pcre_extra =
+            pcre_study(options->pcre_compiled, 0, &pcre_error);
+        if (!options->pcre_extra)
             return NULL;
     }
 
-    ret = pcre_exec(search->pcre_compiled, search->pcre_extra, line,
+    ret = pcre_exec(options->pcre_compiled, options->pcre_extra, line,
         strlen(line), 0, 0, substring_vector, 30);
 
     if (ret < 0)
@@ -147,27 +147,27 @@ char *regex(struct search_t *search, const char *line, const char *pattern)
     return (char *) matched_string;
 }
 
-void *get_parser(struct search_t *search)
+void *get_parser(struct options_t *options)
 {
-    char * (*parser)(struct search_t *, const char *, const char*);
+    char * (*parser)(struct options_t *, const char *, const char*);
 
-    if (!search->incase_option)
+    if (!options->incase_option)
         parser = strstr_wrapper;
     else
         parser = strcasestr_wrapper;
 
-    if (search->regexp_option)
+    if (options->regexp_option)
         parser = regex;
 
     return parser;
 }
 
-char *strstr_wrapper(struct search_t *search, const char *line, const char *pattern)
+char *strstr_wrapper(struct options_t *options, const char *line, const char *pattern)
 {
     return strstr(line, pattern);
 }
 
-char *strcasestr_wrapper(struct search_t *search, const char *line, const char *pattern)
+char *strcasestr_wrapper(struct options_t *options, const char *line, const char *pattern)
 {
     return strcasestr(line, pattern);
 }

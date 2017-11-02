@@ -26,7 +26,7 @@ struct entry_vtable file_vtable = {
     free_file
 };
 
-struct entry_t *create_file(struct search_t *search, char *file)
+struct entry_t *create_file(struct result_t *result, char *file)
 {
     int len = strlen(file) + 1;
     struct file_t *new;
@@ -34,12 +34,12 @@ struct entry_t *create_file(struct search_t *search, char *file)
     new = calloc(1, sizeof(struct file_t) + len);
     strncpy(new->entry.data, file, len);
     new->entry.vtable = &file_vtable;
-    search->nbentry++;
+    result->nbentry++;
 
-    if (search->entries) {
-        search->entries->next = &new->entry;
+    if (result->entries) {
+        result->entries->next = &new->entry;
     } else {
-        search->start = &new->entry;
+        result->start = &new->entry;
     }
 
     return &new->entry;

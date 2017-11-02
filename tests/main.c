@@ -23,151 +23,156 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #include "list.h"
 #include "display.h"
 
+int is_specific_file(struct options_t *options, const char *name);
+int is_ignored_file(struct options_t *options, const char *name);
+void parse_text(struct search_t *search, const char *file_name, int file_size,
+                const char *text, const char *pattern);
+
 int tests_run = 0;
 
 static char * test_no_entry()
 {
-    struct search_t *search;
-    search = create_search();
+    struct options_t *options = create_options();
+    struct search_t *search = create_search(options);
     char text[] = "this is a the first line\nthis is the second line\n";
     const char *pattern = "third";
     parse_text(search, "fake_file", strlen(text), text, pattern);
-    mu_assert("error in number of entry", search->nbentry == 0);
+    mu_assert("error in number of entry", search->result->nbentry == 0);
     free_search(search);
     return 0;
 }
 
 static char * test_one_entry_on_the_first_line()
 {
-    struct search_t *search;
-    search = create_search();
+    struct options_t *options = create_options();
+    struct search_t *search = create_search(options);
     char text[] = "this is a the first line\nthis is the second line\n";
     const char *pattern = "first";
     parse_text(search, "fake_file", strlen(text), text, pattern);
-    mu_assert("error in number of entry", search->nbentry == 2);
+    mu_assert("error in number of entry", search->result->nbentry == 2);
     free_search(search);
     return 0;
 }
 
 static char * test_one_entry_on_the_second_line()
 {
-    struct search_t *search;
-    search = create_search();
+    struct options_t *options = create_options();
+    struct search_t *search = create_search(options);
     char text[] = "this is a the first line\nthis is the second line\n";
     const char *pattern = "second";
     parse_text(search, "fake_file", strlen(text), text, pattern);
-    mu_assert("error in number of entry", search->nbentry == 2);
+    mu_assert("error in number of entry", search->result->nbentry == 2);
     free_search(search);
     return 0;
 }
 
 static char * test_one_entry_incase()
 {
-    struct search_t *search;
-    search = create_search();
-    search->incase_option = 1;
+    struct options_t *options = create_options();
+    options->incase_option = 1;
+    struct search_t *search = create_search(options);
     char text[] = "this is a the first line\nthis is the second line\n";
     const char *pattern = "First";
     parse_text(search, "fake_file", strlen(text), text, pattern);
-    mu_assert("error in number of entry", search->nbentry == 2);
+    mu_assert("error in number of entry", search->result->nbentry == 2);
     free_search(search);
     return 0;
 }
 
 static char * test_two_entries()
 {
-    struct search_t *search;
-    search = create_search();
+    struct options_t *options = create_options();
+    struct search_t *search = create_search(options);
     char text[] = "this is a the first line\nthis is the second line\n";
     const char *pattern = "line";
     parse_text(search, "fake_file", strlen(text), text, pattern);
-    mu_assert("error in number of entry", search->nbentry == 3);
+    mu_assert("error in number of entry", search->result->nbentry == 3);
     free_search(search);
     return 0;
 }
 
 static char * test_regexp_start_of_line()
 {
-    struct search_t *search;
-    search = create_search();
-    search->regexp_option = 1;
+    struct options_t *options = create_options();
+    options->regexp_option = 1;
+    struct search_t *search = create_search(options);
     char text[] = "this is a the first line\nthis is the second line\n";
     const char *pattern = "^this is";
     parse_text(search, "fake_file", strlen(text), text, pattern);
-    mu_assert("error in number of entry", search->nbentry == 3);
+    mu_assert("error in number of entry", search->result->nbentry == 3);
     free_search(search);
     return 0;
 }
 
 static char * test_wrong_regexp()
 {
-    struct search_t *search;
-    search = create_search();
-    search->regexp_option = 1;
+    struct options_t *options = create_options();
+    options->regexp_option = 1;
+    struct search_t *search = create_search(options);
     char text[] = "this is a the first line\nthis is the second line\n";
     const char *pattern = "the.*file";
     parse_text(search, "fake_file", strlen(text), text, pattern);
-    mu_assert("error in number of entry", search->nbentry == 0);
+    mu_assert("error in number of entry", search->result->nbentry == 0);
     free_search(search);
     return 0;
 }
 
 static char * test_is_specific_file_ok()
 {
-    struct search_t *search;
-    search = create_search();
-    add_element(&search->specific_file, "Makefile");
-    mu_assert("test_is_specific_file_ok failed", is_specific_file(search, "Makefile") == 0);
+    struct options_t *options = create_options();
+    add_element(&options->specific_file, "Makefile");
+    struct search_t *search = create_search(options);
+    mu_assert("test_is_specific_file_ok failed", is_specific_file(search->options, "Makefile") == 0);
     free_search(search);
     return 0;
 }
 
 static char * test_is_specific_file_ko()
 {
-    struct search_t *search;
-    search = create_search();
-    add_element(&search->specific_file, "Makefile");
-    mu_assert("test_is_specific_file_ko failed", is_specific_file(search, "makefile") == 0);
+    struct options_t *options = create_options();
+    add_element(&options->specific_file, "Makefile");
+    struct search_t *search = create_search(options);
+    mu_assert("test_is_specific_file_ko failed", is_specific_file(search->options, "makefile") == 0);
     free_search(search);
     return 0;
 }
 
 static char * test_is_ignored_file_ok()
 {
-    struct search_t *search;
-    search = create_search();
-    add_element(&search->ignore, "rules");
-    mu_assert("test_is_ignored_file_ok failed", is_ignored_file(search, "rules") == 0);
+    struct options_t *options = create_options();
+    add_element(&options->ignore, "rules");
+    struct search_t *search = create_search(options);
+    mu_assert("test_is_ignored_file_ok failed", is_ignored_file(search->options, "rules") == 0);
     free_search(search);
     return 0;
 }
 
 static char * test_is_ignored_file_ko()
 {
-    struct search_t *search;
-    search = create_search();
-    add_element(&search->ignore, "rules");
-    mu_assert("test_is_ignored_file_ko failed", is_ignored_file(search, "Rules") == 0);
+    struct options_t *options = create_options();
+    add_element(&options->ignore, "rules");
+    struct search_t *search = create_search(options);
+    mu_assert("test_is_ignored_file_ko failed", is_ignored_file(search->options, "Rules") == 0);
     free_search(search);
     return 0;
 }
 
 static char * test_is_extension_good_ok()
 {
-    struct search_t *search;
-    search = create_search();
-    add_element(&search->extension, ".cpp");
-    mu_assert("test_is_extension_good_ok failed", is_ignored_file(search, "file.cpp") == 0);
+    struct options_t *options = create_options();
+    add_element(&options->extension, ".cpp");
+    struct search_t *search = create_search(options);
+    mu_assert("test_is_extension_good_ok failed", is_ignored_file(search->options, "file.cpp") == 0);
     free_search(search);
     return 0;
 }
 
 static char * test_is_extension_good_ko()
 {
-    struct search_t *search;
-    search = create_search();
-    add_element(&search->extension, ".cpp");
-    mu_assert("test_is_extension_good_ko failed", is_ignored_file(search, "file.c") == 0);
+    struct options_t *options = create_options();
+    add_element(&options->extension, ".cpp");
+    struct search_t *search = create_search(options);
+    mu_assert("test_is_extension_good_ko failed", is_ignored_file(search->options, "file.c") == 0);
     free_search(search);
     return 0;
 }
@@ -175,13 +180,13 @@ static char * test_is_extension_good_ko()
 static char * test_cursor_down()
 {
     struct display_t *display;
-    struct search_t *search;
     int terminal_line_nb;
     char text[] = "this is a the first line\nthis is the second line\n";
     const char *pattern = "line";
 
     display = create_display();
-    search = create_search();
+    struct options_t *options = create_options();
+    struct search_t *search = create_search(options);
     terminal_line_nb = 10;
 
     parse_text(search, "fake_file", strlen(text), text, pattern);
@@ -196,13 +201,13 @@ static char * test_cursor_down()
 static char * test_cursor_down_end_of_entries()
 {
     struct display_t *display;
-    struct search_t *search;
     int terminal_line_nb;
     char text[] = "this is a the first line\n";
     const char *pattern = "line";
 
     display = create_display();
-    search = create_search();
+    struct options_t *options = create_options();
+    struct search_t *search = create_search(options);
     terminal_line_nb = 10;
 
     parse_text(search, "fake_file", strlen(text), text, pattern);
@@ -217,14 +222,14 @@ static char * test_cursor_down_end_of_entries()
 static char * test_cursor_down_skip_file()
 {
     struct display_t *display;
-    struct search_t *search;
     int terminal_line_nb;
     char text[] = "this is a the first line\n";
     char text2[] = "this is a the first line\n";
     const char *pattern = "line";
 
     display = create_display();
-    search = create_search();
+    struct options_t *options = create_options();
+    struct search_t *search = create_search(options);
     terminal_line_nb = 10;
 
     parse_text(search, "fake_file", strlen(text), text, pattern);
@@ -240,13 +245,13 @@ static char * test_cursor_down_skip_file()
 static char * test_cursor_down_end_of_page()
 {
     struct display_t *display;
-    struct search_t *search;
     int terminal_line_nb;
     char text[] = "this is the first line\n this is the second line\n this is the third line\n this is the fourth line \n ";
     const char *pattern = "line";
 
     display = create_display();
-    search = create_search();
+    struct options_t *options = create_options();
+    struct search_t *search = create_search(options);
     terminal_line_nb = 3;
 
     parse_text(search, "fake_file", strlen(text), text, pattern);
@@ -262,14 +267,14 @@ static char * test_cursor_down_end_of_page()
 static char * test_cursor_down_end_of_page_skip_file()
 {
     struct display_t *display;
-    struct search_t *search;
     int terminal_line_nb;
     char text[] = "this is the first line\n this is the second line\n";
     char text2[] = "this is the first line\n";
     const char *pattern = "line";
 
     display = create_display();
-    search = create_search();
+    struct options_t *options = create_options();
+    struct search_t *search = create_search(options);
     terminal_line_nb = 3;
 
     parse_text(search, "fake_file", strlen(text), text, pattern);
@@ -286,13 +291,13 @@ static char * test_cursor_down_end_of_page_skip_file()
 static char * test_cursor_up()
 {
     struct display_t *display;
-    struct search_t *search;
     int terminal_line_nb;
     char text[] = "this is the first line\nthis the second line\n";
     const char *pattern = "line";
 
     display = create_display();
-    search = create_search();
+    struct options_t *options = create_options();
+    struct search_t *search = create_search(options);
     terminal_line_nb = 10;
 
     parse_text(search, "fake_file", strlen(text), text, pattern);
@@ -308,13 +313,13 @@ static char * test_cursor_up()
 static char * test_cursor_up_top_first_page()
 {
     struct display_t *display;
-    struct search_t *search;
     int terminal_line_nb;
     char text[] = "this is the first line\nthis the second line\n";
     const char *pattern = "line";
 
     display = create_display();
-    search = create_search();
+    struct options_t *options = create_options();
+    struct search_t *search = create_search(options);
     terminal_line_nb = 10;
 
     parse_text(search, "fake_file", strlen(text), text, pattern);
@@ -329,14 +334,14 @@ static char * test_cursor_up_top_first_page()
 static char * test_cursor_up_skip_file()
 {
     struct display_t *display;
-    struct search_t *search;
     int terminal_line_nb;
     char text[] = "this is the first line\n";
     char text2[] = "this is the first line\nthis the second line\n";
     const char *pattern = "line";
 
     display = create_display();
-    search = create_search();
+    struct options_t *options = create_options();
+    struct search_t *search = create_search(options);
     terminal_line_nb = 10;
 
     parse_text(search, "fake_file", strlen(text), text, pattern);
@@ -353,13 +358,13 @@ static char * test_cursor_up_skip_file()
 static char * test_cursor_up_page_up()
 {
     struct display_t *display;
-    struct search_t *search;
     int terminal_line_nb;
     char text[] = "this is the first line\nthis is the second line\nthis is the third line\nthis is the fourth line\n";
     const char *pattern = "line";
 
     display = create_display();
-    search = create_search();
+    struct options_t *options = create_options();
+    struct search_t *search = create_search(options);
     terminal_line_nb = 3;
 
     parse_text(search, "fake_file", strlen(text), text, pattern);

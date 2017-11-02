@@ -23,8 +23,9 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #include "line.h"
 #include "list.h"
 #include "entry.h"
-#include "search.h"
 #include "display.h"
+
+#include "search/search.h"
 
 #include <errno.h>
 #include <dirent.h>
@@ -68,156 +69,17 @@ void usage(void)
     exit(-1);
 }
 
-void lookup_file(struct search_t *search, const char *file, const char *pattern)
-{
-    errno = 0;
-    pthread_mutex_t *mutex;
-
-    if (is_ignored_file(search, file) && !search->raw_option)
-        return;
-
-    if (search->raw_option) {
-        lock(search->data_mutex)
-            parse_file(search, file, pattern);
-        return;
-    }
-
-    if (is_specific_file(search, file)) {
-        lock(search->data_mutex)
-            parse_file(search, file, pattern);
-        return;
-    }
-
-    if (is_extension_good(search, file)) {
-        lock(search->data_mutex)
-            parse_file(search, file, pattern);
-        return;
-    }
-}
-
-void lookup_directory(struct search_t *search, const char *dir, const char *pattern)
-{
-    DIR *dp;
-
-    dp = opendir(dir);
-    if (!dp)
-        return;
-
-    if (is_ignored_file(search, dir)) {
-        closedir(dp);
-        return;
-    }
-
-    while (1) {
-        struct dirent *ep;
-        ep = readdir(dp);
-
-        if (!ep)
-            break;
-
-        if (!(ep->d_type & DT_DIR)) {
-            char file_path[PATH_MAX];
-            snprintf(file_path, PATH_MAX, "%s/%s", dir, ep->d_name);
-
-            if (!is_simlink(file_path)) {
-                lookup_file(search, file_path, pattern);
-            }
-        }
-
-        if (ep->d_type & DT_DIR && is_dir_good(ep->d_name)) {
-            char path_dir[PATH_MAX] = "";
-            snprintf(path_dir, PATH_MAX, "%s/%s", dir, ep->d_name);
-            lookup_directory(search, path_dir, pattern);
-        }
-    }
-    closedir(dp);
-}
-
-void external_lookup(struct search_t *search, const char *dir, const char *pattern)
-{
-    char command[PATH_MAX] = {'\0'};
-    snprintf(command, sizeof(command),
-        search->parser_cmd,
-        pattern,
-        dir);
-
-    /* open the command for reading. */
-    FILE *fp = popen(command, "r");
-    if (fp == NULL) {
-        printf("Failed to run command: %s \n", command);
-        exit(1);
-    }
-
-    /* parse the output a line at a time. */
-    char output[PATH_MAX] = {'\0'};
-    while (fgets(output, sizeof(output)-1, fp) != NULL) {
-
-        /* empty line */
-        size_t line_length = strlen(output) - 1;
-        if (line_length == 0) {
-            continue;
-        }
-
-        /* only '--' */
-        char* match = regex(search, output, "^--$");
-        search->pcre_compiled = 0;
-        if (match) {
-            pcre_free_substring(match);
-            continue;
-        }
-
-        /* file names */
-        match = regex(search, output, "^(?!(\\d+?[-:=])|(--)).+$");
-        search->pcre_compiled = 0;
-        if (match) {
-            search->entries = create_file(search, match);
-            pcre_free_substring(match);
-            continue;
-        }
-
-        /* line number */
-        size_t line_number = 0;
-        match = regex(search, output, "^\\d+?(?=[-:=])");
-        search->pcre_compiled = 0;
-        if (match) {
-            line_number = atoi(match);
-            pcre_free_substring(match);
-        }
-
-        /* line content */
-        if (line_number > 0) {
-            match = regex(search, output, "(?<=\\d[-:=]).+");
-            search->pcre_compiled = 0;
-            if (match) {
-                search->entries = create_line(search, match, line_number);
-                pcre_free_substring(match);
-            } else {
-                match = calloc(1, sizeof('\0'));
-                search->entries = create_line(search, match, line_number);
-                free(match);
-            }
-            continue;
-        }
-
-        fprintf(stderr, "error: unmatched output line:\n%s\n", output);
-        exit(-1);
-    }
-
-    /* close */
-    pclose(fp);
-}
-
 void open_entry(struct search_t *search, int index, const char *editor, const char *pattern)
 {
     int i;
     struct entry_t *ptr;
-    struct entry_t *file = search->start;
+    struct entry_t *file = search->result->start;
 
     char command[PATH_MAX];
     char filtered_file_name[PATH_MAX];
     pthread_mutex_t *mutex;
 
-    for (i = 0, ptr = search->start; i < index; i++) {
+    for (i = 0, ptr = search->result->start; i < index; i++) {
         ptr = ptr->next;
         if (!is_entry_selectionable(ptr))
             file = ptr;
@@ -255,17 +117,14 @@ void *lookup_thread(void *arg)
     DIR *dp;
 
     struct search_t *d = (struct search_t *) arg;
-    dp = opendir(d->directory);
+    dp = opendir(d->options->directory);
 
     if (!dp) {
-        fprintf(stderr, "error: could not open directory \"%s\"\n", d->directory);
+        fprintf(stderr, "error: could not open directory \"%s\"\n", d->options->directory);
         exit(-1);
     }
 
-    if (d->external_parser)
-        external_lookup(d, d->directory, d->pattern);
-    else
-        lookup_directory(d, d->directory, d->pattern);
+    do_search(d);
 
     d->status = 0;
     closedir(dp);
@@ -305,7 +164,7 @@ void display_version(void)
     printf("version %s\n", NGP_VERSION);
 }
 
-void read_config(struct search_t *search)
+void read_config(struct options_t *options)
 {
     const char *specific_files;
     const char *extensions;
@@ -321,61 +180,61 @@ void read_config(struct search_t *search)
         fprintf(stderr, "ngprc: no editor string found!\n");
         exit(-1);
     }
-        strncpy(search->editor, buffer, LINE_MAX);
+        strncpy(options->editor, buffer, LINE_MAX);
 
     if (config_lookup_string(&cfg, "parser_cmd", &buffer)) {
-        search->external_parser = 1;
-        strncpy(search->parser_cmd, buffer, LINE_MAX);
+        options->search_type = EXTERNAL_SEARCH;
+        strncpy(options->parser_cmd, buffer, LINE_MAX);
     }
 
     /* only if we don't provide extension as argument */
-    if (!search->extension_option) {
+    if (!options->extension_option) {
         if (!config_lookup_string(&cfg, "files", &specific_files)) {
             fprintf(stderr, "ngprc: no files string found!\n");
             exit(-1);
         }
 
-        search->specific_file = create_list();
+        options->specific_file = create_list();
         ptr = strtok_r((char *) specific_files, " ", &buf);
         while (ptr != NULL) {
-            add_element(&search->specific_file, ptr);
+            add_element(&options->specific_file, ptr);
             ptr = strtok_r(NULL, " ", &buf);
         }
     }
 
-    if (!search->extension_option) {
+    if (!options->extension_option) {
         /* getting files extensions from configuration */
         if (!config_lookup_string(&cfg, "extensions", &extensions)) {
             fprintf(stderr, "ngprc: no extensions string found!\n");
             exit(-1);
         }
 
-        search->extension = create_list();
+        options->extension = create_list();
         ptr = strtok_r((char *) extensions, " ", &buf);
         while (ptr != NULL) {
-            add_element(&search->extension, ptr);
+            add_element(&options->extension, ptr);
             ptr = strtok_r(NULL, " ", &buf);
         }
     }
 
-    if (!search->ignore_option) {
+    if (!options->ignore_option) {
         /* getting ignored files from configuration */
         if (!config_lookup_string(&cfg, "ignore", &ignore)) {
             fprintf(stderr, "ngprc: no ignore string found!\n");
             exit(-1);
         }
 
-        search->ignore = create_list();
+        options->ignore = create_list();
         ptr = strtok_r((char *) ignore, " ", &buf);
         while (ptr != NULL) {
-            add_element(&search->ignore, ptr);
+            add_element(&options->ignore, ptr);
             ptr = strtok_r(NULL, " ", &buf);
         }
     }
     config_destroy(&cfg);
 }
 
-void parse_args(struct search_t *search, int argc, char *argv[])
+void parse_args(struct options_t *options, int argc, char *argv[])
 {
     int opt;
     int clear_extensions = 0;
@@ -388,29 +247,29 @@ void parse_args(struct search_t *search, int argc, char *argv[])
             usage();
             break;
         case 'i':
-            search->incase_option = 1;
+            options->incase_option = 1;
             break;
         case 't':
             if (!clear_extensions) {
-                free_list(&search->extension);
-                search->extension_option = 1;
+                free_list(&options->extension);
+                options->extension_option = 1;
                 clear_extensions = 1;
             }
-            add_element(&search->extension, optarg);
+            add_element(&options->extension, optarg);
             break;
         case 'I':
             if (!clear_ignores) {
-                free_list(&search->ignore);
-                search->ignore_option = 1;
+                free_list(&options->ignore);
+                options->ignore_option = 1;
                 clear_ignores = 1;
             }
-            add_element(&search->ignore, optarg);
+            add_element(&options->ignore, optarg);
             break;
         case 'r':
-            search->raw_option = 1;
+            options->raw_option = 1;
             break;
         case 'e':
-            search->regexp_option = 1;
+            options->regexp_option = 1;
             break;
         case 'v':
             display_version();
@@ -426,32 +285,30 @@ void parse_args(struct search_t *search, int argc, char *argv[])
 
     for ( ; optind < argc; optind++) {
         if (!first_argument) {
-            strcpy(search->pattern, argv[optind]);
+            strcpy(options->pattern, argv[optind]);
             first_argument = 1;
         } else {
-            strcpy(search->directory, argv[optind]);
-            if (!opendir(search->directory)) {
-                fprintf(stderr, "error: could not open directory \"%s\"\n", search->directory);
-                exit(-1);
-            }
+            strcpy(options->directory, argv[optind]);
         }
+    }
+
+    if (!opendir(options->directory)) {
+        fprintf(stderr, "error: could not open directory \"%s\"\n", options->directory);
+        exit(-1);
     }
 }
 
 int main(int argc, char *argv[])
 {
-    int ch;
-    pthread_mutex_t *mutex;
-    struct search_t *search;
-    struct display_t *display;
+    struct options_t *options = create_options();
+    parse_args(options, argc, argv);
+    read_config(options);
 
-    search = create_search();
+    struct search_t *search = create_search(options);
     global_search = search;
     pthread_mutex_init(&search->data_mutex, NULL);
 
-    parse_args(search, argc, argv);
-    read_config(search);
-
+    struct display_t *display;
     display = create_display();
     global_display = display;
 
@@ -462,9 +319,11 @@ int main(int argc, char *argv[])
         exit(-1);
     }
 
+    pthread_mutex_t *mutex;
     lock(search->data_mutex)
         display_results(display, search, LINES);
 
+    int ch;
     while ((ch = getch())) {
         switch(ch) {
         case KEY_RESIZE:
@@ -495,11 +354,11 @@ int main(int argc, char *argv[])
             break;
         case ENTER:
         case '\n':
-            if (search->nbentry == 0)
+            if (search->result->nbentry == 0)
                 break;
             stop_ncurses(display);
             open_entry(search, display->cursor + display->index,
-                       search->editor, search->pattern);
+                       search->options->editor, search->options->pattern);
             start_ncurses(display);
             resize_display(display, search, LINES);
             break;
@@ -519,14 +378,14 @@ int main(int argc, char *argv[])
         lock(search->data_mutex) {
             display_results(display, search, LINES);
             display_status(search);
-            if (search->nbentry != 0 && !display->ncurses_initialized) {
+            if (search->result->nbentry != 0 && !display->ncurses_initialized) {
                 start_ncurses(display);
                 display->ncurses_initialized = 1;
             }
         }
 
         lock(search->data_mutex) {
-            if (search->status == 0 && search->nbentry == 0) {
+            if (search->status == 0 && search->result->nbentry == 0) {
                 goto quit;
             }
         }

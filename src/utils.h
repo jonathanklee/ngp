@@ -19,7 +19,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef UTILS_H
 #define UTILS_H
 
-#include "search.h"
+#include "search/search.h"
 #include <libconfig.h>
 
 int is_selectionable(struct search_t *search, int index);
@@ -29,10 +29,10 @@ char *get_file_name(const char * absolute_path);
 char *remove_double(char *initial, char c, char *final);
 char *extract_line_number(char *line);
 void configuration_init(config_t *cfg);
-char *regex(struct search_t *search, const char *line, const char *pattern);
-void *get_parser(struct search_t *search);
-char *strstr_wrapper(struct search_t *search, const char *line, const char *pattern);
-char *strcasestr_wrapper(struct search_t *search, const char *line, const char *pattern);
+char *regex(struct options_t *options, const char *line, const char *pattern);
+void *get_parser(struct options_t *options);
+char *strstr_wrapper(struct options_t *options, const char *line, const char *pattern);
+char *strcasestr_wrapper(struct options_t *options, const char *line, const char *pattern);
 int get_integer_as_string(int integer, char *string);
 
 #endif /* UTILS_H */

@@ -16,32 +16,13 @@ You should have received a copy of the GNU General Public License
 along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef ENTRY_H
-#define ENTRY_H
+#ifndef NGP_SEARCH_H
+#define NGP_SEARCH_H
 
-#include <stddef.h>
-#include "entry.h"
-#include "search/search.h"
+#include "search.h"
 
-#define container_of(ptr, type, member) \
-    ((type *)((char *)(ptr) - offsetof(type, member)))
-
-struct entry_t {
-    struct entry_vtable *vtable;
-    struct entry_t *next;
-    char data[];
-};
-
-struct entry_vtable {
-    void (*display)(struct entry_t *, struct search_t *, int, int);
-    int (*is_selectionable)(struct entry_t *);
-    void (*free)(struct entry_t *);
-};
-
-void display_entry(struct entry_t *entry, struct search_t *search, int y, int is_cursor_on_entry);
-
-void free_entry(struct entry_t *entry);
-
-int is_entry_selectionable(struct entry_t *entry);
+struct search_t * create_ngp_search();
+void do_ngp_search(struct search_t *search);
+void free_ngp_search(struct search_t *search);
 
 #endif

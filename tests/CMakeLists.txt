@@ -11,6 +11,7 @@ set(HEADER_TESTS
 add_executable(tests ${SRC_TESTS} ${HEADERS_TESTS})
 
 include_directories(../src)
+include_directories(../src/search)
 
 # config
 find_package(PkgConfig REQUIRED)

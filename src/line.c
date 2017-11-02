@@ -25,7 +25,7 @@ struct entry_vtable line_vtable = {
     free_line
 };
 
-struct entry_t *create_line(struct search_t *search, char *line, int line_number)
+struct entry_t *create_line(struct result_t *result, char *line, int line_number)
 {
     int len = strlen(line) + 1;
     struct line_t *new;
@@ -34,14 +34,14 @@ struct entry_t *create_line(struct search_t *search, char *line, int line_number
     strncpy(new->entry.data, line, len);
     new->opened = 0;
     new->line = line_number;
-    search->nbentry++;
+    result->nbentry++;
 
     new->entry.vtable = &line_vtable;
 
-    if (search->entries) {
-        search->entries->next = &new->entry;
+    if (result->entries) {
+        result->entries->next = &new->entry;
     } else {
-        search->start = &new->entry;
+        result->start = &new->entry;
     }
 
     return &new->entry;
@@ -58,8 +58,8 @@ static void hilight_pattern(struct entry_t *entry, char *line, struct search_t *
     struct line_t *container = container_of(entry, struct line_t, entry);
     char buffer[32];
 
-    if (search->regexp_option) {
-        regexp_matched_string = regex(search, line, search->pattern);
+    if (search->options->regexp_option) {
+        regexp_matched_string = regex(search->options, line, search->options->pattern);
         if (!regexp_matched_string)
             return;
 
@@ -67,8 +67,8 @@ static void hilight_pattern(struct entry_t *entry, char *line, struct search_t *
         goto start_printing;
     }
 
-    parser = get_parser(search);
-    pattern = parser(search, line, search->pattern);
+    parser = get_parser(search->options);
+    pattern = parser(search, line, search->options->pattern);
 
 start_printing:
 
@@ -91,11 +91,11 @@ start_printing:
     else
        attron(COLOR_PAIR(COLOR_HIGHLIGHT));
 
-    if (search->regexp_option) {
+    if (search->options->regexp_option) {
         length = strlen(regexp_matched_string);
         pcre_free_substring(regexp_matched_string);
     } else {
-        length = strlen(search->pattern);
+        length = strlen(search->options->pattern);
     }
 
     for (counter = 0; counter < length; counter++, ptr++)
