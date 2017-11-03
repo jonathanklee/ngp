@@ -22,7 +22,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #include "search/search.h"
 #include <libconfig.h>
 
-int is_selectionable(struct search_t *search, int index);
+int is_selectable(struct search_t *search, int index);
 int is_dir_good(char *dir);
 int is_simlink(char *file_path);
 char *get_file_name(const char * absolute_path);

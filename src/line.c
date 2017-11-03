@@ -21,7 +21,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 
 struct entry_vtable line_vtable = {
     display_line,
-    is_line_selectionable,
+    is_line_selectable,
     free_line
 };
 
@@ -136,7 +136,7 @@ void display_line(struct entry_t *entry, struct search_t *search, int y, int is_
         attroff(A_REVERSE);
 }
 
-int is_line_selectionable(struct entry_t *entry)
+int is_line_selectable(struct entry_t *entry)
 {
     return true;
 }

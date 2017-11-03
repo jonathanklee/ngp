@@ -81,7 +81,7 @@ void open_entry(struct search_t *search, int index, const char *editor, const ch
 
     for (i = 0, ptr = search->result->start; i < index; i++) {
         ptr = ptr->next;
-        if (!is_entry_selectionable(ptr))
+        if (!is_entry_selectable(ptr))
             file = ptr;
     }
 

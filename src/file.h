@@ -28,6 +28,6 @@ struct file_t {
 struct entry_t *create_file(struct result_t *result, char *file);
 void display_file(struct entry_t *entry, struct search_t *search, int y, int is_cursor_on_entry);
 void free_file(struct entry_t *entry);
-int is_file_selectionable(struct entry_t *entry);
+int is_file_selectable(struct entry_t *entry);
 
 #endif

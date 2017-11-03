@@ -35,9 +35,9 @@ void free_entry(struct entry_t *entry)
     entry->vtable->free(entry);
 }
 
-int is_entry_selectionable(struct entry_t *entry)
+int is_entry_selectable(struct entry_t *entry)
 {
-    return entry->vtable->is_selectionable(entry);
+    return entry->vtable->is_selectable(entry);
 }
 
 

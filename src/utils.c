@@ -25,7 +25,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 #include <sys/stat.h>
 
-int is_selectionable(struct search_t *search, int index)
+int is_selectable(struct search_t *search, int index)
 {
     int i;
     struct entry_t *ptr = search->result->start;
@@ -33,7 +33,7 @@ int is_selectionable(struct search_t *search, int index)
     for (i = 0; i < index; i++)
         ptr = ptr->next;
 
-    return is_entry_selectionable(ptr);
+    return is_entry_selectable(ptr);
 }
 
 int is_dir_good(char *dir)

@@ -22,7 +22,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 
 struct entry_vtable file_vtable = {
     display_file,
-    is_file_selectionable,
+    is_file_selectable,
     free_file
 };
 
@@ -67,7 +67,7 @@ void display_file(struct entry_t *entry, struct search_t *search, int y, int is_
     attroff(A_BOLD);
 }
 
-int is_file_selectionable(struct entry_t *entry)
+int is_file_selectable(struct entry_t *entry)
 {
     return false;
 }
