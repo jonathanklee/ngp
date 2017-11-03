@@ -77,18 +77,52 @@ void display_results(struct display_t *display, struct search_t *search, int ter
     }
 }
 
+static int search_next_upwards(struct display_t *display, struct search_t *search, int ignore_current)
+{
+    int next_selectable = display->index + display->cursor;
+
+    if (ignore_current)
+        next_selectable -= 1;
+
+    for (; next_selectable > 0; next_selectable--) {
+        if (is_selectable(search, next_selectable)) {
+            return next_selectable - display->index;
+        }
+    }
+
+    return display->cursor;
+}
+
+static int search_next_downwards(struct display_t *display, struct search_t *search, int ignore_current)
+{
+    int next_selectable = display->index + display->cursor;
+
+    if (ignore_current)
+        next_selectable += 1;
+
+    for (; next_selectable < search->result->nbentry; next_selectable++) {
+        if (is_selectable(search, next_selectable)) {
+            return next_selectable - display->index;
+        }
+    }
+
+    return display->cursor;
+}
+
 void move_page_up(struct display_t *display, struct search_t *search, int terminal_line_nb)
 {
     if (display->index == 0)
-        display->cursor = 1;
+        display->cursor = 0;
     else
-        display->cursor = terminal_line_nb - 1;
+        display->cursor = terminal_line_nb;
 
     display->index -= terminal_line_nb;
     display->index = (display->index < 0 ? 0 : display->index);
 
-    if (!is_selectable(search, display->index + display->cursor))
-        display->cursor -= 1;
+    if (display->cursor == 0)
+        display->cursor = search_next_downwards(display, search, 0);
+    else
+        display->cursor = search_next_upwards(display, search, 1);
 }
 
 void move_page_down(struct display_t *display, struct search_t *search, int terminal_line_nb)
@@ -108,8 +142,10 @@ void move_page_down(struct display_t *display, struct search_t *search, int term
     display->index += terminal_line_nb;
     display->index = (display->index > max_index ? max_index : display->index);
 
-    if (!is_selectable(search, display->index + display->cursor))
-        display->cursor += 1;
+    if (display->cursor == 0)
+        display->cursor = search_next_downwards(display, search, 0);
+    else
+        display->cursor = search_next_upwards(display, search, 0);
 }
 
 void move_page_up_and_refresh(struct display_t *display, struct search_t *search)
@@ -132,31 +168,18 @@ void move_page_down_and_refresh(struct display_t *display, struct search_t *sear
 
 void move_cursor_up(struct display_t *display, struct search_t *search, int terminal_line_nb)
 {
-    /* when cursor is on the first page and on the 2nd line,
-       do not move the cursor up */
-    if (display->index == 0 && display->cursor == 1)
-        return;
+    display->cursor = search_next_upwards(display, search, 1);
 
-    if (display->cursor <= 0 ||
-            (!is_selectable(search, display->index) && display->cursor == 1)) {
+    if (display->cursor <= 0) {
         move_page_up(display, search, terminal_line_nb);
-        return;
+        clear();
+        refresh();
     }
-
-    if (display->cursor > 0)
-        display->cursor = display->cursor - 1;
-
-    if (!is_selectable(search, display->index + display->cursor))
-        display->cursor = display->cursor - 1;
 }
 
 void move_cursor_down(struct display_t *display, struct search_t *search, int terminal_line_nb)
 {
-    if (display->cursor + display->index < search->result->nbentry - 1)
-        display->cursor = display->cursor + 1;
-
-    if (!is_selectable(search, display->index + display->cursor))
-        display->cursor = display->cursor + 1;
+    display->cursor = search_next_downwards(display, search, 1);
 
     if (display->cursor > (terminal_line_nb - 1)) {
         move_page_down(display, search, terminal_line_nb);

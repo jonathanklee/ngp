@@ -25,10 +25,13 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 struct line_t {
 	int line;
 	int opened;
+	int is_selectable;
 	struct entry_t entry;
 };
 
 struct entry_t *create_line(struct result_t *result, char *line, int line_number);
+struct entry_t *create_unselectable_line(struct result_t *result, char *line, int line_number);
+struct entry_t *create_blank_line(struct result_t *result);
 void display_line(struct entry_t *entry, struct search_t *search, int y, int is_cursor_on_entry);
 void free_line(struct entry_t *entry);
 int is_line_selectable(struct entry_t *entry);

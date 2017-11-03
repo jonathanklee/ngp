@@ -19,10 +19,13 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #include "line.h"
 #include "theme.h"
 
+static void *get_line(struct entry_t *entry, entry_type_t type);
+
 struct entry_vtable line_vtable = {
     display_line,
     is_line_selectable,
-    free_line
+    free_line,
+    get_line
 };
 
 struct entry_t *create_line(struct result_t *result, char *line, int line_number)
@@ -33,6 +36,7 @@ struct entry_t *create_line(struct result_t *result, char *line, int line_number
     new = calloc(1, sizeof(struct line_t) + len);
     strncpy(new->entry.data, line, len);
     new->opened = 0;
+    new->is_selectable = 1;
     new->line = line_number;
     result->nbentry++;
 
@@ -45,6 +49,20 @@ struct entry_t *create_line(struct result_t *result, char *line, int line_number
     }
 
     return &new->entry;
+}
+
+struct entry_t *create_unselectable_line(struct result_t *result, char *line, int line_number)
+{
+    struct entry_t *entry = create_line(result, line, line_number);
+    struct line_t *new = container_of(entry, struct line_t, entry);
+    new->is_selectable = 0;
+
+    return entry;
+}
+
+struct entry_t *create_blank_line(struct result_t *result)
+{
+    return create_unselectable_line(result, "", 0);
 }
 
 static void hilight_pattern(struct entry_t *entry, char *line, struct search_t *search, int y)
@@ -117,9 +135,22 @@ void display_line(struct entry_t *entry, struct search_t *search, int y, int is_
     move(y, 0);
     clrtoeol();
 
+    /* display blank line */
+    struct line_t *container = container_of(entry, struct line_t, entry);
+    if (container->line == 0) {
+        for (int i = 0; i < COLS; ++i)
+            cropped_line[i] = '-';
+
+        attron(A_BOLD);
+        attron(COLOR_PAIR(COLOR_FILE));
+        mvprintw(y, 0, "%s", cropped_line);
+        attroff(COLOR_PAIR(COLOR_FILE));
+        attroff(A_BOLD);
+        return;
+    }
+
     /* display line number */
     attron(COLOR_PAIR(COLOR_LINE_NUMBER));
-    struct line_t *container = container_of(entry, struct line_t, entry);
     mvprintw(y, 0, "%d:", container->line);
 
     /* display rest of line */
@@ -138,7 +169,8 @@ void display_line(struct entry_t *entry, struct search_t *search, int y, int is_
 
 int is_line_selectable(struct entry_t *entry)
 {
-    return true;
+    struct line_t *line = container_of(entry, struct line_t, entry);
+    return line->is_selectable;
 }
 
 void free_line(struct entry_t *entry)
@@ -147,4 +179,10 @@ void free_line(struct entry_t *entry)
     free(ptr);
 }
 
+static void *get_line(struct entry_t *entry, entry_type_t type)
+{
+    if (type == LINE_ENTRY)
+        return container_of(entry, struct line_t, entry);
 
+    return NULL;
+}

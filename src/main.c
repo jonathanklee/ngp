@@ -81,8 +81,9 @@ void open_entry(struct search_t *search, int index, const char *editor, const ch
 
     for (i = 0, ptr = search->result->start; i < index; i++) {
         ptr = ptr->next;
-        if (!is_entry_selectable(ptr))
-            file = ptr;
+        struct file_t *cast_result = get_type(ptr, FILE_ENTRY);
+        if (cast_result)
+            file = &cast_result->entry;
     }
 
     struct line_t *line = container_of(ptr, struct line_t, entry);

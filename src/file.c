@@ -20,10 +20,13 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #include "utils.h"
 #include "theme.h"
 
+static void *get_file(struct entry_t *entry, entry_type_t type);
+
 struct entry_vtable file_vtable = {
     display_file,
     is_file_selectable,
-    free_file
+    free_file,
+    get_file
 };
 
 struct entry_t *create_file(struct result_t *result, char *file)
@@ -78,3 +81,10 @@ void free_file(struct entry_t *entry)
     free(ptr);
 }
 
+static void *get_file(struct entry_t *entry, entry_type_t type)
+{
+    if (type == FILE_ENTRY)
+        return container_of(entry, struct file_t, entry);
+
+    return NULL;
+}

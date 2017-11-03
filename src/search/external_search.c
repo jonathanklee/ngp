@@ -63,6 +63,7 @@ void do_external_search(struct search_t *search)
         char* match = regex(search->options, output, "^--$");
         search->options->pcre_compiled = 0;
         if (match) {
+            search->result->entries = create_empty_line(search->result);
             pcre_free_substring(match);
             continue;
         }
@@ -87,17 +88,22 @@ void do_external_search(struct search_t *search)
 
         /* line content */
         if (line_number > 0) {
-            match = regex(search->options, output, "(?<=\\d[-:=]).+");
+            match = regex(search->options, output, "(?<=\\d[-=]).*$");
+            search->options->pcre_compiled = 0;
+            if (match) {
+                search->result->entries = create_unselectable_line(search->result, match, line_number);
+                /* search->result->entries = create_line(search->result, match, line_number); */
+                pcre_free_substring(match);
+                continue;
+            }
+
+            match = regex(search->options, output, "(?<=\\d[:]).*$");
             search->options->pcre_compiled = 0;
             if (match) {
                 search->result->entries = create_line(search->result, match, line_number);
                 pcre_free_substring(match);
-            } else {
-                match = calloc(1, sizeof('\0'));
-                search->result->entries = create_line(search->result, match, line_number);
-                free(match);
+                continue;
             }
-            continue;
         }
 
         fprintf(stderr, "error: unmatched output line:\n%s\n", output);

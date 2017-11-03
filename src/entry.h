@@ -20,11 +20,15 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #define ENTRY_H
 
 #include <stddef.h>
-#include "entry.h"
 #include "search/search.h"
 
 #define container_of(ptr, type, member) \
     ((type *)((char *)(ptr) - offsetof(type, member)))
+
+typedef enum {
+    FILE_ENTRY = 0,
+    LINE_ENTRY
+} entry_type_t;
 
 struct entry_t {
     struct entry_vtable *vtable;
@@ -36,6 +40,7 @@ struct entry_vtable {
     void (*display)(struct entry_t *, struct search_t *, int, int);
     int (*is_selectable)(struct entry_t *);
     void (*free)(struct entry_t *);
+    void *(*get_type)(struct entry_t *, entry_type_t);
 };
 
 void display_entry(struct entry_t *entry, struct search_t *search, int y, int is_cursor_on_entry);
@@ -43,5 +48,7 @@ void display_entry(struct entry_t *entry, struct search_t *search, int y, int is
 void free_entry(struct entry_t *entry);
 
 int is_entry_selectable(struct entry_t *entry);
+
+void *get_type(struct entry_t *entry, entry_type_t type);
 
 #endif

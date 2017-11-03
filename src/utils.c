@@ -132,7 +132,7 @@ char *regex(struct options_t *options, const char *line, const char *pattern)
 
         options->pcre_extra =
             pcre_study(options->pcre_compiled, 0, &pcre_error);
-        if (!options->pcre_extra)
+        if (pcre_error)
             return NULL;
     }
 
