@@ -26,6 +26,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #include <pthread.h>
 #include <errno.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <dirent.h>
 
 struct search_t * create_external_search()
@@ -33,6 +34,94 @@ struct search_t * create_external_search()
     return NULL;
 }
 
+static int validate_file(const char *path)
+{
+    struct stat st;
+
+    if (stat(path, &st) == 0 &&
+        S_ISREG(st.st_mode) == 1)
+        return 1;
+
+
+    FILE* stream = fopen("/tmp/ngp.log", "w");
+    fprintf(stream, "parsing error: not a valid file:\n%s\n", path);
+    fflush( stream );
+    pclose(stream);
+    /* exit(1); */
+    return 0;
+}
+
+static const char* apply_regex(const char *output, const char *expr)
+{
+    struct options_t *options = calloc(1, sizeof(*options));
+    char* match = regex(options, output, expr);
+    free( options );
+    return match;
+}
+
+static int match_blank_line(struct result_t *result, const char *output)
+{
+    /* empty line */
+    size_t line_length = strlen(output) - 1;
+    if (line_length == 0) {
+        result->entries = create_blank_line(result);
+        return 1;
+    }
+
+    /* only '--' */
+    const char* match = apply_regex(output, "^--$");
+    if (!match)
+        return 0;
+
+    result->entries = create_blank_line(result);
+    pcre_free_substring(match);
+
+    return 1;
+}
+
+static int match_file(struct result_t *result, const char *output)
+{
+    const char* match = apply_regex(output, "^(?!(\\d+?[-:=])|(--)).+$");
+    if (!match)
+        return 0;
+
+    if(!validate_file(match))
+        return 1;
+
+    result->entries = create_file(result, (char*)match);
+    pcre_free_substring(match);
+
+    return 1;
+}
+
+static int match_line(struct result_t *result, const char *output)
+{
+    const char *match = apply_regex(output, "^\\d+?(?=[-:=])");
+    if (!match)
+        return 0;
+
+    size_t line_number = atoi(match);
+    pcre_free_substring(match);
+
+    if (line_number == 0)
+        return 0;
+
+    match = apply_regex(output, "(?<=\\d[-=]).*$");
+    if (match) {
+        result->entries = create_unselectable_line(result, (char*)match, line_number);
+        pcre_free_substring(match);
+        return 1;
+    }
+
+    match = apply_regex(output, "(?<=\\d[:]).*$");
+    if (match) {
+        result->entries = create_line(result, (char*)match, line_number);
+        pcre_free_substring(match);
+        return 1;
+    }
+
+    return 0;
+}
 
 void do_external_search(struct search_t *search)
 {
@@ -50,65 +139,24 @@ void do_external_search(struct search_t *search)
     }
 
     /* parse the output a line at a time. */
-    char output[PATH_MAX] = {'\0'};
-    while (fgets(output, sizeof(output)-1, fp) != NULL) {
+    size_t read_size;
+    char* line;
+    while (getline(&line, &read_size, fp) != -1) {
 
-        /* empty line */
-        size_t line_length = strlen(output) - 1;
-        if (line_length == 0) {
+        if (match_blank_line(search->result, line))
             continue;
-        }
 
-        /* only '--' */
-        char* match = regex(search->options, output, "^--$");
-        search->options->pcre_compiled = 0;
-        if (match) {
-            search->result->entries = create_empty_line(search->result);
-            pcre_free_substring(match);
+        if (match_file(search->result, line))
             continue;
-        }
 
-        /* file names */
-        match = regex(search->options, output, "^(?!(\\d+?[-:=])|(--)).+$");
-        search->options->pcre_compiled = 0;
-        if (match) {
-            search->result->entries = create_file(search->result, match);
-            pcre_free_substring(match);
+        if (match_line(search->result, line))
             continue;
-        }
 
-        /* line number */
-        size_t line_number = 0;
-        match = regex(search->options, output, "^\\d+?(?=[-:=])");
-        search->options->pcre_compiled = 0;
-        if (match) {
-            line_number = atoi(match);
-            pcre_free_substring(match);
-        }
-
-        /* line content */
-        if (line_number > 0) {
-            match = regex(search->options, output, "(?<=\\d[-=]).*$");
-            search->options->pcre_compiled = 0;
-            if (match) {
-                search->result->entries = create_unselectable_line(search->result, match, line_number);
-                /* search->result->entries = create_line(search->result, match, line_number); */
-                pcre_free_substring(match);
-                continue;
-            }
-
-            match = regex(search->options, output, "(?<=\\d[:]).*$");
-            search->options->pcre_compiled = 0;
-            if (match) {
-                search->result->entries = create_line(search->result, match, line_number);
-                pcre_free_substring(match);
-                continue;
-            }
-        }
-
-        fprintf(stderr, "error: unmatched output line:\n%s\n", output);
+        fprintf(stderr, "error: unmatched output line:\n\t%s\n", line);
         exit(-1);
     }
+
+    free( line );
 
     /* close */
     pclose(fp);
