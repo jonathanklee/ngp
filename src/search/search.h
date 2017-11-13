@@ -57,6 +57,7 @@ struct options_t {
 
     SearchType search_type;
     char parser_cmd[LINE_MAX];
+    char parser_options[LINE_MAX];
 };
 
 struct search_t {

@@ -56,17 +56,28 @@ static struct search_t *global_search;
 static struct display_t *global_display;
 static pthread_t pid;
 
-void usage(void)
+void usage(int status)
 {
-    fprintf(stderr, "usage: ngp [options]... pattern [directory]\n\n");
-    fprintf(stderr, "options:\n");
-    fprintf(stderr, " -i : ignore case distinctions in pattern\n");
-    fprintf(stderr, " -r : raw mode\n");
-    fprintf(stderr, " -t type : look into files with specified extension\n");
-    fprintf(stderr, " -I name : ignore file/dir with specified name\n");
-    fprintf(stderr, " -e : pattern is a regular expression\n");
-    fprintf(stderr, " -v : display version\n");
-    exit(-1);
+    FILE *out = status == 0 ? stdout : stderr;
+    fprintf(out, "usage: ngp [-h|--help] [-v|--version]\n");
+    fprintf(out, "       ngp [--<parser>] [<parser-options>] [--] <pattern> [<path>]\n");
+    fprintf(out, "       ngp [--<parser>=<parser-options>] <pattern> [<path>]\n");
+    fprintf(out, "\n");
+    fprintf(out, "options:\n");
+    fprintf(out, " -h, --help     display this message\n");
+    fprintf(out, " -v, --version  show ngp version\n");
+    fprintf(out, "\n");
+    fprintf(out, "parser:\n");
+    fprintf(out, " --int[=<int-options>]  use ngp's internal search implementation with <int-options>\n");
+    fprintf(out, " --ext[=<ext-options>]  use external parser specified in the .ngprc\n");
+    fprintf(out, "\n");
+    fprintf(out, "int-options:\n");
+    fprintf(out, " -i         ignore case distinctions in pattern\n");
+    fprintf(out, " -r         raw mode\n");
+    fprintf(out, " -t <type>  look into files with specified <type>\n");
+    fprintf(out, " -I <name>  ignore file/dir with specified <name>\n");
+    fprintf(out, " -e         pattern is a regular expression\n");
+    exit(status);
 }
 
 void open_entry(struct search_t *search, int index, const char *editor, const char *pattern)
@@ -163,6 +174,7 @@ void display_status(struct search_t *search)
 void display_version(void)
 {
     printf("version %s\n", NGP_VERSION);
+    exit(0);
 }
 
 void read_config(struct options_t *options)
@@ -237,52 +249,104 @@ void read_config(struct options_t *options)
 
 void parse_args(struct options_t *options, int argc, char *argv[])
 {
-    int opt;
+    int opt = 0;
     int clear_extensions = 0;
     int clear_ignores = 0;
     int first_argument = 0;
 
-    while ((opt = getopt(argc, argv, "heit:rI:v")) != -1) {
+    static struct option long_options[] = {
+        {"help",    no_argument,       0,  'h' },
+        {"version", no_argument,       0,  'v' },
+        {"int",     optional_argument, 0,  'i' },
+        {"ext",     optional_argument, 0,  'e' },
+        {0,         0,                 0,   0 }
+    };
+
+    opterr = 0;
+    while (opt != -1) {
+        opt = getopt_long(argc, argv, "-hv", long_options, NULL);
+
         switch (opt) {
-        case 'h':
-            usage();
-            break;
-        case 'i':
-            options->incase_option = 1;
-            break;
-        case 't':
-            if (!clear_extensions) {
-                free_list(&options->extension);
-                options->extension_option = 1;
-                clear_extensions = 1;
+            case 'h':
+                usage(0);
+                break;
+            case 'v':
+                display_version();
+                break;
+
+            case 'i': {
+                if (optind > 2)
+                    usage(-1);
+
+                options->search_type = NGP_SEARCH;
+                argv[optind-1] = "";
             }
-            add_element(&options->extension, optarg);
             break;
-        case 'I':
-            if (!clear_ignores) {
-                free_list(&options->ignore);
-                options->ignore_option = 1;
-                clear_ignores = 1;
+            case 'e': {
+                if (optind > 2)
+                    usage(-1);
+
+                if (optarg != NULL) {
+                    strcpy(options->parser_options, optarg);
+                    opt = -1;
+                }
+
+                options->search_type = EXTERNAL_SEARCH;
+                argv[optind-1] = "";
             }
-            add_element(&options->ignore, optarg);
             break;
-        case 'r':
-            options->raw_option = 1;
-            break;
-        case 'e':
-            options->regexp_option = 1;
-            break;
-        case 'v':
-            display_version();
-            exit(0);
-        default:
-            exit(-1);
+
+            case 1:
+            case '?':
+            {
+                strcat( options->parser_options, argv[optind - 1] );
+                strcat( options->parser_options, " " );
+                continue;
+            }
             break;
         }
     }
 
+    if (options->search_type == NGP_SEARCH) {
+        opterr = 1;
+        optind = 0;
+
+        while ((opt = getopt(argc, argv, "eit:rI:")) != -1) {
+            switch (opt) {
+                case 'i':
+                    options->incase_option = 1;
+                    break;
+                case 't':
+                    if (!clear_extensions) {
+                        free_list(&options->extension);
+                        options->extension_option = 1;
+                        clear_extensions = 1;
+                    }
+                    add_element(&options->extension, optarg);
+                    break;
+                case 'I':
+                    if (!clear_ignores) {
+                        free_list(&options->ignore);
+                        options->ignore_option = 1;
+                        clear_ignores = 1;
+                    }
+                    add_element(&options->ignore, optarg);
+                    break;
+                case 'r':
+                    options->raw_option = 1;
+                    break;
+                case 'e':
+                    options->regexp_option = 1;
+                    break;
+                default:
+                    usage(-1);
+                    break;
+            }
+        }
+    }
+
     if (argc - optind < 1 || argc - optind > 2)
-        usage();
+        usage(-1);
 
     for ( ; optind < argc; optind++) {
         if (!first_argument) {
@@ -302,8 +366,8 @@ void parse_args(struct options_t *options, int argc, char *argv[])
 int main(int argc, char *argv[])
 {
     struct options_t *options = create_options();
-    parse_args(options, argc, argv);
     read_config(options);
+    parse_args(options, argc, argv);
 
     struct search_t *search = create_search(options);
     global_search = search;
