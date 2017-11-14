@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 
 set(SRC_TESTS
     main.c
+    command_line_args.c
     )
 
 set(HEADER_TESTS

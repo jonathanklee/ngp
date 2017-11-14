@@ -51,16 +51,16 @@ static void usage(int status)
     fprintf(out, " -t <type>  look into files with specified <type>\n");
     fprintf(out, " -I <name>  ignore file/dir with specified <name>\n");
     fprintf(out, " -e         pattern is a regular expression\n");
-    abort();
     exit(status);
 }
 
 static void display_version(void)
 {
-    printf("version %s\n", NGP_VERSION);
+    fprintf(stdout, "version %s\n", NGP_VERSION);
     exit(0);
 }
 
+#ifndef read_config /* ignore for testing */
 static void read_config(struct options_t *options)
 {
     const char *specific_files;
@@ -130,6 +130,8 @@ static void read_config(struct options_t *options)
     }
     config_destroy(&cfg);
 }
+#endif
+
 
 static void parse_ngp_search_args(struct options_t *options, int argc, char *argv[])
 {
@@ -190,7 +192,6 @@ static void parse_args(struct options_t *options, int argc, char *argv[])
         args[i] = argv[i];
     }
 
-
     optind = 0;
     opterr = 0;
 
@@ -199,7 +200,6 @@ static void parse_args(struct options_t *options, int argc, char *argv[])
         opt = getopt_long(arg_count, args, "-hv", long_options, NULL);
 
         int current_index = optind - 1;
-                /* printf( "opt= %c %d ARGV[%d] = %s\n", opt, opt, current_index, argv[current_index] ); */
         switch (opt) {
             case 'h':
                 usage(0);
@@ -211,6 +211,11 @@ static void parse_args(struct options_t *options, int argc, char *argv[])
             case 'i': {
                 if (current_index != 1)
                     usage(-1);
+
+                if (optarg != NULL) {
+                    strcpy(options->parser_options, optarg);
+                    opt = -1;
+                }
 
                 options->search_type = NGP_SEARCH;
                 argv[current_index] = NULL;
@@ -239,8 +244,12 @@ static void parse_args(struct options_t *options, int argc, char *argv[])
             }
             case '?':
             {
+                if (options->search_type == NGP_SEARCH)
+                    continue;
+
+                if (strlen(options->parser_options) > 0)
+                    strcat(options->parser_options, " ");
                 strcat(options->parser_options, argv[current_index]);
-                strcat(options->parser_options, " ");
                 continue;
             }
             break;
@@ -249,12 +258,44 @@ static void parse_args(struct options_t *options, int argc, char *argv[])
 
     if (options->search_type == NGP_SEARCH) {
 
+        /* delete NULL pointer from args */
         arg_count = 0;
         for (int i = 0; i < argc; ++i) {
-            if (argv[i]) {
-                args[arg_count] = argv[i];
-                arg_count++;
+            if (argv[i])
+                args[arg_count++] = argv[i];
+        }
+
+        if (strlen(options->parser_options) > 1) {
+
+            /* count args in parser_options */
+            int new_argc = arg_count;
+            char *arg = options->parser_options;
+            for (int i = 0; i < strlen(arg); ++i) {
+                if (arg[i] == ' ')
+                    new_argc++;
             }
+            new_argc++;
+
+             /* create new args */
+            char **new_args = calloc(new_argc, sizeof(*new_args));
+            new_args[0] = argv[0];
+
+            /* "copy" args from parser_options to new args */
+            new_argc = 1;
+            while ((arg = strtok(arg, " ")) != NULL) {
+                new_args[new_argc++] = arg;
+                arg += strlen(arg) + 1;
+            }
+
+            /* append remaineing args to new args */
+            for (int i = 1; i < arg_count; ++i) {
+                new_args[new_argc++] = args[i];
+            }
+
+            /* set args to new args */
+            free(args);
+            arg_count = new_argc;
+            args = new_args;
         }
 
         parse_ngp_search_args(options, arg_count, args);

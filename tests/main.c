@@ -23,6 +23,8 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #include "list.h"
 #include "display.h"
 
+extern char * command_line_arg_tests();
+
 int is_specific_file(struct options_t *options, const char *name);
 int is_ignored_file(struct options_t *options, const char *name);
 void parse_text(struct search_t *search, const char *file_name, int file_size,
@@ -408,6 +410,10 @@ static char * test_cursor_up_page_up()
 }
 
 static char * all_tests() {
+    char *message = command_line_arg_tests();
+    if (message)
+        return message;
+
     mu_run_test(test_no_entry);
     mu_run_test(test_one_entry_on_the_first_line);
     mu_run_test(test_one_entry_on_the_second_line);
