@@ -18,6 +18,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "line.h"
 #include "theme.h"
+#include "options.h"
 
 static void *get_line(struct entry_t *entry, entry_type_t type);
 

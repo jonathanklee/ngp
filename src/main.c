@@ -24,6 +24,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #include "list.h"
 #include "entry.h"
 #include "display.h"
+#include "options.h"
 
 #include "search/search.h"
 
@@ -34,7 +35,6 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #include <unistd.h>
 
 #define _GNU_SOURCE
-#define NGP_VERSION   "1.4"
 
 #define CURSOR_UP     'k'
 #define CURSOR_DOWN   'j'
@@ -55,30 +55,6 @@ pthread_mutex_unlock(mutex), mutex = 0)
 static struct search_t *global_search;
 static struct display_t *global_display;
 static pthread_t pid;
-
-void usage(int status)
-{
-    FILE *out = status == 0 ? stdout : stderr;
-    fprintf(out, "usage: ngp [-h|--help] [-v|--version]\n");
-    fprintf(out, "       ngp [--<parser>] [<parser-options>] [--] <pattern> [<path>]\n");
-    fprintf(out, "       ngp [--<parser>=<parser-options>] <pattern> [<path>]\n");
-    fprintf(out, "\n");
-    fprintf(out, "options:\n");
-    fprintf(out, " -h, --help     display this message\n");
-    fprintf(out, " -v, --version  show ngp version\n");
-    fprintf(out, "\n");
-    fprintf(out, "parser:\n");
-    fprintf(out, " --int[=<int-options>]  use ngp's internal search implementation with <int-options>\n");
-    fprintf(out, " --ext[=<ext-options>]  use external parser specified in the .ngprc\n");
-    fprintf(out, "\n");
-    fprintf(out, "int-options:\n");
-    fprintf(out, " -i         ignore case distinctions in pattern\n");
-    fprintf(out, " -r         raw mode\n");
-    fprintf(out, " -t <type>  look into files with specified <type>\n");
-    fprintf(out, " -I <name>  ignore file/dir with specified <name>\n");
-    fprintf(out, " -e         pattern is a regular expression\n");
-    exit(status);
-}
 
 void open_entry(struct search_t *search, int index, const char *editor, const char *pattern)
 {
@@ -171,204 +147,9 @@ void display_status(struct search_t *search)
         mvaddstr(0, COLS - 5, "");
 }
 
-void display_version(void)
-{
-    printf("version %s\n", NGP_VERSION);
-    exit(0);
-}
-
-void read_config(struct options_t *options)
-{
-    const char *specific_files;
-    const char *extensions;
-    const char *ignore;
-    const char *buffer;
-    char *ptr;
-    char *buf = NULL;
-    config_t cfg;
-
-    configuration_init(&cfg);
-
-    if (!config_lookup_string(&cfg, "editor", &buffer)) {
-        fprintf(stderr, "ngprc: no editor string found!\n");
-        exit(-1);
-    }
-        strncpy(options->editor, buffer, LINE_MAX);
-
-    if (config_lookup_string(&cfg, "parser_cmd", &buffer)) {
-        options->search_type = EXTERNAL_SEARCH;
-        strncpy(options->parser_cmd, buffer, LINE_MAX);
-    }
-
-    /* only if we don't provide extension as argument */
-    if (!options->extension_option) {
-        if (!config_lookup_string(&cfg, "files", &specific_files)) {
-            fprintf(stderr, "ngprc: no files string found!\n");
-            exit(-1);
-        }
-
-        options->specific_file = create_list();
-        ptr = strtok_r((char *) specific_files, " ", &buf);
-        while (ptr != NULL) {
-            add_element(&options->specific_file, ptr);
-            ptr = strtok_r(NULL, " ", &buf);
-        }
-    }
-
-    if (!options->extension_option) {
-        /* getting files extensions from configuration */
-        if (!config_lookup_string(&cfg, "extensions", &extensions)) {
-            fprintf(stderr, "ngprc: no extensions string found!\n");
-            exit(-1);
-        }
-
-        options->extension = create_list();
-        ptr = strtok_r((char *) extensions, " ", &buf);
-        while (ptr != NULL) {
-            add_element(&options->extension, ptr);
-            ptr = strtok_r(NULL, " ", &buf);
-        }
-    }
-
-    if (!options->ignore_option) {
-        /* getting ignored files from configuration */
-        if (!config_lookup_string(&cfg, "ignore", &ignore)) {
-            fprintf(stderr, "ngprc: no ignore string found!\n");
-            exit(-1);
-        }
-
-        options->ignore = create_list();
-        ptr = strtok_r((char *) ignore, " ", &buf);
-        while (ptr != NULL) {
-            add_element(&options->ignore, ptr);
-            ptr = strtok_r(NULL, " ", &buf);
-        }
-    }
-    config_destroy(&cfg);
-}
-
-void parse_args(struct options_t *options, int argc, char *argv[])
-{
-    int opt = 0;
-    int clear_extensions = 0;
-    int clear_ignores = 0;
-    int first_argument = 0;
-
-    static struct option long_options[] = {
-        {"help",    no_argument,       0,  'h' },
-        {"version", no_argument,       0,  'v' },
-        {"int",     optional_argument, 0,  'i' },
-        {"ext",     optional_argument, 0,  'e' },
-        {0,         0,                 0,   0 }
-    };
-
-    opterr = 0;
-    while (opt != -1) {
-        opt = getopt_long(argc, argv, "-hv", long_options, NULL);
-
-        switch (opt) {
-            case 'h':
-                usage(0);
-                break;
-            case 'v':
-                display_version();
-                break;
-
-            case 'i': {
-                if (optind > 2)
-                    usage(-1);
-
-                options->search_type = NGP_SEARCH;
-                argv[optind-1] = "";
-            }
-            break;
-            case 'e': {
-                if (optind > 2)
-                    usage(-1);
-
-                if (optarg != NULL) {
-                    strcpy(options->parser_options, optarg);
-                    opt = -1;
-                }
-
-                options->search_type = EXTERNAL_SEARCH;
-                argv[optind-1] = "";
-            }
-            break;
-
-            case 1:
-            case '?':
-            {
-                strcat( options->parser_options, argv[optind - 1] );
-                strcat( options->parser_options, " " );
-                continue;
-            }
-            break;
-        }
-    }
-
-    if (options->search_type == NGP_SEARCH) {
-        opterr = 1;
-        optind = 0;
-
-        while ((opt = getopt(argc, argv, "eit:rI:")) != -1) {
-            switch (opt) {
-                case 'i':
-                    options->incase_option = 1;
-                    break;
-                case 't':
-                    if (!clear_extensions) {
-                        free_list(&options->extension);
-                        options->extension_option = 1;
-                        clear_extensions = 1;
-                    }
-                    add_element(&options->extension, optarg);
-                    break;
-                case 'I':
-                    if (!clear_ignores) {
-                        free_list(&options->ignore);
-                        options->ignore_option = 1;
-                        clear_ignores = 1;
-                    }
-                    add_element(&options->ignore, optarg);
-                    break;
-                case 'r':
-                    options->raw_option = 1;
-                    break;
-                case 'e':
-                    options->regexp_option = 1;
-                    break;
-                default:
-                    usage(-1);
-                    break;
-            }
-        }
-    }
-
-    if (argc - optind < 1 || argc - optind > 2)
-        usage(-1);
-
-    for ( ; optind < argc; optind++) {
-        if (!first_argument) {
-            strcpy(options->pattern, argv[optind]);
-            first_argument = 1;
-        } else {
-            strcpy(options->directory, argv[optind]);
-        }
-    }
-
-    if (!opendir(options->directory)) {
-        fprintf(stderr, "error: could not open directory \"%s\"\n", options->directory);
-        exit(-1);
-    }
-}
-
 int main(int argc, char *argv[])
 {
-    struct options_t *options = create_options();
-    read_config(options);
-    parse_args(options, argc, argv);
-
+    struct options_t *options = create_options(argc, argv);
     struct search_t *search = create_search(options);
     global_search = search;
     pthread_mutex_init(&search->data_mutex, NULL);

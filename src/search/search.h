@@ -22,16 +22,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #include <pthread.h>
 #include <pcre.h>
 #include <limits.h>
-
-#ifdef LINE_MAX
-    #undef LINE_MAX
-#endif
-#define LINE_MAX    512
-
-typedef enum {
-    NGP_SEARCH = 0,
-    EXTERNAL_SEARCH = 1
-} SearchType;
+#include "../options.h"
 
 struct result_t {
     struct entry_t *entries;
@@ -39,30 +30,7 @@ struct result_t {
     int nbentry;
 };
 
-struct options_t {
-    const pcre *pcre_compiled;
-    const pcre_extra *pcre_extra;
-    char editor[LINE_MAX];
-    char directory[PATH_MAX];
-    char pattern[LINE_MAX];
-    struct list *specific_file;
-    struct list *extension;
-    struct list *ignore;
-    int raw_option;
-    int regexp_option;
-    int extension_option;
-    int incase_option;
-    int ignore_option;
-    int regexp_is_ok;
-
-    SearchType search_type;
-    char parser_cmd[LINE_MAX];
-    char parser_options[LINE_MAX];
-};
-
 struct search_t {
-
-    SearchType type;
 
     struct result_t* result;
 
@@ -73,7 +41,6 @@ struct search_t {
     struct options_t* options;
 };
 
-struct options_t * create_options();
 struct search_t * create_search(struct options_t* options);
 void do_search(struct search_t *search);
 void free_search(struct search_t *search);

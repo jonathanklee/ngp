@@ -18,6 +18,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "../entry.h"
 #include "../list.h"
+#include "../options.h"
 #include "search.h"
 #include "ngp_search.h"
 #include "external_search.h"
@@ -74,14 +75,4 @@ void free_search(struct search_t *search)
 
     if (search->options->pcre_extra)
         pcre_free((void *) search->options->pcre_extra);
-}
-
-struct options_t * create_options()
-{
-    struct options_t *options = calloc(1, sizeof(*options));
-
-    options->search_type = NGP_SEARCH;
-    strcpy(options->directory, ".");
-
-    return options;
 }
