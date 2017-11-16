@@ -175,7 +175,7 @@ static char * test_parser_and_pattern()
         free(options);
     }
     {
-        char *argv[4] = {"ngp", "--ext", "--", "pattern"};
+        char *argv[4] = {"ngp", "--ag", "--", "pattern"};
         int argc = sizeof(argv) / sizeof(*argv);
 
         struct options_t *options = NULL;
@@ -184,7 +184,22 @@ static char * test_parser_and_pattern()
         }
 
         mu_assert_verbose(success == 42);
-        mu_assert_verbose(options->search_type == EXTERNAL_SEARCH);
+        mu_assert_verbose(options->search_type == AG_SEARCH);
+        mu_assert_verbose(!strcmp("pattern", options->pattern));
+
+        free(options);
+    }
+    {
+        char *argv[4] = {"ngp", "--git", "--", "pattern"};
+        int argc = sizeof(argv) / sizeof(*argv);
+
+        struct options_t *options = NULL;
+        if (!setjmp(buf)) {
+            options = create_options(argc, argv);
+        }
+
+        mu_assert_verbose(success == 42);
+        mu_assert_verbose(options->search_type == GIT_SEARCH);
         mu_assert_verbose(!strcmp("pattern", options->pattern));
 
         free(options);
@@ -249,7 +264,7 @@ static char * test_parser_and_pattern_and_path()
     {
         success = 42;
 
-        char *argv[5] = {"ngp", "--ext", "--", "pattern", ".."};
+        char *argv[5] = {"ngp", "--ag", "--", "pattern", ".."};
         int argc = sizeof(argv) / sizeof(*argv);
 
         struct options_t *options = NULL;
@@ -258,7 +273,25 @@ static char * test_parser_and_pattern_and_path()
         }
 
         mu_assert_verbose(success == 42);
-        mu_assert_verbose(options->search_type == EXTERNAL_SEARCH);
+        mu_assert_verbose(options->search_type == AG_SEARCH);
+        mu_assert_verbose(!strcmp("pattern", options->pattern));
+        mu_assert_verbose(!strcmp("..", options->directory));
+
+        free(options);
+    }
+    {
+        success = 42;
+
+        char *argv[5] = {"ngp", "--git", "--", "pattern", ".."};
+        int argc = sizeof(argv) / sizeof(*argv);
+
+        struct options_t *options = NULL;
+        if (!setjmp(buf)) {
+            options = create_options(argc, argv);
+        }
+
+        mu_assert_verbose(success == 42);
+        mu_assert_verbose(options->search_type == GIT_SEARCH);
         mu_assert_verbose(!strcmp("pattern", options->pattern));
         mu_assert_verbose(!strcmp("..", options->directory));
 
@@ -417,6 +450,7 @@ static char * test_parser_and_serch_options()
         }
 
         mu_assert_verbose(success == 42);
+        mu_assert_verbose(options->search_type == NGP_SEARCH);
         mu_assert_verbose(options->incase_option == 1);
         mu_assert_verbose(options->raw_option == 1);
         mu_assert_verbose(options->extension_option == 1);
@@ -437,6 +471,7 @@ static char * test_parser_and_serch_options()
         }
 
         mu_assert_verbose(success == 42);
+        mu_assert_verbose(options->search_type == NGP_SEARCH);
         mu_assert_verbose(options->incase_option == 1);
         mu_assert_verbose(options->raw_option == 1);
         mu_assert_verbose(options->extension_option == 1);
@@ -448,7 +483,7 @@ static char * test_parser_and_serch_options()
         free(options);
     }
     {
-        char *argv[] = {"ngp", "--ext", "-i", "-r", "-t", ".c", "-I", "Makefile", "--", "pattern", ".."};
+        char *argv[] = {"ngp", "--ag", "-i", "-r", "-t", ".c", "-I", "Makefile", "--", "pattern", ".."};
         int argc = sizeof(argv) / sizeof(*argv);
 
         struct options_t *options = NULL;
@@ -457,13 +492,14 @@ static char * test_parser_and_serch_options()
         }
 
         mu_assert_verbose(success == 42);
+        mu_assert_verbose(options->search_type == AG_SEARCH);
         mu_assert_verbose(!strcmp("-i -r -t .c -I Makefile", options->parser_options));
         mu_assert_verbose(!strcmp("pattern", options->pattern));
 
         free(options);
     }
     {
-        char *argv[] = {"ngp", "--ext=-i -r -t .c -I Makefile", "pattern", ".."};
+        char *argv[] = {"ngp", "--ag=-i -r -t .c -I Makefile", "pattern", ".."};
         int argc = sizeof(argv) / sizeof(*argv);
 
         struct options_t *options = NULL;
@@ -472,6 +508,39 @@ static char * test_parser_and_serch_options()
         }
 
         mu_assert_verbose(success == 42);
+        mu_assert_verbose(options->search_type == AG_SEARCH);
+        mu_assert_verbose(!strcmp("-i -r -t .c -I Makefile", options->parser_options));
+        mu_assert_verbose(!strcmp("pattern", options->pattern));
+
+        free(options);
+    }
+    {
+        char *argv[] = {"ngp", "--git", "-i", "-r", "-t", ".c", "-I", "Makefile", "--", "pattern", ".."};
+        int argc = sizeof(argv) / sizeof(*argv);
+
+        struct options_t *options = NULL;
+        if (!setjmp(buf)) {
+            options = create_options(argc, argv);
+        }
+
+        mu_assert_verbose(success == 42);
+        mu_assert_verbose(options->search_type == GIT_SEARCH);
+        mu_assert_verbose(!strcmp("-i -r -t .c -I Makefile", options->parser_options));
+        mu_assert_verbose(!strcmp("pattern", options->pattern));
+
+        free(options);
+    }
+    {
+        char *argv[] = {"ngp", "--git=-i -r -t .c -I Makefile", "pattern", ".."};
+        int argc = sizeof(argv) / sizeof(*argv);
+
+        struct options_t *options = NULL;
+        if (!setjmp(buf)) {
+            options = create_options(argc, argv);
+        }
+
+        mu_assert_verbose(success == 42);
+        mu_assert_verbose(options->search_type == GIT_SEARCH);
         mu_assert_verbose(!strcmp("-i -r -t .c -I Makefile", options->parser_options));
         mu_assert_verbose(!strcmp("pattern", options->pattern));
 
@@ -499,7 +568,7 @@ static char * test_missing_pattern()
     }
     {
         success = 42;
-        char *argv[] = {"ngp", "--ext", "--"};
+        char *argv[] = {"ngp", "--git", "--"};
         int argc = sizeof(argv) / sizeof(*argv);
 
         struct options_t *options = NULL;
@@ -513,7 +582,7 @@ static char * test_missing_pattern()
     }
     {
         success = 42;
-        char *argv[] = {"ngp", "--ext=-C 2"};
+        char *argv[] = {"ngp", "--ag=-C 2"};
         int argc = sizeof(argv) / sizeof(*argv);
 
         struct options_t *options = NULL;
@@ -563,8 +632,6 @@ char * command_line_arg_tests()
     mu_run_test(test_missing_pattern);
     mu_run_test(test_invalid_path);
 
-    // TODO Tests
-    // no a valid path
     return 0;
 }
 

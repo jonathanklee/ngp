@@ -127,7 +127,8 @@ void do_external_search(struct search_t *search)
 {
     char command[PATH_MAX] = {'\0'};
     snprintf(command, sizeof(command),
-        search->options->parser_cmd,
+        search->options->parser_cmd[search->options->search_type],
+        search->options->parser_options,
         search->options->pattern,
         search->options->directory);
 

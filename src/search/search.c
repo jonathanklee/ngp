@@ -47,8 +47,12 @@ void do_search(struct search_t *search)
         case NGP_SEARCH:
             return do_ngp_search(search);
 
-        case EXTERNAL_SEARCH:
+        case AG_SEARCH:
+        case GIT_SEARCH:
             return do_external_search(search);
+
+        default:
+            break;
     }
 
     exit(-1);

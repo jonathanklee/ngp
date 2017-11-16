@@ -28,7 +28,10 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 
 typedef enum {
     NGP_SEARCH = 0,
-    EXTERNAL_SEARCH = 1
+    AG_SEARCH,
+    GIT_SEARCH,
+
+    NUM_SEARCHES
 } SearchType;
 
 struct options_t {
@@ -48,7 +51,7 @@ struct options_t {
     int regexp_is_ok;
 
     SearchType search_type;
-    char parser_cmd[LINE_MAX];
+    char parser_cmd[NUM_SEARCHES][LINE_MAX];
     char parser_options[LINE_MAX];
 };
 
