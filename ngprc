@@ -23,8 +23,8 @@ editor = "vim -c 'set hls' -c 'silent /%1$s' -c %2$d %3$s"
  *     arg %3$s = directory
  */
 default_parser = "ag"
-ag_cmd = "ag -H -0  %1$s \"%2$s\" %3$s"
-git_cmd = "git grep -n --heading  %1$s \"%2$s\" %3$s"
+ag_cmd = "ag  %1$s \"%2$s\" %3$s"
+git_cmd = "git grep   %1$s \"%2$s\" %3$s"
 
 
 /* themes

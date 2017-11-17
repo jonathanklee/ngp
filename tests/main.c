@@ -23,14 +23,11 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #include "list.h"
 #include "display.h"
 
-extern char * command_line_arg_tests();
-
-int is_specific_file(struct options_t *options, const char *name);
-int is_ignored_file(struct options_t *options, const char *name);
-void parse_text(struct search_t *search, const char *file_name, int file_size,
-                const char *text, const char *pattern);
-
 int tests_run = 0;
+char * command_line_arg_tests();
+
+#include "../src/search/ngp_search.c"
+
 
 static char * test_no_entry()
 {

@@ -16,14 +16,17 @@ You should have received a copy of the GNU General Public License
 along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <string.h>
+
 #include "../entry.h"
 #include "../list.h"
 #include "../options.h"
 #include "search.h"
-#include "ngp_search.h"
-#include "external_search.h"
 
-#include <string.h>
+
+void do_ngp_search(struct search_t *search);
+void do_ag_search(struct search_t *search);
+void do_git_search(struct search_t *search);
 
 struct search_t * create_search( struct options_t *options )
 {
@@ -48,8 +51,10 @@ void do_search(struct search_t *search)
             return do_ngp_search(search);
 
         case AG_SEARCH:
+            return do_ag_search(search);
+
         case GIT_SEARCH:
-            return do_external_search(search);
+            return do_git_search(search);
 
         default:
             break;

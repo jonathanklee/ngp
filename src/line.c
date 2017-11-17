@@ -18,7 +18,6 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "line.h"
 #include "theme.h"
-#include "options.h"
 
 static void *get_line(struct entry_t *entry, entry_type_t type);
 
@@ -29,7 +28,7 @@ struct entry_vtable line_vtable = {
     get_line
 };
 
-struct entry_t *create_line(struct result_t *result, char *line, int line_number)
+struct entry_t *create_line(struct result_t *result, char *line, int line_number, range_t match)
 {
     int len = strlen(line) + 1;
     struct line_t *new;
@@ -39,6 +38,8 @@ struct entry_t *create_line(struct result_t *result, char *line, int line_number
     new->opened = 0;
     new->is_selectable = 1;
     new->line = line_number;
+    new->highlight.begin = match.begin;
+    new->highlight.end = match.end;
     result->nbentry++;
 
     new->entry.vtable = &line_vtable;
@@ -54,7 +55,8 @@ struct entry_t *create_line(struct result_t *result, char *line, int line_number
 
 struct entry_t *create_unselectable_line(struct result_t *result, char *line, int line_number)
 {
-    struct entry_t *entry = create_line(result, line, line_number);
+    range_t no_match = {0, 0};
+    struct entry_t *entry = create_line(result, line, line_number, no_match);
     struct line_t *new = container_of(entry, struct line_t, entry);
     new->is_selectable = 0;
 
@@ -66,38 +68,15 @@ struct entry_t *create_blank_line(struct result_t *result)
     return create_unselectable_line(result, "", 0);
 }
 
-static void hilight_pattern(struct entry_t *entry, char *line, struct search_t *search, int y)
+static void hilight_pattern(struct line_t *container, char *line, int y)
 {
-    int length;
-    int counter;
-    char *ptr;
-    char *regexp_matched_string = NULL;
-    char *pattern = NULL;
-    char * (*parser)(struct search_t *, const char *, const char*);
-    struct line_t *container = container_of(entry, struct line_t, entry);
+    char *ptr = (char *)line;
     char buffer[32];
-
-    if (search->options->regexp_option) {
-        regexp_matched_string = regex(search->options, line, search->options->pattern);
-        if (!regexp_matched_string)
-            return;
-
-        pattern = strstr(line, regexp_matched_string);
-        goto start_printing;
-    }
-
-    parser = get_parser(search->options);
-    pattern = parser(search, line, search->options->pattern);
-
-start_printing:
-
-    if (!pattern)
-           return;
-
-    ptr = (char *)line;
-    length = get_integer_as_string(container->line, buffer);
+    int length = get_integer_as_string(container->line, buffer);
     move(y, length);
-    while (ptr != pattern) {
+
+    /* while (ptr != pattern) { */
+    while (container->highlight.begin > (ptr - line)) {
         addch(*ptr);
         ptr++;
     }
@@ -110,14 +89,8 @@ start_printing:
     else
        attron(COLOR_PAIR(COLOR_HIGHLIGHT));
 
-    if (search->options->regexp_option) {
-        length = strlen(regexp_matched_string);
-        pcre_free_substring(regexp_matched_string);
-    } else {
-        length = strlen(search->options->pattern);
-    }
-
-    for (counter = 0; counter < length; counter++, ptr++)
+    length = container->highlight.end - container->highlight.begin;
+    for (int counter = 0; counter < length; counter++, ptr++)
         addch(*ptr);
 
     attroff(A_REVERSE);
@@ -162,7 +135,7 @@ void display_line(struct entry_t *entry, struct search_t *search, int y, int is_
     strncpy(cropped_line, line, COLS - length);
     mvprintw(y, length, "%s", cropped_line);
 
-    hilight_pattern(entry, cropped_line, search, y);
+    hilight_pattern(container, cropped_line, y);
 
     if (is_cursor_on_entry)
         attroff(A_REVERSE);

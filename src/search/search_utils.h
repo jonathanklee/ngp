@@ -16,13 +16,20 @@ You should have received a copy of the GNU General Public License
 along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef NGP_SEARCH_H
-#define NGP_SEARCH_H
+#ifndef SEARCH_UTILS_H
+#define SEARCH_UTILS_H
 
 #include "search.h"
 
-struct search_t * create_ngp_search();
-void do_ngp_search(struct search_t *search);
-void free_ngp_search(struct search_t *search);
+typedef struct {
+    const char *default_arguments;
+    int (*match_file)(struct result_t *result, const char *output);
+    int (*match_line)(struct result_t *result, const char *output);
+    int (*match_blank_line)(struct result_t *result, const char *output);
+} external_parser_t;
+
+int validate_file(const char *path);
+const char* apply_regex(const char *output, const char *expr);
+void popen_search(struct search_t *search, external_parser_t *parser);
 
 #endif

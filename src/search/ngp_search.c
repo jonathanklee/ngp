@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "ngp_search.h"
 #include "../utils.h"
 #include "../entry.h"
 #include "../list.h"
@@ -35,8 +34,8 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #define for_lock(MUTEX) \
 for(mutex = &MUTEX; mutex && !pthread_mutex_lock(mutex); pthread_mutex_unlock(mutex), mutex = 0)
 
-void parse_text(struct search_t *search, const char *file_name, int file_size,
-                const char *text, const char *pattern)
+static void parse_text(struct search_t *search, const char *file_name, int file_size,
+                       const char *text, const char *pattern)
 {
     char *end;
     char *endline;
@@ -61,12 +60,21 @@ void parse_text(struct search_t *search, const char *file_name, int file_size,
 
         *endline = '\0';
 
-        if (parser(search->options, pointer, pattern) != NULL) {
+        char *match_begin = parser(search->options, pointer, pattern);
+        if (match_begin != NULL) {
             if (first_occurrence) {
                 search->result->entries = create_file(search->result, (char *)file_name);
                 first_occurrence = 0;
             }
-            search->result->entries = create_line(search->result, pointer, line_number);
+            range_t match = {0, 0};
+            if (search->options->regexp_option) {
+                match.begin = strstr(pointer, match_begin) - pointer;
+                match.end = match.begin + strlen(match_begin);
+            } else {
+                match.begin = match_begin - pointer;
+                match.end = match.begin + strlen(search->options->pattern);
+            }
+            search->result->entries = create_line(search->result, pointer, line_number, match);
         }
 
         *endline = '\n';
@@ -76,7 +84,7 @@ void parse_text(struct search_t *search, const char *file_name, int file_size,
 
 }
 
-int is_specific_file(struct options_t *options, const char *name)
+static int is_specific_file(struct options_t *options, const char *name)
 {
     char *name_begins;
     struct list *pointer = options->specific_file;
@@ -90,7 +98,7 @@ int is_specific_file(struct options_t *options, const char *name)
     return 0;
 }
 
-int is_ignored_file(struct options_t *options, const char *name)
+static int is_ignored_file(struct options_t *options, const char *name)
 {
     char *name_begins;
     struct list *pointer = options->ignore;
@@ -222,15 +230,4 @@ static void lookup_directory(struct search_t *search, const char *dir, const cha
 void do_ngp_search(struct search_t *search)
 {
     lookup_directory(search, search->options->directory, search->options->pattern);
-}
-
-
-struct search_t * create_ngp_search()
-{
-    return NULL;
-}
-
-
-void free_ngp_search(struct search_t *search)
-{
 }

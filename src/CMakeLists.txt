@@ -24,8 +24,10 @@ add_library(objects STATIC
     display.c
     options.c
     search/search.c
+    search/search_utils.c
     search/ngp_search.c
-    search/external_search.c
+    search/ag_search.c
+    search/git_search.c
     theme.c
     utils.c
 )
