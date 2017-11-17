@@ -68,6 +68,13 @@ struct entry_t *create_blank_line(struct result_t *result)
     return create_unselectable_line(result, "", 0);
 }
 
+
+static int get_integer_as_string(int integer, char *string)
+{
+    sprintf(string, "%d", integer);
+    return strlen(string) + 1;
+}
+
 static void hilight_pattern(struct line_t *container, char *line, int y)
 {
     char *ptr = (char *)line;

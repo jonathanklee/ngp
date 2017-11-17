@@ -20,8 +20,6 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #define LINE_H
 
 #include "entry.h"
-#include "utils.h"
-
 
 typedef struct {
 	size_t begin;

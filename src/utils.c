@@ -36,25 +36,6 @@ int is_selectable(struct search_t *search, int index)
     return is_entry_selectable(ptr);
 }
 
-int is_dir_good(char *dir)
-{
-    return strcmp(dir, ".") != 0 &&
-        strcmp(dir, "..") != 0 &&
-        strcmp(dir, ".git") != 0 ? 1 : 0;
-}
-
-char *get_file_name(const char * absolute_path)
-{
-    char *ret;
-
-    if (strrchr(absolute_path + 3, '/') != NULL)
-        ret = strrchr(absolute_path + 3, '/') + 1;
-    else
-        ret = (char *) absolute_path + 3;
-
-    return ret;
-}
-
 char *remove_double(char *initial, char c, char *final)
 {
     int i, j;
@@ -75,22 +56,6 @@ char *remove_double(char *initial, char c, char *final)
     final[j] = '\0';
 
     return final;
-}
-
-char *extract_line_number(char *line)
-{
-    char *token;
-    char *buffer;
-    token = strtok_r(line, " :", &buffer);
-    return token;
-}
-
-int is_simlink(char *file_path)
-{
-    struct stat filestat;
-
-    lstat(file_path, &filestat);
-    return S_ISLNK(filestat.st_mode);
 }
 
 void configuration_init(config_t *cfg)
@@ -171,10 +136,3 @@ char *strcasestr_wrapper(struct options_t *options, const char *line, const char
 {
     return strcasestr(line, pattern);
 }
-
-int get_integer_as_string(int integer, char *string)
-{
-    sprintf(string, "%d", integer);
-    return strlen(string) + 1;
-}
-

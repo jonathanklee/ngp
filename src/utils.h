@@ -23,16 +23,11 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #include <libconfig.h>
 
 int is_selectable(struct search_t *search, int index);
-int is_dir_good(char *dir);
-int is_simlink(char *file_path);
-char *get_file_name(const char * absolute_path);
 char *remove_double(char *initial, char c, char *final);
-char *extract_line_number(char *line);
 void configuration_init(config_t *cfg);
 char *regex(struct options_t *options, const char *line, const char *pattern);
 void *get_parser(struct options_t *options);
 char *strstr_wrapper(struct options_t *options, const char *line, const char *pattern);
 char *strcasestr_wrapper(struct options_t *options, const char *line, const char *pattern);
-int get_integer_as_string(int integer, char *string);
 
 #endif /* UTILS_H */

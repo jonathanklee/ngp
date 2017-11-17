@@ -34,6 +34,33 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #define for_lock(MUTEX) \
 for(mutex = &MUTEX; mutex && !pthread_mutex_lock(mutex); pthread_mutex_unlock(mutex), mutex = 0)
 
+static int is_simlink(char *file_path)
+{
+    struct stat filestat;
+
+    lstat(file_path, &filestat);
+    return S_ISLNK(filestat.st_mode);
+}
+
+static int is_dir_good(char *dir)
+{
+    return strcmp(dir, ".") != 0 &&
+        strcmp(dir, "..") != 0 &&
+        strcmp(dir, ".git") != 0 ? 1 : 0;
+}
+
+static char *get_file_name(const char * absolute_path)
+{
+    char *ret;
+
+    if (strrchr(absolute_path + 3, '/') != NULL)
+        ret = strrchr(absolute_path + 3, '/') + 1;
+    else
+        ret = (char *) absolute_path + 3;
+
+    return ret;
+}
+
 static void parse_text(struct search_t *search, const char *file_name, int file_size,
                        const char *text, const char *pattern)
 {
