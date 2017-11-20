@@ -36,28 +36,6 @@ int is_selectable(struct search_t *search, int index)
     return is_entry_selectable(ptr);
 }
 
-char *remove_double(char *initial, char c, char *final)
-{
-    int i, j;
-    int len = strlen(initial);
-
-    for (i = 0, j = 0; i < len; j++ ) {
-        if (initial[i] != c) {
-            final[j] = initial[i];
-            i++;
-        } else {
-            final[j] = initial[i];
-            if (initial[i + 1] == c)
-                i = i + 2;
-            else
-                i++;
-        }
-    }
-    final[j] = '\0';
-
-    return final;
-}
-
 void configuration_init(config_t *cfg)
 {
     char *user_name;

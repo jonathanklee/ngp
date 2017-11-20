@@ -63,7 +63,6 @@ void open_entry(struct search_t *search, int index, const char *editor, const ch
     struct entry_t *file = search->result->start;
 
     char command[PATH_MAX];
-    char filtered_file_name[PATH_MAX];
     pthread_mutex_t *mutex;
 
     for (i = 0, ptr = search->result->start; i < index; i++) {
@@ -76,11 +75,10 @@ void open_entry(struct search_t *search, int index, const char *editor, const ch
     struct line_t *line = container_of(ptr, struct line_t, entry);
 
     lock(search->data_mutex) {
-        remove_double(file->data, '/', filtered_file_name);
         snprintf(command, sizeof(command), editor,
             pattern,
             line->line,
-            filtered_file_name);
+            file->data);
     }
 
     if (system(command) < 0)
