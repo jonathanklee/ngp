@@ -59,7 +59,7 @@ static char * test_show_help()
     {
         success = 0;
 
-        char *argv[2] = {"ngp", "-h"};
+        char *argv[] = {"ngp", "-h"};
         int argc = sizeof(argv) / sizeof(*argv);
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
@@ -71,7 +71,7 @@ static char * test_show_help()
     {
         success = 0;
 
-        char *argv[2] = {"ngp", "--help"};
+        char *argv[] = {"ngp", "--help"};
         int argc = sizeof(argv) / sizeof(*argv);
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
@@ -89,7 +89,7 @@ static char * test_get_version()
     {
         success = 0;
 
-        char *argv[2] = {"ngp", "-v"};
+        char *argv[] = {"ngp", "-v"};
         int argc = sizeof(argv) / sizeof(*argv);
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
@@ -101,7 +101,7 @@ static char * test_get_version()
     {
         success = 0;
 
-        char *argv[2] = {"ngp", "--version"};
+        char *argv[] = {"ngp", "--version"};
         int argc = sizeof(argv) / sizeof(*argv);
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
@@ -118,7 +118,7 @@ static char * test_simple_pattern()
 {
     success = 42;
 
-    char *argv[2] = {"ngp", "pattern"};
+    char *argv[] = {"ngp", "pattern"};
     int argc = sizeof(argv) / sizeof(*argv);
 
     struct options_t *options = NULL;
@@ -138,7 +138,7 @@ static char * test_pattern_and_path()
 {
     success = 42;
 
-    char *argv[3] = {"ngp", "pattern", ".."};
+    char *argv[] = {"ngp", "pattern", ".."};
     int argc = sizeof(argv) / sizeof(*argv);
 
     struct options_t *options = NULL;
@@ -160,7 +160,7 @@ static char * test_parser_and_pattern()
     success = 42;
 
     {
-        char *argv[4] = {"ngp", "--int", "--", "pattern"};
+        char *argv[] = {"ngp", "--nat", "--", "pattern"};
         int argc = sizeof(argv) / sizeof(*argv);
 
         struct options_t *options = NULL;
@@ -175,7 +175,7 @@ static char * test_parser_and_pattern()
         free(options);
     }
     {
-        char *argv[4] = {"ngp", "--ag", "--", "pattern"};
+        char *argv[] = {"ngp", "--ag", "--", "pattern"};
         int argc = sizeof(argv) / sizeof(*argv);
 
         struct options_t *options = NULL;
@@ -190,7 +190,7 @@ static char * test_parser_and_pattern()
         free(options);
     }
     {
-        char *argv[4] = {"ngp", "--git", "--", "pattern"};
+        char *argv[] = {"ngp", "--git", "--", "pattern"};
         int argc = sizeof(argv) / sizeof(*argv);
 
         struct options_t *options = NULL;
@@ -226,7 +226,7 @@ static char * test_wrong_parser_option()
     }
     {
         success = 42;
-        char *argv[] = {"ngp", "-i", "--int", "--", "pattern"};
+        char *argv[] = {"ngp", "-i", "--nat", "--", "pattern"};
         int argc = sizeof(argv) / sizeof(*argv);
 
         struct options_t *options = NULL;
@@ -246,7 +246,7 @@ static char * test_parser_and_pattern_and_path()
     {
         success = 42;
 
-        char *argv[5] = {"ngp", "--int", "--", "pattern", ".."};
+        char *argv[] = {"ngp", "--nat", "--", "pattern", ".."};
         int argc = sizeof(argv) / sizeof(*argv);
 
         struct options_t *options = NULL;
@@ -264,7 +264,7 @@ static char * test_parser_and_pattern_and_path()
     {
         success = 42;
 
-        char *argv[5] = {"ngp", "--ag", "--", "pattern", ".."};
+        char *argv[] = {"ngp", "--ag", "--", "pattern", ".."};
         int argc = sizeof(argv) / sizeof(*argv);
 
         struct options_t *options = NULL;
@@ -282,7 +282,7 @@ static char * test_parser_and_pattern_and_path()
     {
         success = 42;
 
-        char *argv[5] = {"ngp", "--git", "--", "pattern", ".."};
+        char *argv[] = {"ngp", "--git", "--", "pattern", ".."};
         int argc = sizeof(argv) / sizeof(*argv);
 
         struct options_t *options = NULL;
@@ -441,7 +441,7 @@ static char * test_parser_and_serch_options()
     success = 42;
 
     {
-        char *argv[] = {"ngp", "--int", "-i", "-r", "-t", ".c", "-I", "Makefile", "--", "pattern", ".."};
+        char *argv[] = {"ngp", "--nat", "-i", "-r", "-t", ".c", "-I", "Makefile", "--", "pattern", ".."};
         int argc = sizeof(argv) / sizeof(*argv);
 
         struct options_t *options = NULL;
@@ -462,7 +462,7 @@ static char * test_parser_and_serch_options()
         free(options);
     }
     {
-        char *argv[] = {"ngp", "--int=-i -r -t .c -I Makefile", "pattern", ".."};
+        char *argv[] = {"ngp", "--nat=-i -r -t .c -I Makefile", "pattern", ".."};
         int argc = sizeof(argv) / sizeof(*argv);
 
         struct options_t *options = NULL;

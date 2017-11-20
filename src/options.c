@@ -42,7 +42,7 @@ static void usage(int status)
     fprintf(out, " -v, --version  show ngp version\n");
     fprintf(out, "\n");
     fprintf(out, "parser:\n");
-    fprintf(out, " --int[=<int-options>]       use ngp's internal search implementation with <int-options>\n");
+    fprintf(out, " --nat[=<nat-options>]       use ngp's native search implementation with <int-options>\n");
     fprintf(out, " --ag[=<ag-options>]         use ag aka sliver searcher as parser\n");
     fprintf(out, " --git[=<git-grep-options>]  use git-grep as parser (works only within GIT repositories)\n");
     fprintf(out, "\n");
@@ -85,6 +85,8 @@ static void read_config(struct options_t *options)
             options->search_type = AG_SEARCH;
         else if (!strncmp(buffer, "git", 3))
             options->search_type = GIT_SEARCH;
+        else
+            options->search_type = NGP_SEARCH;
     }
 
     if (config_lookup_string(&cfg, "ag_cmd", &buffer)) {
@@ -192,7 +194,7 @@ static void parse_args(struct options_t *options, int argc, char *argv[])
     static struct option long_options[] = {
         {"help",    no_argument,       0,  'h' },
         {"version", no_argument,       0,  'v' },
-        {"int",     optional_argument, 0,  'i' },
+        {"nat",     optional_argument, 0,  'n' },
         {"ag",      optional_argument, 0,  'a' },
         {"git",     optional_argument, 0,  'g' },
         {0,         0,                 0,   0 }
@@ -220,7 +222,7 @@ static void parse_args(struct options_t *options, int argc, char *argv[])
                 display_version();
                 break;
 
-            case 'i': {
+            case 'n': {
                 if (current_index != 1)
                     usage(-1);
 
