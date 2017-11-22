@@ -437,7 +437,7 @@ static char * test_wrong_ngp_search_options()
     return 0;
 }
 
-static char * test_parser_and_serch_options()
+static char * test_parser_and_search_options()
 {
     success = 42;
 
@@ -629,7 +629,7 @@ char * command_line_arg_tests()
     mu_run_test(test_parser_and_pattern_and_path);
     mu_run_test(test_ngp_search_options);
     mu_run_test(test_wrong_ngp_search_options);
-    mu_run_test(test_parser_and_serch_options);
+    mu_run_test(test_parser_and_search_options);
     mu_run_test(test_missing_pattern);
     mu_run_test(test_invalid_path);
 

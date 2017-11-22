@@ -26,7 +26,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
     ((type *)((char *)(ptr) - offsetof(type, member)))
 
 typedef enum {
-    FILE_ENTRY = 0,
+    FILE_ENTRY,
     LINE_ENTRY
 } entry_type_t;
 

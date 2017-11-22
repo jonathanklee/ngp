@@ -58,11 +58,11 @@ const char* apply_regex(const char *output, const char *expr)
 
 void popen_search(struct search_t *search, external_parser_t *parser)
 {
-    char parser_args[PATH_MAX] = {'\0'};
+    char parser_args[PATH_MAX] = "";
     strcat(parser_args, parser->default_arguments);
     strcat(parser_args, search->options->parser_options);
 
-    char command[PATH_MAX] = {'\0'};
+    char command[PATH_MAX] = "";
     snprintf(command, sizeof(command),
         search->options->parser_cmd[search->options->search_type],
         parser_args,
