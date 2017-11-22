@@ -40,7 +40,8 @@ static void test_exit(int status)
 #define stderr stdout
 
 /* ignore config for the tests */
-#define read_config(options)
+#define read_config(options) \
+    options->search_type = NGP_SEARCH
 
 /* silence getopt error output */
 int opterr = 0;

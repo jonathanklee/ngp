@@ -91,55 +91,54 @@ static void read_config(struct options_t *options)
 
     if (config_lookup_string(&cfg, "ag_cmd", &buffer)) {
         strncpy(options->parser_cmd[AG_SEARCH], buffer, LINE_MAX);
+    } else {
+        fprintf(stderr, "ngprc: no ag_cmd string found!\n");
+        exit(-1);
     }
 
     if (config_lookup_string(&cfg, "git_cmd", &buffer)) {
         strncpy(options->parser_cmd[GIT_SEARCH], buffer, LINE_MAX);
+    } else {
+        fprintf(stderr, "ngprc: no git_cmd string found!\n");
+        exit(-1);
     }
 
-    /* only if we don't provide extension as argument */
-    if (!options->extension_option) {
-        if (!config_lookup_string(&cfg, "files", &specific_files)) {
-            fprintf(stderr, "ngprc: no files string found!\n");
-            exit(-1);
-        }
-
+    if (config_lookup_string(&cfg, "files", &specific_files)) {
         options->specific_file = create_list();
         ptr = strtok_r((char *) specific_files, " ", &buf);
         while (ptr != NULL) {
             add_element(&options->specific_file, ptr);
             ptr = strtok_r(NULL, " ", &buf);
         }
+    } else {
+        fprintf(stderr, "ngprc: no files string found!\n");
+        exit(-1);
     }
 
-    if (!options->extension_option) {
-        /* getting files extensions from configuration */
-        if (!config_lookup_string(&cfg, "extensions", &extensions)) {
-            fprintf(stderr, "ngprc: no extensions string found!\n");
-            exit(-1);
-        }
-
+    /* getting files extensions from configuration */
+    if (config_lookup_string(&cfg, "extensions", &extensions)) {
         options->extension = create_list();
         ptr = strtok_r((char *) extensions, " ", &buf);
         while (ptr != NULL) {
             add_element(&options->extension, ptr);
             ptr = strtok_r(NULL, " ", &buf);
         }
+    } else {
+        fprintf(stderr, "ngprc: no extensions string found!\n");
+        exit(-1);
     }
 
-    if (!options->ignore_option) {
-        /* getting ignored files from configuration */
-        if (!config_lookup_string(&cfg, "ignore", &ignore)) {
-            fprintf(stderr, "ngprc: no ignore string found!\n");
-            exit(-1);
-        }
-
+    /* getting ignored files from configuration */
+    if (config_lookup_string(&cfg, "ignore", &ignore)) {
         options->ignore = create_list();
         ptr = strtok_r((char *) ignore, " ", &buf);
         while (ptr != NULL) {
             add_element(&options->ignore, ptr);
             ptr = strtok_r(NULL, " ", &buf);
         }
+    } else {
+        fprintf(stderr, "ngprc: no ignore string found!\n");
+        exit(-1);
     }
 
     config_destroy(&cfg);
@@ -162,6 +161,7 @@ static void parse_ngp_search_args(struct options_t *options, int argc, char *arg
                 break;
             case 't':
                 if (!clear_extensions) {
+                    free_list(&options->specific_file);
                     free_list(&options->extension);
                     options->extension_option = 1;
                     clear_extensions = 1;
