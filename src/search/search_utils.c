@@ -23,6 +23,19 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #include "../utils.h"
 #include "search_utils.h"
 
+void resize_string(char **string, size_t *string_size, size_t minimal_size)
+{
+    size_t str_len = strlen(*string);
+    size_t new_size = *string_size;
+    while (minimal_size >= new_size-str_len) {
+        new_size *= 2;
+    }
+
+    if (new_size != *string_size) {
+        *string = realloc(*string, new_size);
+        *string_size = new_size;
+    }
+}
 
 int validate_file(const char *path)
 {

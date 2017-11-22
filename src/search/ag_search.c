@@ -95,13 +95,15 @@ static int match_line(struct result_t *result, const char *output)
 
 
     range_t highlight = {0, 0};
-    char line[4096] = {'\0'};
+    size_t line_length = 1024;
+    char *line = calloc(line_length, sizeof(*line));
 
     /* match from line number until match */
     match = apply_regex(output, "(?<=(\\[K[:]))[^\\033]*");
     if (!match)
         return 0;
 
+    resize_string(&line, &line_length, strlen(match));
     strcat(line, match);
     pcre_free_substring(match);
 
@@ -112,6 +114,8 @@ static int match_line(struct result_t *result, const char *output)
 
     highlight.begin = strlen(line);
     highlight.end = highlight.begin + strlen(match);
+
+    resize_string(&line, &line_length, strlen(match));
     strcat(line, match);
     pcre_free_substring(match);
 
@@ -120,6 +124,7 @@ static int match_line(struct result_t *result, const char *output)
     if (!match)
         return 0;
 
+    resize_string(&line, &line_length, strlen(match));
     strcat(line, match);
     pcre_free_substring(match);
 

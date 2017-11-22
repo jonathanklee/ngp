@@ -28,6 +28,7 @@ typedef struct {
     int (*match_blank_line)(struct result_t *result, const char *output);
 } external_parser_t;
 
+void resize_string(char **string, size_t *string_size, size_t minimal_size);
 int validate_file(const char *path);
 const char* apply_regex(const char *output, const char *expr);
 void popen_search(struct search_t *search, external_parser_t *parser);
