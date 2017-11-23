@@ -426,7 +426,13 @@ int main(int argc, char *argv[])
             break;
         }
 
-        usleep(10000);
+        // disable no-delay mode after search was finished
+        if (search->status == 0) {
+            nodelay(stdscr, FALSE);
+        } else {
+            usleep(10000);
+        }
+
         lock(search->data_mutex) {
             display_results(display, search, LINES);
             display_status(search);
