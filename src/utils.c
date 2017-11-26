@@ -22,8 +22,36 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #include "utils.h"
 #include "list.h"
 
+#include <errno.h>
+#include <fcntl.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#define CONFIG_DIR     "ngp"
+#define CONFIG_FILE    "ngprc"
+#define CONFIG_CONTENT "// extensions your want to look into\n"                                  \
+                       "extensions = \".c .h .cpp .hpp .py .S .pl .qml .pro .pri .rb .java\";\n" \
+                       "// files you want to look into\n"                                        \
+                       "files = \"Makefile rules control\";\n"                                   \
+                       "// files you want to ignore\n"                                           \
+                       "ignore = \"\";\n"                                                        \
+                       "/* editor command :\n"                                                   \
+                       "arg #1 = pattern to search\n"                                            \
+                       "arg #2 = line number\n"                                                  \
+                       "arg #3 = file path */\n"                                                 \
+                       "editor = \"vim -c 'set hls' -c 'silent /\%1$s' -c \%2$d \%3$s\"\n"       \
+                       "//editor = \"emacs +\%2$d \%3$s &\";\n"                                  \
+                       "//editor = \"subl \%3$s:\%2$d 1>/dev/null 2>&1\";\n"                     \
+                       "/* themes\n"                                                             \
+                       "   colors available: cyan, yellow, red, green,\n"                        \
+                       "   black, white, blue, magenta */\n"                                     \
+                       "line_color = \"white\";\n"                                               \
+                       "line_number_color = \"yellow\";\n"                                       \
+                       "highlight_color = \"cyan\";\n"                                           \
+                       "file_color = \"green\";\n"                                               \
+                       "opened_line_color = \"red\";\n"
 
 int is_selectionable(struct search_t *search, int index)
 {
@@ -95,23 +123,118 @@ int is_simlink(char *file_path)
 
 void configuration_init(config_t *cfg)
 {
-    char *user_name;
-    char user_ngprc[PATH_MAX];
-
     config_init(cfg);
 
-    user_name = getenv("USER");
-    snprintf(user_ngprc, PATH_MAX, "/home/%s/%s",
-        user_name, ".ngprc");
+    char user_ngprc[PATH_MAX];
+#ifdef __linux__
+    char *xdg_config_home = getenv("XDG_CONFIG_HOME");
 
-    if (config_read_file(cfg, user_ngprc))
+    if (xdg_config_home != NULL) {
+        snprintf(user_ngprc, PATH_MAX, "%s/%s/%s", xdg_config_home,
+                 CONFIG_DIR, CONFIG_FILE);
+
+        if (config_read_file(cfg, user_ngprc))
+            return;
+    }
+
+
+    char *xdg_config_dirs = getenv("XDG_CONFIG_DIRS");
+
+    if (xdg_config_dirs != NULL) {
+        // strtok overwrites delimiters with NULL bytes, so we need to operate
+        // on a copy here. Allow for five entries in XDG_CONFIG_DIRS here, that
+        // should probably be enough.
+        char xdg_config_dirs_cpy[PATH_MAX * 5];
+        strncpy(xdg_config_dirs_cpy, xdg_config_dirs, strlen(xdg_config_dirs));
+
+        char *token = strtok(xdg_config_dirs_cpy, ":");
+
+        // Iterate through all directories within XDG_CONFIG_DIRS
+        while (token != NULL) {
+            char sys_ngprc[PATH_MAX];
+            snprintf(sys_ngprc, PATH_MAX, "%s/%s/%s", token, CONFIG_DIR,
+                     CONFIG_FILE);
+
+            if (config_read_file(cfg, sys_ngprc))
+                return;
+
+            token = strtok(NULL, ":");
+        }
+    }
+
+    // We've found the config file neither in the user's config dir nor globally,
+    // let's try to create one.
+    if (xdg_config_home != NULL) {
+#elif __APPLE__
+    // At first, try the user specific config file
+    char *home = getenv("HOME");
+
+    if (home != NULL) {
+        snprintf(user_ngprc, PATH_MAX, "%s/Library/Preferences/%s/%s", home,
+                 CONFIG_DIR, CONFIG_FILE);
+
+        if (config_read_file(cfg, user_ngprc))
+            return;
+    }
+
+    // No user specific config file found or $HOME not set. Trying the system wide.
+    char sys_ngprc[PATH_MAX];
+    snprintf(sys_ngprc, PATH_MAX, "/etc/%s/%s", CONFIG_DIR, CONFIG_FILE);
+
+    if (config_read_file(cfg, sys_ngprc))
         return;
 
-    if (!config_read_file(cfg, "/etc/ngprc")) {
-        fprintf(stderr, "error in /etc/ngprc\n");
-        fprintf(stderr, "Could be that the configuration file has not been found\n");
+    // Neither a system wide nor a user specific config file found, but $HOME is
+    // set. Try to create a per-user file.
+    if (home != NULL) {
+#endif /* __linux__ / __APPLE__ */
+        fprintf(stderr, "No configuration file found. Trying to create a minimal "
+                        "default one in %s. You should adopt it to your needs.\n",
+                        user_ngprc);
+
+        // The file shouldn't exist (we've tested before). Use O_EXCL though, just
+        // to be sure we don't delete anything.
+        int fd = open(user_ngprc, O_WRONLY | O_CLOEXEC | O_CREAT | O_EXCL,
+                                                                  S_IRUSR | S_IWUSR);
+        if (0 > fd) {
+           fprintf(stderr, "Failed to open default configuration file in %s (%s).\n",
+                           user_ngprc, strerror(errno));
+           exit(EXIT_FAILURE);
+        }
+
+        const char* buf = CONFIG_CONTENT;
+        ssize_t written = 0u;
+        ssize_t ret = 0u;
+
+        do {
+            ret = write(fd, (void*)(buf + written), (size_t)(strlen(buf) - written));
+
+            if (-1 == ret) {
+                fprintf(stderr, "Failed to write to default configuration file in %s"
+                                " (%s).\n", user_ngprc, strerror(errno));
+                exit(EXIT_FAILURE);
+            }
+
+            written += ret;
+        } while (strlen(buf) > written);
+
+        close(fd);
+
+        if (config_read_file(cfg, user_ngprc))
+            return;
+
+        fprintf(stderr, "Failed to create default configuration file in %s.\n",
+                        user_ngprc);
+        exit(EXIT_FAILURE);
+    } else {
+        fprintf(stderr, "No configuration file found and unable to create a default"
+#ifdef __linux__
+                        " one (XDG_CONFIG_HOME not set). Aborting.\n");
+#elif __APPLE__
+                        " one (HOME not set). Aborting.\n");
+#endif /* __linux__ / __APPLE__ */
         config_destroy(cfg);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 }
 
