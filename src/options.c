@@ -183,6 +183,8 @@ static void parse_ngp_search_args(struct options_t *options, int argc, char *arg
                 options->regexp_option = 1;
                 break;
             default:
+                free_options(options);
+                free(argv);
                 usage(-1);
                 break;
         }
@@ -216,15 +218,19 @@ static void parse_args(struct options_t *options, int argc, char *argv[])
         int current_index = optind - 1;
         switch (opt) {
             case 'h':
+                free_options(options);
+                free(args);
                 usage(0);
                 break;
             case 'v':
+                free_options(options);
+                free(args);
                 display_version();
                 break;
 
             case 'n': {
                 if (current_index != 1)
-                    usage(-1);
+                    goto error;
 
                 options->search_type = NGP_SEARCH;
 
@@ -238,7 +244,7 @@ static void parse_args(struct options_t *options, int argc, char *argv[])
             break;
             case 'a': {
                 if (current_index != 1)
-                    usage(-1);
+                    goto error;
 
                 options->search_type = AG_SEARCH;
 
@@ -252,7 +258,7 @@ static void parse_args(struct options_t *options, int argc, char *argv[])
             break;
             case 'g': {
                 if (current_index != 1)
-                    usage(-1);
+                    goto error;
 
                 options->search_type = GIT_SEARCH;
 
@@ -333,7 +339,7 @@ static void parse_args(struct options_t *options, int argc, char *argv[])
     }
 
     if (arg_count - optind < 1 || arg_count - optind > 2)
-        usage(-1);
+        goto error;
 
     int first_argument = 0;
     for ( ; optind < arg_count; optind++) {
@@ -345,10 +351,22 @@ static void parse_args(struct options_t *options, int argc, char *argv[])
         }
     }
 
-    if (!opendir(options->directory)) {
+    free(args);
+
+    DIR* dirp = opendir(options->directory);
+    if (!dirp) {
         fprintf(stderr, "error: could not open directory \"%s\"\n", options->directory);
+        free_options(options);
         exit(-1);
     }
+    closedir(dirp);
+
+    return;
+
+error:
+    free_options(options);
+    free(args);
+    usage(-1);
 }
 
 struct options_t * create_options(int argc, char *argv[])
@@ -362,4 +380,32 @@ struct options_t * create_options(int argc, char *argv[])
     parse_args(options, argc, argv);
 
     return options;
+}
+
+void free_options(struct options_t* options)
+{
+   if (!options) {
+       return;
+   }
+
+   if (options->extension) {
+       free_list(&options->extension);
+   }
+
+   if (options->ignore) {
+       free_list(&options->ignore);
+   }
+
+   if (options->specific_file) {
+       free_list(&options->specific_file);
+   }
+
+    /* free pcre stuffs if needed */
+    if (options->pcre_compiled)
+        pcre_free((void *) options->pcre_compiled);
+
+    if (options->pcre_extra)
+        pcre_free((void *) options->pcre_extra);
+
+    free(options);
 }

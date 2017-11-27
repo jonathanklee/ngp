@@ -56,5 +56,5 @@ struct options_t {
 };
 
 struct options_t * create_options(int argc, char *argv[]);
-
+void free_options(struct options_t* options);
 #endif

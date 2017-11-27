@@ -73,15 +73,11 @@ void free_search(struct search_t *search)
         ptr = ptr->next;
         free_entry(p);
     }
+    free(search->result);
 
-    free_list(&search->options->extension);
-    free_list(&search->options->specific_file);
-    free_list(&search->options->ignore);
+   if (search->options) {
+       free_options(search->options);
+   }
 
-    /* free pcre stuffs if needed */
-    if (search->options->pcre_compiled)
-        pcre_free((void *) search->options->pcre_compiled);
-
-    if (search->options->pcre_extra)
-        pcre_free((void *) search->options->pcre_extra);
+   free(search);
 }

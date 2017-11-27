@@ -67,7 +67,7 @@ static char * test_show_help()
             options = create_options(argc, argv);
         }
         mu_assert_verbose(success == 1);
-        free(options);
+        free_options(options);
     }
     {
         success = 0;
@@ -79,7 +79,7 @@ static char * test_show_help()
             options = create_options(argc, argv);
         }
         mu_assert_verbose(success == 1);
-        free(options);
+        free_options(options);
     }
 
     return 0;
@@ -97,7 +97,7 @@ static char * test_get_version()
             options = create_options(argc, argv);
         }
         mu_assert_verbose(success == 1);
-        free(options);
+        free_options(options);
     }
     {
         success = 0;
@@ -109,7 +109,7 @@ static char * test_get_version()
             options = create_options(argc, argv);
         }
         mu_assert_verbose(success == 1);
-        free(options);
+        free_options(options);
     }
 
     return 0;
@@ -130,7 +130,7 @@ static char * test_simple_pattern()
     mu_assert_verbose(success == 42);
     mu_assert_verbose(!strcmp("pattern", options->pattern));
 
-    free(options);
+    free_options(options);
 
     return 0;
 }
@@ -151,7 +151,7 @@ static char * test_pattern_and_path()
     mu_assert_verbose(!strcmp("pattern", options->pattern));
     mu_assert_verbose(!strcmp("..", options->directory));
 
-    free(options);
+    free_options(options);
 
     return 0;
 }
@@ -173,7 +173,7 @@ static char * test_parser_and_pattern()
         mu_assert_verbose(options->search_type == NGP_SEARCH);
         mu_assert_verbose(!strcmp("pattern", options->pattern));
 
-        free(options);
+        free_options(options);
     }
     {
         char *argv[] = {"ngp", "--ag", "--", "pattern"};
@@ -188,7 +188,7 @@ static char * test_parser_and_pattern()
         mu_assert_verbose(options->search_type == AG_SEARCH);
         mu_assert_verbose(!strcmp("pattern", options->pattern));
 
-        free(options);
+        free_options(options);
     }
     {
         char *argv[] = {"ngp", "--git", "--", "pattern"};
@@ -203,7 +203,7 @@ static char * test_parser_and_pattern()
         mu_assert_verbose(options->search_type == GIT_SEARCH);
         mu_assert_verbose(!strcmp("pattern", options->pattern));
 
-        free(options);
+        free_options(options);
     }
 
     return 0;
@@ -223,7 +223,7 @@ static char * test_wrong_parser_option()
 
         mu_assert_verbose(success == 0);
 
-        free(options);
+        free_options(options);
     }
     {
         success = 42;
@@ -237,7 +237,7 @@ static char * test_wrong_parser_option()
 
         mu_assert_verbose(success == 0);
 
-        free(options);
+        free_options(options);
     }
     return 0;
 }
@@ -260,7 +260,7 @@ static char * test_parser_and_pattern_and_path()
         mu_assert_verbose(!strcmp("pattern", options->pattern));
         mu_assert_verbose(!strcmp("..", options->directory));
 
-        free(options);
+        free_options(options);
     }
     {
         success = 42;
@@ -278,7 +278,7 @@ static char * test_parser_and_pattern_and_path()
         mu_assert_verbose(!strcmp("pattern", options->pattern));
         mu_assert_verbose(!strcmp("..", options->directory));
 
-        free(options);
+        free_options(options);
     }
     {
         success = 42;
@@ -296,7 +296,7 @@ static char * test_parser_and_pattern_and_path()
         mu_assert_verbose(!strcmp("pattern", options->pattern));
         mu_assert_verbose(!strcmp("..", options->directory));
 
-        free(options);
+        free_options(options);
     }
 
     return 0;
@@ -319,7 +319,7 @@ static char * test_ngp_search_options()
         mu_assert_verbose(options->incase_option == 1);
         mu_assert_verbose(!strcmp("pattern", options->pattern));
 
-        free(options);
+        free_options(options);
     }
     {
         char *argv[] = {"ngp", "-r", "pattern"};
@@ -334,7 +334,7 @@ static char * test_ngp_search_options()
         mu_assert_verbose(options->raw_option == 1);
         mu_assert_verbose(!strcmp("pattern", options->pattern));
 
-        free(options);
+        free_options(options);
     }
     {
         char *argv[] = {"ngp", "-t", ".c", "-t", ".h", "pattern"};
@@ -351,7 +351,7 @@ static char * test_ngp_search_options()
         mu_assert_verbose(!strcmp(".h", options->extension->next->data));
         mu_assert_verbose(!strcmp("pattern", options->pattern));
 
-        free(options);
+        free_options(options);
     }
     {
         char *argv[] = {"ngp", "-I", "Makefile", "-I", "build", "pattern"};
@@ -368,7 +368,7 @@ static char * test_ngp_search_options()
         mu_assert_verbose(!strcmp("build", options->ignore->next->data));
         mu_assert_verbose(!strcmp("pattern", options->pattern));
 
-        free(options);
+        free_options(options);
     }
     {
         char *argv[] = {"ngp", "-e", "^pattern$"};
@@ -383,7 +383,7 @@ static char * test_ngp_search_options()
         mu_assert_verbose(options->regexp_option == 1);
         mu_assert_verbose(!strcmp("^pattern$", options->pattern));
 
-        free(options);
+        free_options(options);
     }
 
     return 0;
@@ -403,7 +403,7 @@ static char * test_wrong_ngp_search_options()
 
         mu_assert_verbose(success == 0);
 
-        free(options);
+        free_options(options);
     }
     {
         success = 42;
@@ -417,7 +417,7 @@ static char * test_wrong_ngp_search_options()
 
         mu_assert_verbose(success == 0);
 
-        free(options);
+        free_options(options);
     }
     {
         success = 42;
@@ -431,7 +431,7 @@ static char * test_wrong_ngp_search_options()
 
         mu_assert_verbose(success == 0);
 
-        free(options);
+        free_options(options);
     }
 
     return 0;
@@ -460,7 +460,7 @@ static char * test_parser_and_search_options()
         mu_assert_verbose(!strcmp("Makefile", options->ignore->data));
         mu_assert_verbose(!strcmp("pattern", options->pattern));
 
-        free(options);
+        free_options(options);
     }
     {
         char *argv[] = {"ngp", "--nat=-i -r -t .c -I Makefile", "pattern", ".."};
@@ -481,7 +481,7 @@ static char * test_parser_and_search_options()
         mu_assert_verbose(!strcmp("Makefile", options->ignore->data));
         mu_assert_verbose(!strcmp("pattern", options->pattern));
 
-        free(options);
+        free_options(options);
     }
     {
         char *argv[] = {"ngp", "--ag", "-i", "-r", "-t", ".c", "-I", "Makefile", "--", "pattern", ".."};
@@ -497,7 +497,7 @@ static char * test_parser_and_search_options()
         mu_assert_verbose(!strcmp("-i -r -t .c -I Makefile", options->parser_options));
         mu_assert_verbose(!strcmp("pattern", options->pattern));
 
-        free(options);
+        free_options(options);
     }
     {
         char *argv[] = {"ngp", "--ag=-i -r -t .c -I Makefile", "pattern", ".."};
@@ -513,7 +513,7 @@ static char * test_parser_and_search_options()
         mu_assert_verbose(!strcmp("-i -r -t .c -I Makefile", options->parser_options));
         mu_assert_verbose(!strcmp("pattern", options->pattern));
 
-        free(options);
+        free_options(options);
     }
     {
         char *argv[] = {"ngp", "--git", "-i", "-r", "-t", ".c", "-I", "Makefile", "--", "pattern", ".."};
@@ -529,7 +529,7 @@ static char * test_parser_and_search_options()
         mu_assert_verbose(!strcmp("-i -r -t .c -I Makefile", options->parser_options));
         mu_assert_verbose(!strcmp("pattern", options->pattern));
 
-        free(options);
+        free_options(options);
     }
     {
         char *argv[] = {"ngp", "--git=-i -r -t .c -I Makefile", "pattern", ".."};
@@ -545,7 +545,7 @@ static char * test_parser_and_search_options()
         mu_assert_verbose(!strcmp("-i -r -t .c -I Makefile", options->parser_options));
         mu_assert_verbose(!strcmp("pattern", options->pattern));
 
-        free(options);
+        free_options(options);
     }
 
     return 0;
@@ -565,7 +565,7 @@ static char * test_missing_pattern()
 
         mu_assert_verbose(success == 0);
 
-        free(options);
+        free_options(options);
     }
     {
         success = 42;
@@ -579,7 +579,7 @@ static char * test_missing_pattern()
 
         mu_assert_verbose(success == 0);
 
-        free(options);
+        free_options(options);
     }
     {
         success = 42;
@@ -593,7 +593,7 @@ static char * test_missing_pattern()
 
         mu_assert_verbose(success == 0);
 
-        free(options);
+        free_options(options);
     }
 
     return 0;
@@ -612,7 +612,7 @@ static char * test_invalid_path()
 
     mu_assert_verbose(success == 0);
 
-    free(options);
+    free_options(options);
 
     return 0;
 }
