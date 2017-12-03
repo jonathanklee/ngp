@@ -46,7 +46,7 @@ static void usage(int status)
     fprintf(out, " --ag[=<ag-options>]         use ag aka sliver searcher as parser\n");
     fprintf(out, " --git[=<git-grep-options>]  use git-grep as parser (works only within GIT repositories)\n");
     fprintf(out, "\n");
-    fprintf(out, "int-options:\n");
+    fprintf(out, "nat-options:\n");
     fprintf(out, " -i         ignore case distinctions in pattern\n");
     fprintf(out, " -r         raw mode\n");
     fprintf(out, " -t <type>  look into files with specified <type>\n");
