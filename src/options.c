@@ -42,7 +42,7 @@ static void usage(int status)
     fprintf(out, " -v, --version  show ngp version\n");
     fprintf(out, "\n");
     fprintf(out, "parser:\n");
-    fprintf(out, " --nat[=<nat-options>]       use ngp's native search implementation with <int-options>\n");
+    fprintf(out, " --nat[=<nat-options>]       use ngp's native search implementation with <nat-options>\n");
     fprintf(out, " --ag[=<ag-options>]         use ag aka sliver searcher as parser\n");
     fprintf(out, " --git[=<git-grep-options>]  use git-grep as parser (works only within GIT repositories)\n");
     fprintf(out, "\n");
