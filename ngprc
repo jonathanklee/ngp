@@ -16,6 +16,18 @@ editor = "vim -c 'set hls' -c 'silent /%1$s' -c %2$d %3$s"
 //editor = "emacs +%2$d %3$s &"
 //editor = "subl %3$s:%2$d 1>/dev/null 2>&1"
 
+// default parser: nat (native), ag or git
+default_parser = "nat"
+
+/*
+ * external parser commands :
+ *     arg %1$s = options
+ *     arg %2$s = pattern to search
+ *     arg %3$s = directory
+ */
+ag_cmd = "ag  %1$s \"%2$s\" %3$s"
+git_cmd = "git grep   %1$s \"%2$s\" %3$s"
+
 
 /* themes
    colors available: cyan, yellow, red, green,

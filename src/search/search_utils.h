@@ -16,29 +16,21 @@ You should have received a copy of the GNU General Public License
 along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef LINE_H
-#define LINE_H
+#ifndef SEARCH_UTILS_H
+#define SEARCH_UTILS_H
 
-#include "entry.h"
+#include "search.h"
 
 typedef struct {
-	size_t begin;
-	size_t end;
-} range_t;
+    const char *default_arguments;
+    int (*match_file)(struct result_t *result, const char *output);
+    int (*match_line)(struct result_t *result, const char *output);
+    int (*match_blank_line)(struct result_t *result, const char *output);
+} external_parser_t;
 
-struct line_t {
-	int line;
-	int opened;
-	int is_selectable;
-	range_t highlight;
-	struct entry_t entry;
-};
-
-struct entry_t *create_line(struct result_t *result, char *line, int line_number, range_t match);
-struct entry_t *create_unselectable_line(struct result_t *result, char *line, int line_number);
-struct entry_t *create_blank_line(struct result_t *result);
-void display_line(struct entry_t *entry, struct search_t *search, int y, int is_cursor_on_entry);
-void free_line(struct entry_t *entry);
-int is_line_selectable(struct entry_t *entry);
+void resize_string(char **string, size_t *string_size, size_t minimal_size);
+int validate_file(const char *path);
+const char* apply_regex(const char *output, const char *expr);
+void popen_search(struct search_t *search, external_parser_t *parser);
 
 #endif

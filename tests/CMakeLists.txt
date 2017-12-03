@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 
 set(SRC_TESTS
     main.c
+    command_line_args.c
     )
 
 set(HEADER_TESTS
@@ -11,6 +12,7 @@ set(HEADER_TESTS
 add_executable(tests ${SRC_TESTS} ${HEADERS_TESTS})
 
 include_directories(../src)
+include_directories(../src/search)
 
 # config
 find_package(PkgConfig REQUIRED)

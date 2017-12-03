@@ -20,26 +20,61 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #include "utils.h"
 #include "theme.h"
 
+static void *get_file(struct entry_t *entry, entry_type_t type);
+
 struct entry_vtable file_vtable = {
     display_file,
-    is_file_selectionable,
-    free_file
+    is_file_selectable,
+    free_file,
+    get_file
 };
 
-struct entry_t *create_file(struct search_t *search, char *file)
+
+static char *remove_double(char *initial, char c, char *final)
+{
+    int i, j;
+    int len = strlen(initial);
+
+    for (i = 0, j = 0; i < len; j++ ) {
+        if (initial[i] != c) {
+            final[j] = initial[i];
+            i++;
+        } else {
+            final[j] = initial[i];
+            if (initial[i + 1] == c)
+                i = i + 2;
+            else
+                i++;
+        }
+    }
+    final[j] = '\0';
+
+    return final;
+}
+
+static void format_path(char* src, char* dest)
+{
+    if (strncmp(src, "./", 2) == 0)
+        remove_double(src + 2, '/', dest);
+    else
+        remove_double(src, '/', dest);
+}
+
+struct entry_t *create_file(struct result_t *result, char *file)
 {
     int len = strlen(file) + 1;
     struct file_t *new;
 
     new = calloc(1, sizeof(struct file_t) + len);
-    strncpy(new->entry.data, file, len);
-    new->entry.vtable = &file_vtable;
-    search->nbentry++;
 
-    if (search->entries) {
-        search->entries->next = &new->entry;
+    format_path(file, new->entry.data);
+    new->entry.vtable = &file_vtable;
+    result->nbentry++;
+
+    if (result->entries) {
+        result->entries->next = &new->entry;
     } else {
-        search->start = &new->entry;
+        result->start = &new->entry;
     }
 
     return &new->entry;
@@ -47,9 +82,9 @@ struct entry_t *create_file(struct search_t *search, char *file)
 
 void display_file(struct entry_t *entry, struct search_t *search, int y, int is_cursor_on_entry)
 {
-    char filtered_line[PATH_MAX];
-    char cropped_line[PATH_MAX] = "";
     int crop = COLS;
+    char cropped_line[PATH_MAX] = "";
+    strncpy(cropped_line, entry->data, crop);
 
     /* first clear line */
     move(y, 0);
@@ -57,20 +92,13 @@ void display_file(struct entry_t *entry, struct search_t *search, int y, int is_
 
     attron(A_BOLD);
 
-    if (strcmp(search->directory, "./") == 0)
-        remove_double(entry->data + 3, '/', filtered_line);
-    else
-        remove_double(entry->data , '/', filtered_line);
-
-    strncpy(cropped_line, filtered_line, crop);
     attron(COLOR_PAIR(COLOR_FILE));
-    remove_double(cropped_line, '/', filtered_line);
     mvprintw(y, 0, "%s", cropped_line);
 
     attroff(A_BOLD);
 }
 
-int is_file_selectionable(struct entry_t *entry)
+int is_file_selectable(struct entry_t *entry)
 {
     return false;
 }
@@ -81,3 +109,10 @@ void free_file(struct entry_t *entry)
     free(ptr);
 }
 
+static void *get_file(struct entry_t *entry, entry_type_t type)
+{
+    if (type == FILE_ENTRY)
+        return container_of(entry, struct file_t, entry);
+
+    return NULL;
+}
