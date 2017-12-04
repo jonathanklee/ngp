@@ -28,6 +28,24 @@ make install
 ngp my_pattern
 ```
 
+The Parser
+----------
+ngp implements it's own native source code parser.
+However you can use an external tool for parsing your source code.
+Currently `ag` and `git grep` are supported.
+
+The default parser can be specified in the .ngprc file.
+It's preset is "nat", the native parser.
+Other available values for the 'default_parser' option are "ag" or "git".
+The parser can also be specified using command line arguments.
+For example `ngp --ag -- pattern` will use `ag` for the search, which will overwrite the 'default_parser' setting.
+Please check `ngp --help` for further information on command line arguments.
+
+The .ngprc file also allows customizing the commands for `ag` and `git grep`.
+Thereby you can set default parser options, like "-C".
+Or you can change a tools location if it's not in the $PATH.
+However it is mandatory to specify the three arguments, options, pattern and path for each command.
+
 Example
 -------
 
