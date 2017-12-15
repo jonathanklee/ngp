@@ -26,7 +26,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #include "display.h"
 #include "options.h"
 
-#include "search/search.h"
+#include "search.h"
 
 #include <errno.h>
 #include <dirent.h>

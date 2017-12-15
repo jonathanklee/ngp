@@ -16,11 +16,11 @@ You should have received a copy of the GNU General Public License
 along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../utils.h"
-#include "../entry.h"
-#include "../list.h"
-#include "../file.h"
-#include "../line.h"
+#include "utils.h"
+#include "entry.h"
+#include "list.h"
+#include "file.h"
+#include "line.h"
 
 #include <sys/stat.h>
 #include <sys/mman.h>

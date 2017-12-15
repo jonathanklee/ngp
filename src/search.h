@@ -22,7 +22,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #include <pthread.h>
 #include <pcre.h>
 #include <limits.h>
-#include "../options.h"
+#include "options.h"
 
 struct result_t {
     struct entry_t *entries;

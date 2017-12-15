@@ -26,7 +26,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 int tests_run = 0;
 char * command_line_arg_tests();
 
-#include "../src/search/ngp_search.c"
+#include "../src/ngp_search.c"
 
 
 static char * test_no_entry()

@@ -20,7 +20,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #define ENTRY_H
 
 #include <stddef.h>
-#include "search/search.h"
+#include "search.h"
 
 #define container_of(ptr, type, member) \
     ((type *)((char *)(ptr) - offsetof(type, member)))

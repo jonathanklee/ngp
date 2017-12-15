@@ -20,7 +20,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 #include <sys/stat.h>
 
-#include "../utils.h"
+#include "utils.h"
 #include "search_utils.h"
 
 void resize_string(char **string, size_t *string_size, size_t minimal_size)

@@ -19,7 +19,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef UTILS_H
 #define UTILS_H
 
-#include "search/search.h"
+#include "search.h"
 #include <libconfig.h>
 
 int is_selectable(struct search_t *search, int index);

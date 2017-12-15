@@ -11,7 +11,7 @@ set(HEADERS
     entry.h
     display.h
     options.h
-    search/search.h
+    search.h
     theme.h
     utils.h
     )
@@ -23,11 +23,11 @@ add_library(objects STATIC
     entry.c
     display.c
     options.c
-    search/search.c
-    search/search_utils.c
-    search/ngp_search.c
-    search/ag_search.c
-    search/git_search.c
+    search.c
+    search_utils.c
+    ngp_search.c
+    ag_search.c
+    git_search.c
     theme.c
     utils.c
 )

@@ -19,7 +19,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef DISPLAY_H
 #define DISPLAY_H
 
-#include "search/search.h"
+#include "search.h"
 
 struct display_t {
     int index;

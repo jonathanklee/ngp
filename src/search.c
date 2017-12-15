@@ -18,9 +18,9 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string.h>
 
-#include "../entry.h"
-#include "../list.h"
-#include "../options.h"
+#include "entry.h"
+#include "list.h"
+#include "options.h"
 #include "search.h"
 
 

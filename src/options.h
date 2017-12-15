@@ -19,7 +19,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef OPTIONS_H
 #define OPTIONS_H
 
-#include "search/search.h"
+#include "search.h"
 
 #ifdef LINE_MAX
     #undef LINE_MAX

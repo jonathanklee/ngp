@@ -17,25 +17,25 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <string.h>
 
-#include "../file.h"
-#include "../line.h"
+#include "file.h"
+#include "line.h"
 
 #include "search_utils.h"
 
 /*
- * command: ag -H --color -C 1 "ag_"
+ * command: git grep -n --heading -C 1 -p --color=always "git_"
  *
- *[1;32msrc/search/search.c[0m[K
- *[1;33m27[0m[K-void do_ngp_search(struct search_t *search);
- *[1;33m28[0m[K:void do_[30;43mag_[0m[Ksearch(struct search_t *search);
- *[1;33m29[0m[K-void do_git_search(struct search_t *search);
- *--
- *[1;33m52[0m[K-
- *[1;33m53[0m[K:        case [30;43mAG_[0m[KSEARCH:
- *[1;33m54[0m[K:            return do_[30;43mag_[0m[Ksearch(search);
- *[1;33m55[0m[K-
- *
- *[1;32msrc/search/ag_search.c[0m[K
+ *[36m--[m
+ *src/search/search.c
+ *28[36m=[mvoid do_ag_search(struct search_t *search);
+ *29[36m:[mvoid do_[1;31mgit_[msearch(struct search_t *search);
+ *30[36m-[m
+ *[36m--[m
+ *47[36m=[mvoid do_search(struct search_t *search)
+ *[36m--[m
+ *56[36m-[m        case GIT_SEARCH:
+ *57[36m:[m            return do_[1;31mgit_[msearch(search);
+ *58[36m-[m
  */
 
 static int match_blank_line(struct result_t *result, const char *output)
@@ -43,11 +43,12 @@ static int match_blank_line(struct result_t *result, const char *output)
     /* empty line */
     size_t line_length = strlen(output);
     if (line_length == 0) {
+        result->entries = create_blank_line(result);
         return 1;
     }
 
-    /* only '--' */
-    const char* match = apply_regex(output, "^(--)$");
+    /* only colored '--' */
+    const char* match = apply_regex(output, "^(\\033\\[36m)(--)(\\033\\[m)$");
     if (!match)
         return 0;
 
@@ -59,7 +60,7 @@ static int match_blank_line(struct result_t *result, const char *output)
 
 static int match_file(struct result_t *result, const char *output)
 {
-    const char *match = apply_regex(output, "(?<=(\\[1;32m))[^\\033]*");
+    const char* match = apply_regex(output, "^([^\\033]+)$");
     if (!match)
         return 0;
 
@@ -75,7 +76,7 @@ static int match_file(struct result_t *result, const char *output)
 static int match_line(struct result_t *result, const char *output)
 {
     /* match line number */
-    const char *match = apply_regex(output, "(?<=(\\[1;33m))[^\\033]*");
+    const char *match = apply_regex(output, "^\\d+");
     if (!match)
         return 0;
 
@@ -85,8 +86,8 @@ static int match_line(struct result_t *result, const char *output)
     if (line_number == 0)
         return 0;
 
-    /* match context lines ('-' after line number) */
-    match = apply_regex(output, "(?<=(\\[K[-])).*$");
+    /* match context lines ('-' or '=' after line number) */
+    match = apply_regex(output, "(?<=([-=]\\033\\[m)).*$");
     if (match) {
         result->entries = create_unselectable_line(result, (char*)match, line_number);
         pcre_free_substring(match);
@@ -99,7 +100,7 @@ static int match_line(struct result_t *result, const char *output)
     char *line = calloc(line_length, sizeof(*line));
 
     /* match from line number until match */
-    match = apply_regex(output, "(?<=(\\[K[:]))[^\\033]*");
+    match = apply_regex(output, "(?<=([:]\\033\\[m))[^\\033]*");
     if (!match)
         return 0;
 
@@ -108,7 +109,7 @@ static int match_line(struct result_t *result, const char *output)
     pcre_free_substring(match);
 
     /* match the highlighted match */
-    match = apply_regex(output, "(?<=(\\[30;43m))[^\\033]*");
+    match = apply_regex(output, "(?<=(\\033\\[1;31m))[^\\033]*");
     if (!match)
         return 0;
 
@@ -120,7 +121,7 @@ static int match_line(struct result_t *result, const char *output)
     pcre_free_substring(match);
 
     /* match rest of line */
-    match = apply_regex(output, "(?<=(\\[K))[^\\033]*$");
+    match = apply_regex(output, "(?<=(\\033\\[m))[^\\033]*$");
     if (!match)
         return 0;
 
@@ -133,15 +134,15 @@ static int match_line(struct result_t *result, const char *output)
     return 1;
 }
 
-void do_ag_search(struct search_t *search)
+void do_git_search(struct search_t *search)
 {
-    char default_arguments[] = "-H --color ";
-    external_parser_t ag = {
+    char default_arguments[] = "-n --heading --color=always ";
+    external_parser_t git_grep = {
         default_arguments,
         match_file,
         match_line,
         match_blank_line
     };
 
-    popen_search(search, &ag);
+    popen_search(search, &git_grep);
 }
