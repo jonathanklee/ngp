@@ -28,7 +28,7 @@ make install
 ngp my_pattern
 ```
 
-The Parser
+Native or External parser
 ----------
 ngp implements it's own code source parser. You can also use an external tool to parse your source code.
 Currently only `ag` and `git grep` are supported.
