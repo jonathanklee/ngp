@@ -184,14 +184,17 @@ void configuration_init(config_t *cfg)
                         user_ngprc);
         exit(EXIT_FAILURE);
     } else {
-        fprintf(stderr, "No configuration file found and unable to create a default"
-#ifdef __linux__
-                        " one (XDG_CONFIG_HOME not set). Aborting.\n");
-#elif __APPLE__
-                        " one (HOME not set). Aborting.\n");
-#endif /* __linux__ / __APPLE__ */
-        config_destroy(cfg);
-        exit(EXIT_FAILURE);
+
+        // If file does not exist, create a default ngprc and open it
+        char dir[PATH_MAX];
+        snprintf(dir, PATH_MAX, "%s/ngp", getenv("HOME"));
+        snprintf(user_ngprc, PATH_MAX, "%s/ngprc", dir);
+
+        if (access(user_ngprc, R_OK) < 0) {
+            create_user_ngprc(user_ngprc);
+        }
+
+        config_read_file(cfg, user_ngprc);
     }
 }
 
