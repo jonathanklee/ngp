@@ -33,12 +33,12 @@ Native or External parser
 ngp implements it's own code source parser. You can also use an external tool to parse your source code.
 Currently only `ag` and `git grep` are supported.
 
-The default parser can be specified in your ~/.ngprc file.
+The default parser can be specified in your ~/.config/ngp/ngprc file.
 Other available values for the 'default_parser' option are "ag" or "git". The parser can also be specified using command line arguments.
 For example, `ngp --ag -- pattern` will use `ag` as a parser anbd will overwrite the 'default_parser' setting.
 Please check `ngp --help` for further information on command line arguments.
 
-Your ~/.ngprc file also allows you to customize the commands for `ag` and `git grep`. Thus, you can add options for `ag` like "-C"
+Your ngprc file also allows you to customize the commands for `ag` and `git grep`. Thus, you can add options for `ag` like "-C"
 or you can change a tools location if it's not in your $PATH.
 Note that it is mandatory to specify the three arguments : options, pattern and path for each command.
 
