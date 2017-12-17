@@ -122,13 +122,6 @@ void load_configuration(struct configuration_t *config)
             return;
     }
 
-    // No user specific config file found or $HOME not set. Trying the system wide.
-    char sys_ngprc[PATH_MAX];
-    snprintf(sys_ngprc, PATH_MAX, "/etc/%s/%s", CONFIG_DIR, CONFIG_FILE);
-
-    if (config_read_file(&config->config, sys_ngprc))
-        return;
-
 #endif /* __linux__ / __APPLE__ */
 
     // If file does not exist, create a default ngprc and open it
