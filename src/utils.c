@@ -75,6 +75,37 @@ int is_selectable(struct search_t *search, int index)
     return is_entry_selectable(ptr);
 }
 
+static void create_user_ngprc(const char *file_path)
+{
+    // The file shouldn't exist (we've tested before). Use O_EXCL though, just
+    // to be sure we don't delete anything.
+    int fd = open(file_path, O_WRONLY | O_CLOEXEC | O_CREAT | O_EXCL,
+                                                              S_IRUSR | S_IWUSR);
+    if (0 > fd) {
+       fprintf(stderr, "Failed to open default configuration file in %s (%s).\n",
+                       file_path, strerror(errno));
+       exit(EXIT_FAILURE);
+    }
+
+    const char* buf = CONFIG_CONTENT;
+    ssize_t written = 0u;
+    ssize_t ret = 0u;
+
+    do {
+        ret = write(fd, (void*)(buf + written), (size_t)(strlen(buf) - written));
+
+        if (-1 == ret) {
+            fprintf(stderr, "Failed to write to default configuration file in %s"
+                            " (%s).\n", file_path, strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+
+        written += ret;
+    } while (strlen(buf) > written);
+
+    close(fd);
+}
+
 void configuration_init(config_t *cfg)
 {
     config_init(cfg);
@@ -146,33 +177,7 @@ void configuration_init(config_t *cfg)
                         "default one in %s. You should adopt it to your needs.\n",
                         user_ngprc);
 
-        // The file shouldn't exist (we've tested before). Use O_EXCL though, just
-        // to be sure we don't delete anything.
-        int fd = open(user_ngprc, O_WRONLY | O_CLOEXEC | O_CREAT | O_EXCL,
-                                                                  S_IRUSR | S_IWUSR);
-        if (0 > fd) {
-           fprintf(stderr, "Failed to open default configuration file in %s (%s).\n",
-                           user_ngprc, strerror(errno));
-           exit(EXIT_FAILURE);
-        }
-
-        const char* buf = CONFIG_CONTENT;
-        ssize_t written = 0u;
-        ssize_t ret = 0u;
-
-        do {
-            ret = write(fd, (void*)(buf + written), (size_t)(strlen(buf) - written));
-
-            if (-1 == ret) {
-                fprintf(stderr, "Failed to write to default configuration file in %s"
-                                " (%s).\n", user_ngprc, strerror(errno));
-                exit(EXIT_FAILURE);
-            }
-
-            written += ret;
-        } while (strlen(buf) > written);
-
-        close(fd);
+        create_user_ngprc(user_ngprc);
 
         if (config_read_file(cfg, user_ngprc))
             return;
