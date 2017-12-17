@@ -41,9 +41,8 @@ static int get_color(const char *color)
     return -1;
 }
 
-struct theme_t *read_theme()
+struct theme_t *read_theme(struct configuration_t *config)
 {
-    config_t cfg;
     const char *buffer;
     char line_color[64];
     char line_number_color[64];
@@ -53,7 +52,8 @@ struct theme_t *read_theme()
     struct theme_t *new;
 
     new = calloc(1, sizeof(struct theme_t));
-    configuration_init(&cfg);
+    load_configuration(config);
+    config_t cfg = config->config;
 
     if (!config_lookup_string(&cfg, "line_color", &buffer)) {
         fprintf(stderr, "ngprc: no line_color string found!\n");

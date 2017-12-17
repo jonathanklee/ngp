@@ -23,7 +23,6 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #include <libconfig.h>
 
 int is_selectable(struct search_t *search, int index);
-void configuration_init(config_t *cfg);
 char *regex(struct options_t *options, const char *line, const char *pattern);
 void *get_parser(struct options_t *options);
 char *strstr_wrapper(struct options_t *options, const char *line, const char *pattern);

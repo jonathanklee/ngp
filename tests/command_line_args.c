@@ -40,7 +40,7 @@ static void test_exit(int status)
 #define stderr stdout
 
 /* ignore config for the tests */
-#define read_config(options) \
+#define read_config(configuration, options) \
     options->search_type = NGP_SEARCH
 
 /* silence getopt error output */
@@ -62,9 +62,10 @@ static char * test_show_help()
 
         char *argv[] = {"ngp", "-h"};
         int argc = sizeof(argv) / sizeof(*argv);
+        struct configuration_t* config = NULL;
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
-            options = create_options(argc, argv);
+            options = create_options(config, argc, argv);
         }
         mu_assert_verbose(success == 1);
         free_options(options);
@@ -74,9 +75,10 @@ static char * test_show_help()
 
         char *argv[] = {"ngp", "--help"};
         int argc = sizeof(argv) / sizeof(*argv);
+        struct configuration_t* config = NULL;
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
-            options = create_options(argc, argv);
+            options = create_options(config, argc, argv);
         }
         mu_assert_verbose(success == 1);
         free_options(options);
@@ -92,9 +94,10 @@ static char * test_get_version()
 
         char *argv[] = {"ngp", "-v"};
         int argc = sizeof(argv) / sizeof(*argv);
+        struct configuration_t* config = NULL;
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
-            options = create_options(argc, argv);
+            options = create_options(config, argc, argv);
         }
         mu_assert_verbose(success == 1);
         free_options(options);
@@ -104,9 +107,10 @@ static char * test_get_version()
 
         char *argv[] = {"ngp", "--version"};
         int argc = sizeof(argv) / sizeof(*argv);
+        struct configuration_t* config = NULL;
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
-            options = create_options(argc, argv);
+            options = create_options(config, argc, argv);
         }
         mu_assert_verbose(success == 1);
         free_options(options);
@@ -122,9 +126,10 @@ static char * test_simple_pattern()
     char *argv[] = {"ngp", "pattern"};
     int argc = sizeof(argv) / sizeof(*argv);
 
+    struct configuration_t* config = NULL;
     struct options_t *options = NULL;
     if (!setjmp(buf)) {
-        options = create_options(argc, argv);
+        options = create_options(config, argc, argv);
     }
 
     mu_assert_verbose(success == 42);
@@ -142,9 +147,10 @@ static char * test_pattern_and_path()
     char *argv[] = {"ngp", "pattern", ".."};
     int argc = sizeof(argv) / sizeof(*argv);
 
+    struct configuration_t* config = NULL;
     struct options_t *options = NULL;
     if (!setjmp(buf)) {
-        options = create_options(argc, argv);
+        options = create_options(config, argc, argv);
     }
 
     mu_assert_verbose(success == 42);
@@ -164,9 +170,10 @@ static char * test_parser_and_pattern()
         char *argv[] = {"ngp", "--nat", "--", "pattern"};
         int argc = sizeof(argv) / sizeof(*argv);
 
+        struct configuration_t* config = NULL;
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
-            options = create_options(argc, argv);
+            options = create_options(config, argc, argv);
         }
 
         mu_assert_verbose(success == 42);
@@ -179,9 +186,10 @@ static char * test_parser_and_pattern()
         char *argv[] = {"ngp", "--ag", "--", "pattern"};
         int argc = sizeof(argv) / sizeof(*argv);
 
+        struct configuration_t* config = NULL;
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
-            options = create_options(argc, argv);
+            options = create_options(config, argc, argv);
         }
 
         mu_assert_verbose(success == 42);
@@ -194,9 +202,10 @@ static char * test_parser_and_pattern()
         char *argv[] = {"ngp", "--git", "--", "pattern"};
         int argc = sizeof(argv) / sizeof(*argv);
 
+        struct configuration_t* config = NULL;
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
-            options = create_options(argc, argv);
+            options = create_options(config, argc, argv);
         }
 
         mu_assert_verbose(success == 42);
@@ -216,9 +225,10 @@ static char * test_wrong_parser_option()
         char *argv[] = {"ngp", "--parser", "--", "pattern"};
         int argc = sizeof(argv) / sizeof(*argv);
 
+        struct configuration_t* config = NULL;
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
-            options = create_options(argc, argv);
+            options = create_options(config, argc, argv);
         }
 
         mu_assert_verbose(success == 0);
@@ -230,9 +240,10 @@ static char * test_wrong_parser_option()
         char *argv[] = {"ngp", "-i", "--nat", "--", "pattern"};
         int argc = sizeof(argv) / sizeof(*argv);
 
+        struct configuration_t* config = NULL;
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
-            options = create_options(argc, argv);
+            options = create_options(config, argc, argv);
         }
 
         mu_assert_verbose(success == 0);
@@ -250,9 +261,10 @@ static char * test_parser_and_pattern_and_path()
         char *argv[] = {"ngp", "--nat", "--", "pattern", ".."};
         int argc = sizeof(argv) / sizeof(*argv);
 
+        struct configuration_t* config = NULL;
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
-            options = create_options(argc, argv);
+            options = create_options(config, argc, argv);
         }
 
         mu_assert_verbose(success == 42);
@@ -268,9 +280,10 @@ static char * test_parser_and_pattern_and_path()
         char *argv[] = {"ngp", "--ag", "--", "pattern", ".."};
         int argc = sizeof(argv) / sizeof(*argv);
 
+        struct configuration_t* config = NULL;
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
-            options = create_options(argc, argv);
+            options = create_options(config, argc, argv);
         }
 
         mu_assert_verbose(success == 42);
@@ -286,9 +299,10 @@ static char * test_parser_and_pattern_and_path()
         char *argv[] = {"ngp", "--git", "--", "pattern", ".."};
         int argc = sizeof(argv) / sizeof(*argv);
 
+        struct configuration_t* config = NULL;
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
-            options = create_options(argc, argv);
+            options = create_options(config, argc, argv);
         }
 
         mu_assert_verbose(success == 42);
@@ -310,9 +324,10 @@ static char * test_ngp_search_options()
         char *argv[] = {"ngp", "-i", "pattern"};
         int argc = sizeof(argv) / sizeof(*argv);
 
+        struct configuration_t* config = NULL;
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
-            options = create_options(argc, argv);
+            options = create_options(config, argc, argv);
         }
 
         mu_assert_verbose(success == 42);
@@ -325,9 +340,10 @@ static char * test_ngp_search_options()
         char *argv[] = {"ngp", "-r", "pattern"};
         int argc = sizeof(argv) / sizeof(*argv);
 
+        struct configuration_t* config = NULL;
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
-            options = create_options(argc, argv);
+            options = create_options(config, argc, argv);
         }
 
         mu_assert_verbose(success == 42);
@@ -340,9 +356,10 @@ static char * test_ngp_search_options()
         char *argv[] = {"ngp", "-t", ".c", "-t", ".h", "pattern"};
         int argc = sizeof(argv) / sizeof(*argv);
 
+        struct configuration_t* config = NULL;
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
-            options = create_options(argc, argv);
+            options = create_options(config, argc, argv);
         }
 
         mu_assert_verbose(success == 42);
@@ -357,9 +374,10 @@ static char * test_ngp_search_options()
         char *argv[] = {"ngp", "-I", "Makefile", "-I", "build", "pattern"};
         int argc = sizeof(argv) / sizeof(*argv);
 
+        struct configuration_t* config = NULL;
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
-            options = create_options(argc, argv);
+            options = create_options(config, argc, argv);
         }
 
         mu_assert_verbose(success == 42);
@@ -374,9 +392,10 @@ static char * test_ngp_search_options()
         char *argv[] = {"ngp", "-e", "^pattern$"};
         int argc = sizeof(argv) / sizeof(*argv);
 
+        struct configuration_t* config = NULL;
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
-            options = create_options(argc, argv);
+            options = create_options(config, argc, argv);
         }
 
         mu_assert_verbose(success == 42);
@@ -396,9 +415,10 @@ static char * test_wrong_ngp_search_options()
         char *argv[] = {"ngp", "-C", "3", "pattern"};
         int argc = sizeof(argv) / sizeof(*argv);
 
+        struct configuration_t* config = NULL;
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
-            options = create_options(argc, argv);
+            options = create_options(config, argc, argv);
         }
 
         mu_assert_verbose(success == 0);
@@ -410,9 +430,10 @@ static char * test_wrong_ngp_search_options()
         char *argv[] = {"ngp", "-I", "pattern"};
         int argc = sizeof(argv) / sizeof(*argv);
 
+        struct configuration_t* config = NULL;
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
-            options = create_options(argc, argv);
+            options = create_options(config, argc, argv);
         }
 
         mu_assert_verbose(success == 0);
@@ -423,10 +444,11 @@ static char * test_wrong_ngp_search_options()
         success = 42;
         char *argv[] = {"ngp", "-i", "Makefile", "-e" "^pattern"};
         int argc = sizeof(argv) / sizeof(*argv);
+        struct configuration_t* config = NULL;
         struct options_t *options = NULL;
 
         if (!setjmp(buf)) {
-            options = create_options(argc, argv);
+            options = create_options(config, argc, argv);
         }
 
         mu_assert_verbose(success == 0);
@@ -445,9 +467,10 @@ static char * test_parser_and_search_options()
         char *argv[] = {"ngp", "--nat", "-i", "-r", "-t", ".c", "-I", "Makefile", "--", "pattern", ".."};
         int argc = sizeof(argv) / sizeof(*argv);
 
+        struct configuration_t* config = NULL;
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
-            options = create_options(argc, argv);
+            options = create_options(config, argc, argv);
         }
 
         mu_assert_verbose(success == 42);
@@ -466,9 +489,10 @@ static char * test_parser_and_search_options()
         char *argv[] = {"ngp", "--nat=-i -r -t .c -I Makefile", "pattern", ".."};
         int argc = sizeof(argv) / sizeof(*argv);
 
+        struct configuration_t* config = NULL;
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
-            options = create_options(argc, argv);
+            options = create_options(config, argc, argv);
         }
 
         mu_assert_verbose(success == 42);
@@ -487,9 +511,10 @@ static char * test_parser_and_search_options()
         char *argv[] = {"ngp", "--ag", "-i", "-r", "-t", ".c", "-I", "Makefile", "--", "pattern", ".."};
         int argc = sizeof(argv) / sizeof(*argv);
 
+        struct configuration_t* config = NULL;
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
-            options = create_options(argc, argv);
+            options = create_options(config, argc, argv);
         }
 
         mu_assert_verbose(success == 42);
@@ -503,9 +528,10 @@ static char * test_parser_and_search_options()
         char *argv[] = {"ngp", "--ag=-i -r -t .c -I Makefile", "pattern", ".."};
         int argc = sizeof(argv) / sizeof(*argv);
 
+        struct configuration_t* config = NULL;
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
-            options = create_options(argc, argv);
+            options = create_options(config, argc, argv);
         }
 
         mu_assert_verbose(success == 42);
@@ -519,9 +545,10 @@ static char * test_parser_and_search_options()
         char *argv[] = {"ngp", "--git", "-i", "-r", "-t", ".c", "-I", "Makefile", "--", "pattern", ".."};
         int argc = sizeof(argv) / sizeof(*argv);
 
+        struct configuration_t* config = NULL;
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
-            options = create_options(argc, argv);
+            options = create_options(config, argc, argv);
         }
 
         mu_assert_verbose(success == 42);
@@ -535,9 +562,10 @@ static char * test_parser_and_search_options()
         char *argv[] = {"ngp", "--git=-i -r -t .c -I Makefile", "pattern", ".."};
         int argc = sizeof(argv) / sizeof(*argv);
 
+        struct configuration_t* config = NULL;
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
-            options = create_options(argc, argv);
+            options = create_options(config, argc, argv);
         }
 
         mu_assert_verbose(success == 42);
@@ -558,9 +586,10 @@ static char * test_missing_pattern()
         char *argv[] = {"ngp", "-i"};
         int argc = sizeof(argv) / sizeof(*argv);
 
+        struct configuration_t* config = NULL;
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
-            options = create_options(argc, argv);
+            options = create_options(config, argc, argv);
         }
 
         mu_assert_verbose(success == 0);
@@ -572,9 +601,10 @@ static char * test_missing_pattern()
         char *argv[] = {"ngp", "--git", "--"};
         int argc = sizeof(argv) / sizeof(*argv);
 
+        struct configuration_t* config = NULL;
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
-            options = create_options(argc, argv);
+            options = create_options(config, argc, argv);
         }
 
         mu_assert_verbose(success == 0);
@@ -586,9 +616,10 @@ static char * test_missing_pattern()
         char *argv[] = {"ngp", "--ag=-C 2"};
         int argc = sizeof(argv) / sizeof(*argv);
 
+        struct configuration_t* config = NULL;
         struct options_t *options = NULL;
         if (!setjmp(buf)) {
-            options = create_options(argc, argv);
+            options = create_options(config, argc, argv);
         }
 
         mu_assert_verbose(success == 0);
@@ -605,9 +636,10 @@ static char * test_invalid_path()
     char *argv[] = {"ngp", "pattern", "/some/invalid/dir"};
     int argc = sizeof(argv) / sizeof(*argv);
 
+    struct configuration_t* config = NULL;
     struct options_t *options = NULL;
     if (!setjmp(buf)) {
-        options = create_options(argc, argv);
+        options = create_options(config, argc, argv);
     }
 
     mu_assert_verbose(success == 0);

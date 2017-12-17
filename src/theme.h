@@ -23,6 +23,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdlib.h>
 #include <string.h>
 #include <ncurses.h>
+#include "configuration.h"
 
 struct theme_t {
     int line_color;
@@ -42,7 +43,7 @@ enum color_t {
     COLOR_FILE
 };
 
-struct theme_t *read_theme();
+struct theme_t *read_theme(struct configuration_t *config);
 void apply_theme(struct theme_t *theme);
 void destroy_theme(struct theme_t *theme);
 

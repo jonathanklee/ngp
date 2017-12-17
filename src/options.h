@@ -20,6 +20,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #define OPTIONS_H
 
 #include "search.h"
+#include "configuration.h"
 
 #ifdef LINE_MAX
     #undef LINE_MAX
@@ -55,6 +56,6 @@ struct options_t {
     char parser_options[LINE_MAX];
 };
 
-struct options_t * create_options(int argc, char *argv[]);
+struct options_t * create_options(struct configuration_t *config, int argc, char *argv[]);
 void free_options(struct options_t* options);
 #endif

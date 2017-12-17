@@ -36,7 +36,7 @@ struct display_t * create_display()
     return display;
 }
 
-void start_ncurses(struct display_t *display)
+void start_ncurses(struct display_t *display, struct configuration_t *config)
 {
     initscr();
     cbreak();
@@ -49,7 +49,7 @@ void start_ncurses(struct display_t *display)
     curs_set(0);
 
     struct theme_t *theme;
-    theme = read_theme();
+    theme = read_theme(config);
     apply_theme(theme);
     destroy_theme(theme);
 }

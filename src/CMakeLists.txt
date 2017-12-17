@@ -14,6 +14,7 @@ set(HEADERS
     search.h
     theme.h
     utils.h
+    configuration.h
     )
 
 add_library(objects STATIC
@@ -30,6 +31,7 @@ add_library(objects STATIC
     git_search.c
     theme.c
     utils.c
+    configuration.c
 )
 
 add_executable(ngp ${SRCS} ${HEADERS})

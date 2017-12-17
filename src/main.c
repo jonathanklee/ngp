@@ -25,6 +25,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #include "entry.h"
 #include "display.h"
 #include "options.h"
+#include "configuration.h"
 
 #include "search.h"
 
@@ -54,6 +55,7 @@ pthread_mutex_unlock(mutex), mutex = 0)
 /* keep a pointer on search_t & display_t for signal handler ONLY */
 static struct search_t *global_search;
 static struct display_t *global_display;
+static struct configuration_t *global_config;
 static pthread_t pid;
 
 void open_entry(struct search_t *search, int index, const char *editor, const char *pattern)
@@ -94,6 +96,7 @@ void sig_handler(int signo)
         pthread_join(pid, NULL);
         stop_ncurses(global_display);
         free_search(global_search);
+        destroy_configuration(global_config);
         exit(-1);
     }
 }
@@ -147,7 +150,8 @@ void display_status(struct search_t *search)
 
 int main(int argc, char *argv[])
 {
-    struct options_t *options = create_options(argc, argv);
+    struct configuration_t *config = create_configuration();
+    struct options_t *options = create_options(config, argc, argv);
     struct search_t *search = create_search(options);
     global_search = search;
     pthread_mutex_init(&search->data_mutex, NULL);
@@ -155,6 +159,7 @@ int main(int argc, char *argv[])
     struct display_t *display;
     display = create_display();
     global_display = display;
+    global_config = config;
 
     signal(SIGINT, sig_handler);
     if (pthread_create(&pid, NULL, lookup_thread, search)) {
@@ -203,7 +208,7 @@ int main(int argc, char *argv[])
             stop_ncurses(display);
             open_entry(search, display->cursor + display->index,
                        search->options->editor, search->options->pattern);
-            start_ncurses(display);
+            start_ncurses(display, config);
             resize_display(display, search, LINES);
             break;
         case QUIT:
@@ -223,7 +228,7 @@ int main(int argc, char *argv[])
             display_results(display, search, LINES);
             display_status(search);
             if (search->result->nbentry != 0 && !display->ncurses_initialized) {
-                start_ncurses(display);
+                start_ncurses(display, config);
                 display->ncurses_initialized = 1;
             }
         }
@@ -240,5 +245,6 @@ quit:
     pthread_join(pid, NULL);
     stop_ncurses(display);
     free_search(search);
+    destroy_configuration(config);
     return 0;
 }

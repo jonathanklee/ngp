@@ -20,6 +20,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #define DISPLAY_H
 
 #include "search.h"
+#include "configuration.h"
 
 struct display_t {
     int index;
@@ -28,7 +29,7 @@ struct display_t {
 };
 
 struct display_t * create_display();
-void start_ncurses(struct display_t *display);
+void start_ncurses(struct display_t *display, struct configuration_t *config);
 void stop_ncurses(struct display_t *display);
 void display_results(struct display_t *display, struct search_t *search, int terminal_line_nb);
 void resize_display(struct display_t *display, struct search_t *search, int terminal_line_nb);

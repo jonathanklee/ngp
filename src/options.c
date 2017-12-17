@@ -27,6 +27,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #include "list.h"
 #include "utils.h"
 #include "options.h"
+#include "configuration.h"
 
 #define NGP_VERSION   "1.4"
 
@@ -62,7 +63,7 @@ static void display_version(void)
 }
 
 #ifndef read_config /* ignore for testing */
-static void read_config(struct options_t *options)
+static void read_config(struct configuration_t *config, struct options_t *options)
 {
     const char *specific_files;
     const char *extensions;
@@ -70,9 +71,9 @@ static void read_config(struct options_t *options)
     const char *buffer;
     char *ptr;
     char *buf = NULL;
-    config_t cfg;
 
-    configuration_init(&cfg);
+    load_configuration(config);
+    config_t cfg = config->config;
 
     if (!config_lookup_string(&cfg, "editor", &buffer)) {
         fprintf(stderr, "ngprc: no editor string found!\n");
@@ -369,14 +370,14 @@ error:
     usage(-1);
 }
 
-struct options_t * create_options(int argc, char *argv[])
+struct options_t * create_options(struct configuration_t *config, int argc, char *argv[])
 {
     struct options_t *options = calloc(1, sizeof(*options));
 
     options->search_type = NGP_SEARCH;
     strcpy(options->directory, ".");
 
-    read_config(options);
+    read_config(config, options);
     parse_args(options, argc, argv);
 
     return options;

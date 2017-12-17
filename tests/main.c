@@ -22,6 +22,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #include "search.h"
 #include "list.h"
 #include "display.h"
+#include "configuration.h"
 
 int tests_run = 0;
 char * command_line_arg_tests();
@@ -33,7 +34,8 @@ static char * test_no_entry()
 {
     char *argv[] = {"ngp", "third"};
     int argc = sizeof(argv) / sizeof(*argv);
-    struct options_t *options = create_options(argc, argv);
+    struct configuration_t *config = NULL;
+    struct options_t *options = create_options(config, argc, argv);
     struct search_t *search = create_search(options);
     char text[] = "this is a the first line\nthis is the second line\n";
     parse_text(search, "fake_file", strlen(text), text, options->pattern);
@@ -46,7 +48,8 @@ static char * test_one_entry_on_the_first_line()
 {
     char *argv[] = {"ngp", "first"};
     int argc = sizeof(argv) / sizeof(*argv);
-    struct options_t *options = create_options(argc, argv);
+    struct configuration_t *config = NULL;
+    struct options_t *options = create_options(config, argc, argv);
     struct search_t *search = create_search(options);
     char text[] = "this is a the first line\nthis is the second line\n";
     parse_text(search, "fake_file", strlen(text), text, options->pattern);
@@ -59,7 +62,8 @@ static char * test_one_entry_on_the_second_line()
 {
     char *argv[] = {"ngp", "second"};
     int argc = sizeof(argv) / sizeof(*argv);
-    struct options_t *options = create_options(argc, argv);
+    struct configuration_t *config = NULL;
+    struct options_t *options = create_options(config, argc, argv);
     struct search_t *search = create_search(options);
     char text[] = "this is a the first line\nthis is the second line\n";
     parse_text(search, "fake_file", strlen(text), text, options->pattern);
@@ -72,7 +76,8 @@ static char * test_one_entry_incase()
 {
     char *argv[] = {"ngp", "First"};
     int argc = sizeof(argv) / sizeof(*argv);
-    struct options_t *options = create_options(argc, argv);
+    struct configuration_t *config = NULL;
+    struct options_t *options = create_options(config, argc, argv);
     options->incase_option = 1;
     struct search_t *search = create_search(options);
     char text[] = "this is a the first line\nthis is the second line\n";
@@ -86,7 +91,8 @@ static char * test_two_entries()
 {
     char *argv[] = {"ngp", "line"};
     int argc = sizeof(argv) / sizeof(*argv);
-    struct options_t *options = create_options(argc, argv);
+    struct configuration_t *config = NULL;
+    struct options_t *options = create_options(config, argc, argv);
     struct search_t *search = create_search(options);
     char text[] = "this is a the first line\nthis is the second line\n";
     parse_text(search, "fake_file", strlen(text), text, options->pattern);
@@ -99,7 +105,8 @@ static char * test_regexp_start_of_line()
 {
     char *argv[] = {"ngp", "^this is"};
     int argc = sizeof(argv) / sizeof(*argv);
-    struct options_t *options = create_options(argc, argv);
+    struct configuration_t *config = NULL;
+    struct options_t *options = create_options(config, argc, argv);
     options->regexp_option = 1;
     struct search_t *search = create_search(options);
     char text[] = "this is a the first line\nthis is the second line\n";
@@ -113,7 +120,8 @@ static char * test_wrong_regexp()
 {
     char *argv[] = {"ngp", "the.*file"};
     int argc = sizeof(argv) / sizeof(*argv);
-    struct options_t *options = create_options(argc, argv);
+    struct configuration_t *config = NULL;
+    struct options_t *options = create_options(config, argc, argv);
     options->regexp_option = 1;
     struct search_t *search = create_search(options);
     char text[] = "this is a the first line\nthis is the second line\n";
@@ -127,7 +135,8 @@ static char * test_is_specific_file_ok()
 {
     char *argv[] = {"ngp", "pattern"};
     int argc = sizeof(argv) / sizeof(*argv);
-    struct options_t *options = create_options(argc, argv);
+    struct configuration_t *config = NULL;
+    struct options_t *options = create_options(config, argc, argv);
     add_element(&options->specific_file, "Makefile");
     struct search_t *search = create_search(options);
     mu_assert("test_is_specific_file_ok failed", is_specific_file(search->options, "Makefile") == 0);
@@ -139,7 +148,8 @@ static char * test_is_specific_file_ko()
 {
     char *argv[] = {"ngp", "pattern"};
     int argc = sizeof(argv) / sizeof(*argv);
-    struct options_t *options = create_options(argc, argv);
+    struct configuration_t *config = NULL;
+    struct options_t *options = create_options(config, argc, argv);
     add_element(&options->specific_file, "Makefile");
     struct search_t *search = create_search(options);
     mu_assert("test_is_specific_file_ko failed", is_specific_file(search->options, "makefile") == 0);
@@ -151,7 +161,8 @@ static char * test_is_ignored_file_ok()
 {
     char *argv[] = {"ngp", "pattern"};
     int argc = sizeof(argv) / sizeof(*argv);
-    struct options_t *options = create_options(argc, argv);
+    struct configuration_t *config = NULL;
+    struct options_t *options = create_options(config, argc, argv);
     add_element(&options->ignore, "rules");
     struct search_t *search = create_search(options);
     mu_assert("test_is_ignored_file_ok failed", is_ignored_file(search->options, "rules") == 0);
@@ -163,7 +174,8 @@ static char * test_is_ignored_file_ko()
 {
     char *argv[] = {"ngp", "pattern"};
     int argc = sizeof(argv) / sizeof(*argv);
-    struct options_t *options = create_options(argc, argv);
+    struct configuration_t *config = NULL;
+    struct options_t *options = create_options(config, argc, argv);
     add_element(&options->ignore, "rules");
     struct search_t *search = create_search(options);
     mu_assert("test_is_ignored_file_ko failed", is_ignored_file(search->options, "Rules") == 0);
@@ -175,7 +187,8 @@ static char * test_is_extension_good_ok()
 {
     char *argv[] = {"ngp", "pattern"};
     int argc = sizeof(argv) / sizeof(*argv);
-    struct options_t *options = create_options(argc, argv);
+    struct configuration_t *config = NULL;
+    struct options_t *options = create_options(config, argc, argv);
     add_element(&options->extension, ".cpp");
     struct search_t *search = create_search(options);
     mu_assert("test_is_extension_good_ok failed", is_ignored_file(search->options, "file.cpp") == 0);
@@ -187,7 +200,8 @@ static char * test_is_extension_good_ko()
 {
     char *argv[] = {"ngp", "pattern"};
     int argc = sizeof(argv) / sizeof(*argv);
-    struct options_t *options = create_options(argc, argv);
+    struct configuration_t *config = NULL;
+    struct options_t *options = create_options(config, argc, argv);
     add_element(&options->extension, ".cpp");
     struct search_t *search = create_search(options);
     mu_assert("test_is_extension_good_ko failed", is_ignored_file(search->options, "file.c") == 0);
@@ -204,7 +218,8 @@ static char * test_cursor_down()
     int argc = sizeof(argv) / sizeof(*argv);
 
     display = create_display();
-    struct options_t *options = create_options(argc, argv);
+    struct configuration_t *config = NULL;
+    struct options_t *options = create_options(config, argc, argv);
     struct search_t *search = create_search(options);
     terminal_line_nb = 10;
 
@@ -226,7 +241,8 @@ static char * test_cursor_down_end_of_entries()
     int argc = sizeof(argv) / sizeof(*argv);
 
     display = create_display();
-    struct options_t *options = create_options(argc, argv);
+    struct configuration_t *config = NULL;
+    struct options_t *options = create_options(config, argc, argv);
     struct search_t *search = create_search(options);
     terminal_line_nb = 10;
 
@@ -249,7 +265,8 @@ static char * test_cursor_down_skip_file()
     int argc = sizeof(argv) / sizeof(*argv);
 
     display = create_display();
-    struct options_t *options = create_options(argc, argv);
+    struct configuration_t *config = NULL;
+    struct options_t *options = create_options(config, argc, argv);
     struct search_t *search = create_search(options);
     terminal_line_nb = 10;
 
@@ -272,7 +289,8 @@ static char * test_cursor_down_end_of_page()
     int argc = sizeof(argv) / sizeof(*argv);
 
     display = create_display();
-    struct options_t *options = create_options(argc, argv);
+    struct configuration_t *config = NULL;
+    struct options_t *options = create_options(config, argc, argv);
     struct search_t *search = create_search(options);
     terminal_line_nb = 3;
 
@@ -296,7 +314,8 @@ static char * test_cursor_down_end_of_page_skip_file()
     int argc = sizeof(argv) / sizeof(*argv);
 
     display = create_display();
-    struct options_t *options = create_options(argc, argv);
+    struct configuration_t *config = NULL;
+    struct options_t *options = create_options(config, argc, argv);
     struct search_t *search = create_search(options);
     terminal_line_nb = 3;
 
@@ -320,7 +339,8 @@ static char * test_cursor_up()
     int argc = sizeof(argv) / sizeof(*argv);
 
     display = create_display();
-    struct options_t *options = create_options(argc, argv);
+    struct configuration_t *config = NULL;
+    struct options_t *options = create_options(config, argc, argv);
     struct search_t *search = create_search(options);
     terminal_line_nb = 10;
 
@@ -343,7 +363,8 @@ static char * test_cursor_up_top_first_page()
     int argc = sizeof(argv) / sizeof(*argv);
 
     display = create_display();
-    struct options_t *options = create_options(argc, argv);
+    struct configuration_t *config = NULL;
+    struct options_t *options = create_options(config, argc, argv);
     struct search_t *search = create_search(options);
     terminal_line_nb = 10;
 
@@ -366,7 +387,8 @@ static char * test_cursor_up_skip_file()
     int argc = sizeof(argv) / sizeof(*argv);
 
     display = create_display();
-    struct options_t *options = create_options(argc, argv);
+    struct configuration_t *config = NULL;
+    struct options_t *options = create_options(config, argc, argv);
     struct search_t *search = create_search(options);
     terminal_line_nb = 10;
 
@@ -390,7 +412,8 @@ static char * test_cursor_up_page_up()
     int argc = sizeof(argv) / sizeof(*argv);
 
     display = create_display();
-    struct options_t *options = create_options(argc, argv);
+    struct configuration_t *config = NULL;
+    struct options_t *options = create_options(config, argc, argv);
     struct search_t *search = create_search(options);
     terminal_line_nb = 3;
 
