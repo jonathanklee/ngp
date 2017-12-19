@@ -73,7 +73,7 @@ static void read_config(struct configuration_t *config, struct options_t *option
     char *buf = NULL;
 
     load_configuration(config);
-    config_t cfg = config->config;
+    config_t cfg = get_config(config);
 
     if (!config_lookup_string(&cfg, "editor", &buffer)) {
         fprintf(stderr, "ngprc: no editor string found!\n");

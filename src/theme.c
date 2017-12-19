@@ -53,7 +53,7 @@ struct theme_t *read_theme(struct configuration_t *config)
 
     new = calloc(1, sizeof(struct theme_t));
     load_configuration(config);
-    config_t cfg = config->config;
+    config_t cfg = get_config(config);
 
     if (!config_lookup_string(&cfg, "line_color", &buffer)) {
         fprintf(stderr, "ngprc: no line_color string found!\n");

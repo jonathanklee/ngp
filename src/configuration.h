@@ -52,11 +52,8 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
                        "file_color = \"green\"\n"                                                  \
                        "opened_line_color = \"red\"\n"
 
-struct configuration_t {
-    config_t config;
-};
-
 struct configuration_t *create_configuration();
+config_t get_config(struct configuration_t *config);
 void load_configuration(struct configuration_t *cfg);
 void destroy_configuration(struct configuration_t *cfg);
 

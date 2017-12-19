@@ -32,10 +32,19 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #define CONFIG_DIR     "ngp"
 #define CONFIG_FILE    "ngprc"
 
+struct configuration_t {
+    config_t config;
+};
+
 struct configuration_t *create_configuration()
 {
     struct configuration_t *new = calloc(1, sizeof(struct configuration_t));
     return new;
+}
+
+config_t get_config(struct configuration_t *config)
+{
+    return config->config;
 }
 
 static void create_user_ngprc(const char *file_path)
