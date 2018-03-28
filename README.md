@@ -1,9 +1,9 @@
 ngp
 ===
 
-Ncurses grep tool.
+**n**curses **g**re**p**
 
-ngp lets you look for a pattern in your source code directory and display results in ncurses.
+ngp lets you look for a pattern and display results in ncurses.
 
 ngp lets you browse results with ease.
 
