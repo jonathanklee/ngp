@@ -49,14 +49,26 @@ static int is_dir_good(char *dir)
         strcmp(dir, ".git") != 0 ? 1 : 0;
 }
 
-static char *get_file_name(const char * absolute_path)
+char *get_file_name(const char *absolute_path)
 {
     char *ret;
 
-    if (strrchr(absolute_path + 3, '/') != NULL)
-        ret = strrchr(absolute_path + 3, '/') + 1;
-    else
-        ret = (char *) absolute_path + 3;
+    if (strchr(absolute_path, '/') == NULL){
+        return (char *)absolute_path;
+    }
+
+    char copy[FILENAME_MAX];
+    strcpy(copy, absolute_path);
+
+    int len = strlen(copy);
+    if (copy[len - 1] == '/') {
+        copy[len - 1] = '\0';
+    }
+
+    ret = copy;
+    if (strrchr(copy, '/') != NULL) {
+        ret = strrchr(copy, '/') + 1;
+    }
 
     return ret;
 }

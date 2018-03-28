@@ -23,6 +23,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #include <getopt.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <unistd.h>
 
 #include "list.h"
 #include "utils.h"

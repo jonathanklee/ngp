@@ -23,6 +23,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #include "list.h"
 #include "display.h"
 #include "configuration.h"
+#include "ngp_search.h"
 
 int tests_run = 0;
 char * command_line_arg_tests();
@@ -139,7 +140,8 @@ static char * test_is_specific_file_ok()
     struct options_t *options = create_options(config, argc, argv);
     add_element(&options->specific_file, "Makefile");
     struct search_t *search = create_search(options);
-    mu_assert("test_is_specific_file_ok failed", is_specific_file(search->options, "Makefile") == 0);
+    mu_assert("test_is_specific_file_ok failed",
+        is_specific_file(search->options, "Makefile") == 1);
     free_search(search);
     return 0;
 }
@@ -152,7 +154,8 @@ static char * test_is_specific_file_ko()
     struct options_t *options = create_options(config, argc, argv);
     add_element(&options->specific_file, "Makefile");
     struct search_t *search = create_search(options);
-    mu_assert("test_is_specific_file_ko failed", is_specific_file(search->options, "makefile") == 0);
+    mu_assert("test_is_specific_file_ko failed",
+        is_specific_file(search->options, "makefile") == 0);
     free_search(search);
     return 0;
 }
@@ -165,7 +168,8 @@ static char * test_is_ignored_file_ok()
     struct options_t *options = create_options(config, argc, argv);
     add_element(&options->ignore, "rules");
     struct search_t *search = create_search(options);
-    mu_assert("test_is_ignored_file_ok failed", is_ignored_file(search->options, "rules") == 0);
+    mu_assert("test_is_ignored_file_ok failed",
+        is_ignored_file(search->options, "rules") == 1);
     free_search(search);
     return 0;
 }
@@ -178,7 +182,8 @@ static char * test_is_ignored_file_ko()
     struct options_t *options = create_options(config, argc, argv);
     add_element(&options->ignore, "rules");
     struct search_t *search = create_search(options);
-    mu_assert("test_is_ignored_file_ko failed", is_ignored_file(search->options, "Rules") == 0);
+    mu_assert("test_is_ignored_file_ko failed",
+        is_ignored_file(search->options, "Rules") == 0);
     free_search(search);
     return 0;
 }
@@ -429,6 +434,39 @@ static char * test_cursor_up_page_up()
     return 0;
 }
 
+static char * test_get_file_name_simple()
+{
+    char *result = get_file_name("/file1");
+    mu_assert("test_bla failed", strcmp(result, "file1") == 0);
+
+    return 0;
+}
+
+static char * test_get_file_name_multiple()
+{
+    char *result = get_file_name("/dir1/file1");
+    mu_assert("test_get_file_name failed", strcmp(result, "file1") == 0);
+
+    return 0;
+}
+
+static char * test_get_file_name_current_dir()
+{
+    char *result = get_file_name(".");
+    mu_assert("test_get_file_name_current_dir failed", strcmp(result, ".") == 0);
+
+    return 0;
+}
+
+static char * test_get_file_name_ending_with_slash()
+{
+    char *result = get_file_name("/dir1/dir2/");
+    mu_assert("test_get_file_name failed_ending_with_slash",
+              strcmp(result, "dir2") == 0);
+
+    return 0;
+}
+
 static char * all_tests() {
     char *message = command_line_arg_tests();
     if (message)
@@ -456,6 +494,10 @@ static char * all_tests() {
     mu_run_test(test_cursor_up_top_first_page);
     mu_run_test(test_cursor_up_skip_file);
     mu_run_test(test_cursor_up_page_up);
+    mu_run_test(test_get_file_name_simple);
+    mu_run_test(test_get_file_name_multiple);
+    mu_run_test(test_get_file_name_current_dir);
+    mu_run_test(test_get_file_name_ending_with_slash);
     return 0;
 }
 
