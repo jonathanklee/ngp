@@ -42,7 +42,7 @@ Your ngprc file also allows you to customize the commands for `ag` and `git grep
 or you can change a tools location if it's not in your $PATH.
 Note that it is mandatory to specify the three arguments : options, pattern and path for each command.
 
-Example
+Demo
 -------
 
 Looking for "create" pattern in ngp source code.
