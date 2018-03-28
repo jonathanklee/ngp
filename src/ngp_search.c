@@ -231,14 +231,13 @@ static void lookup_directory(struct search_t *search, const char *dir, const cha
 {
     DIR *dp;
 
+    if (is_ignored_file(search->options, dir)) {
+        return;
+    }
+
     dp = opendir(dir);
     if (!dp)
         return;
-
-    if (is_ignored_file(search->options, dir)) {
-        closedir(dp);
-        return;
-    }
 
     while (1) {
         struct dirent *ep;
