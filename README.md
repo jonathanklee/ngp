@@ -9,7 +9,7 @@ ngp lets you browse results with ease.
 
 ngp lets you open a result with your favorite editor at the right line.
 
-Build
+Build and Install
 ------------
 
 1. Install build dependencies for your platform/distribution : `libconfig`, `libpcre` & `ncurses`
