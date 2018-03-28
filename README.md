@@ -9,7 +9,7 @@ ngp lets you browse results with ease.
 
 ngp lets you open a result with your favorite editor at the right line.
 
-Installation
+Build
 ------------
 
 1. Install build dependencies for your platform/distribution : `libconfig`, `libpcre` & `ncurses`
@@ -17,6 +17,8 @@ Installation
 2. Enter the following commands in your terminal :
 
 ```
+git clone git@github.com:jonathanklee/ngp.git
+cd ./ngp
 cmake .
 make
 make install
