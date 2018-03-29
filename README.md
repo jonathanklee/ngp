@@ -72,9 +72,9 @@ Note that it is mandatory to specify the three arguments : options, pattern and 
 Demo
 -------
 
-Looking for "create" pattern in ngp source code.
+Looking for "struct" pattern in ngp source code.
 
-[![asciicast](https://asciinema.org/a/2r4kmqt572knj5m271z6o7b0y.png)](https://asciinema.org/a/2r4kmqt572knj5m271z6o7b0y)
+![gif](/ngp.gif)
 
 License
 ----
