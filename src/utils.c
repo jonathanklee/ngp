@@ -31,36 +31,6 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 
 #define CONFIG_DIR     "ngp"
 #define CONFIG_FILE    "ngprc"
-#define CONFIG_CONTENT "// extensions your want to look into\n"                                    \
-                       "extensions = \".c .h .cpp .hpp .py .S .pl .qml .pro .pri .rb .java\"\n\n"  \
-                       "// files you want to look into\n"                                          \
-                       "files = \"Makefile rules control\"\n\n"                                    \
-                       "// files you want to ignore\n"                                             \
-                       "ignore = \"\"\n\n"                                                         \
-                       "/* editor command :\n"                                                     \
-                       "arg #1 = pattern to search\n"                                              \
-                       "arg #2 = line number\n"                                                    \
-                       "arg #3 = file path */\n\n"                                                 \
-                       "editor = \"vim -c 'set hls' -c 'silent /\%1$s' -c \%2$d \%3$s\"\n"         \
-                       "//editor = \"emacs +\%2$d \%3$s &\"\n"                                     \
-                       "//editor = \"subl \%3$s:\%2$d 1>/dev/null 2>&1\"\n\n"                      \
-                       "// default parser: nat (native), ag or git\n"                              \
-                       "default_parser = \"nat\"\n\n"                                              \
-                       "/* external parser commands :\n"                                           \
-                       "*     arg \%1$s = options\n"                                               \
-                       "*     arg \%2$s = pattern to search\n"                                     \
-                       "*     arg \%3$s = directory\n"                                             \
-                       "*/\n"                                                                      \
-                       "ag_cmd = \"ag \%1$s \\\"\%2$s\\\" \%3$s\"\n"                               \
-                       "git_cmd = \"git grep \%1$s \\\"\%2$s\\\" \%3$s\"\n\n"                      \
-                       "/* themes\n"                                                               \
-                       "   colors available: cyan, yellow, red, green,\n"                          \
-                       "   black, white, blue, magenta */\n\n"                                     \
-                       "line_color = \"white\"\n"                                                  \
-                       "line_number_color = \"yellow\"\n"                                          \
-                       "highlight_color = \"cyan\"\n"                                              \
-                       "file_color = \"green\"\n"                                                  \
-                       "opened_line_color = \"red\"\n"
 
 int is_selectable(struct search_t *search, int index)
 {
