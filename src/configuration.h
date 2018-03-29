@@ -23,9 +23,9 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 
 #define CONFIG_CONTENT "// extensions your want to look into\n"                                    \
                        "extensions = \".c .h .cpp .hpp .py .S .pl .qml .pro .pri .rb .java\"\n\n"  \
-                       "// files you want to look into\n"                                          \
+                       "// files you want to look into besides the ones matching the extensions\n" \
                        "files = \"Makefile rules control\"\n\n"                                    \
-                       "// files you want to ignore\n"                                             \
+                       "// files or directories you want to ignore\n"                              \
                        "ignore = \"\"\n\n"                                                         \
                        "/* editor command :\n"                                                     \
                        "arg #1 = pattern to search\n"                                              \
