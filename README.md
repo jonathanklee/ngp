@@ -32,7 +32,9 @@ ngp my_pattern
 
 Native or External parser
 ----------
-ngp implements it's own code source parser. By default, ngp looks into the extensions listed in the ngprc configuration file.
+ngp implements it's own parser but you can also use it with an external parser.
+
+By default, ngp looks into the extensions listed in the ngprc configuration file.
 If you want to override those extensions with a specific extension, you can use the -t option :
 ```
 ngp my_pattern -t my_extension
