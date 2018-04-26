@@ -1,10 +1,19 @@
-compiler: cmake
+language: c
+
+os:
+- linux
+- osx
+
+compiler:
+- gcc
+- clang
 
 script:
-- cmake .
-- make
+- if [[ "$TRAVIS_OS_NAME" == "osx" ]] ; then PKG_CONFIG_PATH=/usr/local/opt/ncurses/lib/pkgconfig cmake . ; else cmake . ; fi
+- if [[ "$TRAVIS_OS_NAME" == "osx" ]] ; then LDFLAGS+=-L/usr/local/opt/ncurses/lib make ; else make ; fi
 - make test
+- tests/tests
 
 before_install:
-- sudo apt-get update -q
-- sudo apt-get install libncurses5-dev libconfig-dev libpcre3-dev
+- if [[ "$TRAVIS_OS_NAME" == "linux" ]] ; then sudo apt-get update -q && sudo apt-get install libncurses5-dev libconfig-dev libpcre3-dev ; fi
+- if [[ "$TRAVIS_OS_NAME" == "osx" ]] ; then brew install ncurses libconfig ; fi

@@ -18,7 +18,7 @@ include_directories(../src/search)
 find_package(PkgConfig REQUIRED)
 
 # ncurses
-pkg_check_modules(CURSES REQUIRED ncurses)
+find_package(Curses REQUIRED)
 
 # libconfig
 pkg_check_modules(LIBCONFIG REQUIRED libconfig>=1.0)

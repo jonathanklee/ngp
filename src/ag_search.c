@@ -132,7 +132,6 @@ static int match_line(struct result_t *result, const char *output)
 
     return 1;
 }
-
 void do_ag_search(struct search_t *search)
 {
     char default_arguments[] = "-H --color ";

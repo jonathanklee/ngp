@@ -40,7 +40,9 @@ add_executable(ngp ${SRCS} ${HEADERS})
 find_package(PkgConfig REQUIRED)
 
 # ncurses
-pkg_check_modules(CURSES REQUIRED ncurses)
+find_package(Curses REQUIRED)
+#pkg_check_modules(CURSES REQUIRED ncurses)
+#find_library(LIBCURSES_LIBRARY NAMES ncurses libncurses HINTS ${LIBCURSES_LIBDIR})
 
 # libconfig
 pkg_check_modules(LIBCONFIG REQUIRED libconfig)

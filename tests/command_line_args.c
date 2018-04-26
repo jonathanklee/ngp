@@ -119,27 +119,6 @@ static char * test_get_version()
     return 0;
 }
 
-static char * test_simple_pattern()
-{
-    success = 42;
-
-    char *argv[] = {"ngp", "pattern"};
-    int argc = sizeof(argv) / sizeof(*argv);
-
-    struct configuration_t* config = NULL;
-    struct options_t *options = NULL;
-    if (!setjmp(buf)) {
-        options = create_options(config, argc, argv);
-    }
-
-    mu_assert_verbose(success == 42);
-    mu_assert_verbose(!strcmp("pattern", options->pattern));
-
-    free_options(options);
-
-    return 0;
-}
-
 static char * test_pattern_and_path()
 {
     success = 42;
@@ -649,12 +628,10 @@ static char * test_invalid_path()
     return 0;
 }
 
-
 char * command_line_arg_tests()
 {
     mu_run_test(test_show_help);
     mu_run_test(test_get_version);
-    mu_run_test(test_simple_pattern);
     mu_run_test(test_pattern_and_path);
     mu_run_test(test_parser_and_pattern);
     mu_run_test(test_wrong_parser_option);
