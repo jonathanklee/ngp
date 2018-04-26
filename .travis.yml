@@ -1,0 +1,12 @@
+language: c
+
+compiler: cmake
+
+script:
+- cmake .
+- make
+- make test
+
+before_install:
+- sudo apt-get update -q
+- sudo apt-get install libncurses5-dev libconfig-dev libpcre3-dev
