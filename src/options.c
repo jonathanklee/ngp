@@ -206,7 +206,8 @@ static void parse_args(struct options_t *options, int argc, char *argv[])
 
     int arg_count = argc;
     char **args = calloc(argc, sizeof(*args));
-    for (int i = 0; i < argc; ++i) {
+    int i;
+    for (i = 0; i < argc; ++i) {
         args[i] = argv[i];
     }
 
@@ -299,7 +300,8 @@ static void parse_args(struct options_t *options, int argc, char *argv[])
 
         /* delete NULL pointer from args */
         arg_count = 0;
-        for (int i = 0; i < argc; ++i) {
+        int i;
+        for (i = 0; i < argc; ++i) {
             if (argv[i])
                 args[arg_count++] = argv[i];
         }
@@ -309,7 +311,7 @@ static void parse_args(struct options_t *options, int argc, char *argv[])
             /* count args in parser_options */
             int new_argc = arg_count;
             char *arg = options->parser_options;
-            for (int i = 0; i < strlen(arg); ++i) {
+            for (i = 0; i < strlen(arg); ++i) {
                 if (arg[i] == ' ')
                     new_argc++;
             }
@@ -327,7 +329,7 @@ static void parse_args(struct options_t *options, int argc, char *argv[])
             }
 
             /* append remaineing args to new args */
-            for (int i = 1; i < arg_count; ++i) {
+            for (i = 1; i < arg_count; ++i) {
                 new_args[new_argc++] = args[i];
             }
 

@@ -97,7 +97,8 @@ static void hilight_pattern(struct line_t *container, char *line, int y)
        attron(COLOR_PAIR(COLOR_HIGHLIGHT));
 
     length = container->highlight.end - container->highlight.begin;
-    for (int counter = 0; counter < length; counter++, ptr++)
+    int counter;
+    for (counter = 0; counter < length; counter++, ptr++)
         addch(*ptr);
 
     attroff(A_REVERSE);
@@ -108,6 +109,7 @@ void display_line(struct entry_t *entry, struct search_t *search, int y, int is_
     int length = 0;
     char cropped_line[PATH_MAX] = "";
     char *line = entry->data;
+    int i;
 
     if (is_cursor_on_entry)
         attron(A_REVERSE);
@@ -119,7 +121,7 @@ void display_line(struct entry_t *entry, struct search_t *search, int y, int is_
     /* display blank line */
     struct line_t *container = container_of(entry, struct line_t, entry);
     if (container->line == 0) {
-        for (int i = 0; i < COLS; ++i)
+        for (i = 0; i < COLS; ++i)
             cropped_line[i] = '-';
 
         attron(A_BOLD);
