@@ -134,10 +134,10 @@ void load_configuration(struct configuration_t *config)
 #endif /* __linux__ / __APPLE__ */
 
     // If file does not exist, create a default ngprc and open it
-    char dir[PATH_MAX];
-    snprintf(dir, PATH_MAX, "%s/.config/%s", getenv("HOME"), CONFIG_DIR);
+    char dir[PATH_MAX - strlen(CONFIG_FILE)];
+    snprintf(dir, sizeof(dir), "%s/.config/%s", getenv("HOME"), CONFIG_DIR);
     mkdir(dir, 0777);
-    snprintf(user_ngprc, PATH_MAX, "%s/%s", dir, CONFIG_FILE);
+    snprintf(user_ngprc, sizeof(dir), "%s/%s", dir, CONFIG_FILE);
 
     if (access(user_ngprc, R_OK) < 0) {
         create_user_ngprc(user_ngprc);
