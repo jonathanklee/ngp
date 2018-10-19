@@ -102,7 +102,8 @@ void load_configuration(struct configuration_t *config)
         // on a copy here. Allow for five entries in XDG_CONFIG_DIRS here, that
         // should probably be enough.
         char xdg_config_dirs_cpy[PATH_MAX * 5];
-        strncpy(xdg_config_dirs_cpy, xdg_config_dirs, strlen(xdg_config_dirs));
+        strncpy(xdg_config_dirs_cpy, xdg_config_dirs,
+                strlen(xdg_config_dirs) - 1);
 
         char *token = strtok(xdg_config_dirs_cpy, ":");
 

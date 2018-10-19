@@ -49,25 +49,23 @@ static int is_dir_good(char *dir)
         strcmp(dir, ".git") != 0 ? 1 : 0;
 }
 
-char *get_file_name(const char *absolute_path)
-{
+char *get_file_name(const char *absolute_path, char *file_name) {
     char *ret;
 
     if (strchr(absolute_path, '/') == NULL){
         return (char *)absolute_path;
     }
 
-    char copy[FILENAME_MAX];
-    strcpy(copy, absolute_path);
+    strcpy(file_name, absolute_path);
 
-    int len = strlen(copy);
-    if (copy[len - 1] == '/') {
-        copy[len - 1] = '\0';
+    int len = strlen(file_name);
+    if (file_name[len - 1] == '/') {
+        file_name[len - 1] = '\0';
     }
 
-    ret = copy;
-    if (strrchr(copy, '/') != NULL) {
-        ret = strrchr(copy, '/') + 1;
+    ret = file_name;
+    if (strrchr(file_name, '/') != NULL) {
+        ret = strrchr(file_name, '/') + 1;
     }
 
     return ret;
@@ -128,8 +126,9 @@ static int is_specific_file(struct options_t *options, const char *name)
     char *name_begins;
     struct list *pointer = options->specific_file;
 
+    char file_name[FILENAME_MAX];
     while (pointer) {
-        name_begins = get_file_name(name);
+        name_begins = get_file_name(name, file_name);
         if (!strcmp(name_begins, pointer->data))
             return 1;
         pointer = pointer->next;
@@ -142,8 +141,9 @@ static int is_ignored_file(struct options_t *options, const char *name)
     char *name_begins;
     struct list *pointer = options->ignore;
 
+    char file_name[FILENAME_MAX];
     while (pointer) {
-        name_begins = get_file_name(name);
+        name_begins = get_file_name(name, file_name);
         if (!strcmp(name_begins, pointer->data))
             return 1;
         pointer = pointer->next;

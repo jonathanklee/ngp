@@ -436,7 +436,8 @@ static char * test_cursor_up_page_up()
 
 static char * test_get_file_name_simple()
 {
-    char *result = get_file_name("/file1");
+    char file_name[FILENAME_MAX];
+    char *result = get_file_name("/file1", file_name);
     mu_assert("test_bla failed", strcmp(result, "file1") == 0);
 
     return 0;
@@ -444,7 +445,8 @@ static char * test_get_file_name_simple()
 
 static char * test_get_file_name_multiple()
 {
-    char *result = get_file_name("/dir1/file1");
+    char file_name[FILENAME_MAX];
+    char *result = get_file_name("/dir1/file1", file_name);
     mu_assert("test_get_file_name failed", strcmp(result, "file1") == 0);
 
     return 0;
@@ -452,7 +454,8 @@ static char * test_get_file_name_multiple()
 
 static char * test_get_file_name_current_dir()
 {
-    char *result = get_file_name(".");
+    char file_name[FILENAME_MAX];
+    char *result = get_file_name(".", file_name);
     mu_assert("test_get_file_name_current_dir failed", strcmp(result, ".") == 0);
 
     return 0;
@@ -460,7 +463,8 @@ static char * test_get_file_name_current_dir()
 
 static char * test_get_file_name_ending_with_slash()
 {
-    char *result = get_file_name("/dir1/dir2/");
+    char file_name[FILENAME_MAX];
+    char *result = get_file_name("/dir1/dir2/", file_name);
     mu_assert("test_get_file_name failed_ending_with_slash",
               strcmp(result, "dir2") == 0);
 

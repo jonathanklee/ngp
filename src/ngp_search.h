@@ -19,6 +19,6 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef NGP_SEARCH_H
 #define NGP_SEARCH_H
 
-char *get_file_name(const char *absolute_path);
+char *get_file_name(const char *absolute_path, char *file_name);
 
 #endif // NGP_SEARCH_N

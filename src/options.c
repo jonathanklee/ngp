@@ -80,7 +80,7 @@ static void read_config(struct configuration_t *config, struct options_t *option
         fprintf(stderr, "ngprc: no editor string found!\n");
         exit(-1);
     }
-    strncpy(options->editor, buffer, LINE_MAX);
+    strncpy(options->editor, buffer, LINE_MAX - 1);
 
     if (config_lookup_string(&cfg, "default_parser", &buffer)) {
         if (!strncmp(buffer, "ag", 2))
@@ -92,14 +92,14 @@ static void read_config(struct configuration_t *config, struct options_t *option
     }
 
     if (config_lookup_string(&cfg, "ag_cmd", &buffer)) {
-        strncpy(options->parser_cmd[AG_SEARCH], buffer, LINE_MAX);
+        strncpy(options->parser_cmd[AG_SEARCH], buffer, LINE_MAX - 1);
     } else {
         fprintf(stderr, "ngprc: no ag_cmd string found!\n");
         exit(-1);
     }
 
     if (config_lookup_string(&cfg, "git_cmd", &buffer)) {
-        strncpy(options->parser_cmd[GIT_SEARCH], buffer, LINE_MAX);
+        strncpy(options->parser_cmd[GIT_SEARCH], buffer, LINE_MAX - 1);
     } else {
         fprintf(stderr, "ngprc: no git_cmd string found!\n");
         exit(-1);
