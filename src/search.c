@@ -26,6 +26,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 
 void do_ngp_search(struct search_t *search);
 void do_ag_search(struct search_t *search);
+void do_rg_search(struct search_t *search);
 void do_git_search(struct search_t *search);
 
 struct search_t * create_search( struct options_t *options )
@@ -52,6 +53,9 @@ void do_search(struct search_t *search)
 
         case AG_SEARCH:
             return do_ag_search(search);
+
+        case RG_SEARCH:
+            return do_rg_search(search);
 
         case GIT_SEARCH:
             return do_git_search(search);

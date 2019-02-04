@@ -28,6 +28,7 @@ add_library(objects STATIC
     search_utils.c
     ngp_search.c
     ag_search.c
+    rg_search.c
     git_search.c
     theme.c
     utils.c

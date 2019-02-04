@@ -30,6 +30,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 typedef enum {
     NGP_SEARCH = 0,
     AG_SEARCH,
+    RG_SEARCH,
     GIT_SEARCH,
 
     NUM_SEARCHES
