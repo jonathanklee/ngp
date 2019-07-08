@@ -137,7 +137,13 @@ void load_configuration(struct configuration_t *config)
     // If file does not exist, create a default ngprc and open it
     char dir[PATH_MAX - strlen(CONFIG_FILE)];
     snprintf(dir, sizeof(dir), "%s/.config/%s", getenv("HOME"), CONFIG_DIR);
-    mkdir(dir, 0777);
+
+    if (mkdir(dir, 0777) < 0 && errno != EEXIST) {
+       fprintf(stderr, "Failed to create configuration directory %s (%s).\n",
+                       dir, strerror(errno));
+       exit(EXIT_FAILURE);
+    }
+
     snprintf(user_ngprc, sizeof(dir), "%s/%s", dir, CONFIG_FILE);
 
     if (access(user_ngprc, R_OK) < 0) {
