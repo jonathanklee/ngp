@@ -42,6 +42,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
                        "*     arg \%3$s = directory\n"                                             \
                        "*/\n"                                                                      \
                        "ag_cmd = \"ag \%1$s \\\"\%2$s\\\" \%3$s\"\n"                               \
+                       "rg_cmd = \"rg \%1$s \\\"\%2$s\\\" \%3$s\"\n"                               \
                        "git_cmd = \"git grep \%1$s \\\"\%2$s\\\" \%3$s\"\n\n"                      \
                        "/* themes\n"                                                               \
                        "   colors available: cyan, yellow, red, green,\n"                          \

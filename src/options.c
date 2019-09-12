@@ -46,6 +46,7 @@ static void usage(int status)
     fprintf(out, "parser:\n");
     fprintf(out, " --nat[=<nat-options>]       use ngp's native search implementation with <nat-options>\n");
     fprintf(out, " --ag[=<ag-options>]         use ag aka sliver searcher as parser\n");
+    fprintf(out, " --rg[=<rg-options>]         use rg aka ripgrep as parser\n");
     fprintf(out, " --git[=<git-grep-options>]  use git-grep as parser (works only within GIT repositories)\n");
     fprintf(out, "\n");
     fprintf(out, "nat-options:\n");
@@ -85,6 +86,8 @@ static void read_config(struct configuration_t *config, struct options_t *option
     if (config_lookup_string(&cfg, "default_parser", &buffer)) {
         if (!strncmp(buffer, "ag", 2))
             options->search_type = AG_SEARCH;
+        else if (!strncmp(buffer, "rg", 3))
+            options->search_type = RG_SEARCH;
         else if (!strncmp(buffer, "git", 3))
             options->search_type = GIT_SEARCH;
         else
@@ -97,6 +100,14 @@ static void read_config(struct configuration_t *config, struct options_t *option
         fprintf(stderr, "ngprc: no ag_cmd string found!\n");
         exit(-1);
     }
+
+    if (config_lookup_string(&cfg, "rg_cmd", &buffer)) {
+        strncpy(options->parser_cmd[RG_SEARCH], buffer, LINE_MAX - 1);
+    } else {
+        fprintf(stderr, "ngprc: no rg_cmd string found!\n");
+        exit(-1);
+    }
+
 
     if (config_lookup_string(&cfg, "git_cmd", &buffer)) {
         strncpy(options->parser_cmd[GIT_SEARCH], buffer, LINE_MAX - 1);
@@ -200,6 +211,7 @@ static void parse_args(struct options_t *options, int argc, char *argv[])
         {"version", no_argument,       0,  'v' },
         {"nat",     optional_argument, 0,  'n' },
         {"ag",      optional_argument, 0,  'a' },
+        {"rg",      optional_argument, 0,  'r' },
         {"git",     optional_argument, 0,  'g' },
         {0,         0,                 0,   0 }
     };
@@ -250,6 +262,20 @@ static void parse_args(struct options_t *options, int argc, char *argv[])
                     goto error;
 
                 options->search_type = AG_SEARCH;
+
+                if (optarg != NULL) {
+                    strcpy(options->parser_options, optarg);
+                    opt = -1;
+                }
+
+                argv[current_index] = NULL;
+            }
+            break;
+            case 'r': {
+                if (current_index != 1)
+                    goto error;
+
+                options->search_type = RG_SEARCH;
 
                 if (optarg != NULL) {
                     strcpy(options->parser_options, optarg);
