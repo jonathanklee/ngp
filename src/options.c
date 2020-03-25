@@ -18,35 +18,44 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 
 #define _GNU_SOURCE
 
+#include "options.h"
+
+#include <dirent.h>
+#include <getopt.h>
 #include <stdio.h>
 #include <string.h>
-#include <getopt.h>
 #include <sys/types.h>
-#include <dirent.h>
 #include <unistd.h>
 
+#include "configuration.h"
 #include "list.h"
 #include "utils.h"
-#include "options.h"
-#include "configuration.h"
 
-#define NGP_VERSION   "1.4"
+#define NGP_VERSION "1.4"
 
-static void usage(int status)
-{
+static void usage(int status) {
     FILE *out = status == 0 ? stdout : stderr;
     fprintf(out, "usage: ngp [-h|--help] [-v|--version]\n");
-    fprintf(out, "       ngp [--<parser>] [<parser-options>] -- <pattern> [<path>]\n");
-    fprintf(out, "       ngp [--<parser>=<parser-options>] <pattern> [<path>]\n");
+    fprintf(out,
+            "       ngp [--<parser>] [<parser-options>] -- <pattern> "
+            "[<path>]\n");
+    fprintf(out,
+            "       ngp [--<parser>=<parser-options>] <pattern> [<path>]\n");
     fprintf(out, "\n");
     fprintf(out, "options:\n");
     fprintf(out, " -h, --help     display this message\n");
     fprintf(out, " -v, --version  show ngp version\n");
     fprintf(out, "\n");
     fprintf(out, "parser:\n");
-    fprintf(out, " --nat[=<nat-options>]       use ngp's native search implementation with <nat-options>\n");
-    fprintf(out, " --ag[=<ag-options>]         use ag aka sliver searcher as parser\n");
-    fprintf(out, " --git[=<git-grep-options>]  use git-grep as parser (works only within GIT repositories)\n");
+    fprintf(out,
+            " --nat[=<nat-options>]       use ngp's native search "
+            "implementation with <nat-options>\n");
+    fprintf(out,
+            " --ag[=<ag-options>]         use ag aka sliver searcher as "
+            "parser\n");
+    fprintf(out,
+            " --git[=<git-grep-options>]  use git-grep as parser (works only "
+            "within GIT repositories)\n");
     fprintf(out, "\n");
     fprintf(out, "nat-options:\n");
     fprintf(out, " -i         ignore case distinctions in pattern\n");
@@ -57,15 +66,14 @@ static void usage(int status)
     exit(status);
 }
 
-static void display_version(void)
-{
+static void display_version(void) {
     fprintf(stdout, "version %s\n", NGP_VERSION);
     exit(0);
 }
 
 #ifndef read_config /* ignore for testing */
-static void read_config(struct configuration_t *config, struct options_t *options)
-{
+static void read_config(struct configuration_t *config,
+                        struct options_t *options) {
     const char *specific_files;
     const char *extensions;
     const char *ignore;
@@ -107,7 +115,7 @@ static void read_config(struct configuration_t *config, struct options_t *option
 
     if (config_lookup_string(&cfg, "files", &specific_files)) {
         options->specific_file = create_list();
-        ptr = strtok_r((char *) specific_files, " ", &buf);
+        ptr = strtok_r((char *)specific_files, " ", &buf);
         while (ptr != NULL) {
             add_element(&options->specific_file, ptr);
             ptr = strtok_r(NULL, " ", &buf);
@@ -120,7 +128,7 @@ static void read_config(struct configuration_t *config, struct options_t *option
     /* getting files extensions from configuration */
     if (config_lookup_string(&cfg, "extensions", &extensions)) {
         options->extension = create_list();
-        ptr = strtok_r((char *) extensions, " ", &buf);
+        ptr = strtok_r((char *)extensions, " ", &buf);
         while (ptr != NULL) {
             add_element(&options->extension, ptr);
             ptr = strtok_r(NULL, " ", &buf);
@@ -133,7 +141,7 @@ static void read_config(struct configuration_t *config, struct options_t *option
     /* getting ignored files from configuration */
     if (config_lookup_string(&cfg, "ignore", &ignore)) {
         options->ignore = create_list();
-        ptr = strtok_r((char *) ignore, " ", &buf);
+        ptr = strtok_r((char *)ignore, " ", &buf);
         while (ptr != NULL) {
             add_element(&options->ignore, ptr);
             ptr = strtok_r(NULL, " ", &buf);
@@ -147,8 +155,8 @@ static void read_config(struct configuration_t *config, struct options_t *option
 }
 #endif
 
-static void parse_ngp_search_args(struct options_t *options, int argc, char *argv[])
-{
+static void parse_ngp_search_args(struct options_t *options, int argc,
+                                  char *argv[]) {
     opterr = 1;
     optind = 0;
 
@@ -193,16 +201,13 @@ static void parse_ngp_search_args(struct options_t *options, int argc, char *arg
     }
 }
 
-static void parse_args(struct options_t *options, int argc, char *argv[])
-{
-    static struct option long_options[] = {
-        {"help",    no_argument,       0,  'h' },
-        {"version", no_argument,       0,  'v' },
-        {"nat",     optional_argument, 0,  'n' },
-        {"ag",      optional_argument, 0,  'a' },
-        {"git",     optional_argument, 0,  'g' },
-        {0,         0,                 0,   0 }
-    };
+static void parse_args(struct options_t *options, int argc, char *argv[]) {
+    static struct option long_options[] = {{"help", no_argument, 0, 'h'},
+                                           {"version", no_argument, 0, 'v'},
+                                           {"nat", optional_argument, 0, 'n'},
+                                           {"ag", optional_argument, 0, 'a'},
+                                           {"git", optional_argument, 0, 'g'},
+                                           {0, 0, 0, 0}};
 
     int arg_count = argc;
     char **args = calloc(argc, sizeof(*args));
@@ -232,8 +237,7 @@ static void parse_args(struct options_t *options, int argc, char *argv[])
                 break;
 
             case 'n': {
-                if (current_index != 1)
-                    goto error;
+                if (current_index != 1) goto error;
 
                 options->search_type = NGP_SEARCH;
 
@@ -243,11 +247,9 @@ static void parse_args(struct options_t *options, int argc, char *argv[])
                 }
 
                 argv[current_index] = NULL;
-            }
-            break;
+            } break;
             case 'a': {
-                if (current_index != 1)
-                    goto error;
+                if (current_index != 1) goto error;
 
                 options->search_type = AG_SEARCH;
 
@@ -257,11 +259,9 @@ static void parse_args(struct options_t *options, int argc, char *argv[])
                 }
 
                 argv[current_index] = NULL;
-            }
-            break;
+            } break;
             case 'g': {
-                if (current_index != 1)
-                    goto error;
+                if (current_index != 1) goto error;
 
                 options->search_type = GIT_SEARCH;
 
@@ -271,28 +271,23 @@ static void parse_args(struct options_t *options, int argc, char *argv[])
                 }
 
                 argv[current_index] = NULL;
-            }
-            break;
+            } break;
 
-            case 1:
-            {
+            case 1: {
                 if (current_index == 1) {
                     optind--;
-                    opt=-1;
+                    opt = -1;
                     continue;
                 }
             }
-            case '?':
-            {
-                if (options->search_type == NGP_SEARCH)
-                    continue;
+            case '?': {
+                if (options->search_type == NGP_SEARCH) continue;
 
                 if (strlen(options->parser_options) > 0)
                     strcat(options->parser_options, " ");
                 strcat(options->parser_options, argv[current_index]);
                 continue;
-            }
-            break;
+            } break;
         }
     }
 
@@ -302,8 +297,7 @@ static void parse_args(struct options_t *options, int argc, char *argv[])
         arg_count = 0;
         int i;
         for (i = 0; i < argc; ++i) {
-            if (argv[i])
-                args[arg_count++] = argv[i];
+            if (argv[i]) args[arg_count++] = argv[i];
         }
 
         if (strlen(options->parser_options) > 1) {
@@ -312,12 +306,11 @@ static void parse_args(struct options_t *options, int argc, char *argv[])
             int new_argc = arg_count;
             char *arg = options->parser_options;
             for (i = 0; i < strlen(arg); ++i) {
-                if (arg[i] == ' ')
-                    new_argc++;
+                if (arg[i] == ' ') new_argc++;
             }
             new_argc++;
 
-             /* create new args */
+            /* create new args */
             char **new_args = calloc(new_argc, sizeof(*new_args));
             new_args[0] = argv[0];
 
@@ -342,11 +335,10 @@ static void parse_args(struct options_t *options, int argc, char *argv[])
         parse_ngp_search_args(options, arg_count, args);
     }
 
-    if (arg_count - optind < 1 || arg_count - optind > 2)
-        goto error;
+    if (arg_count - optind < 1 || arg_count - optind > 2) goto error;
 
     int first_argument = 0;
-    for ( ; optind < arg_count; optind++) {
+    for (; optind < arg_count; optind++) {
         if (!first_argument) {
             strcpy(options->pattern, args[optind]);
             first_argument = 1;
@@ -357,9 +349,10 @@ static void parse_args(struct options_t *options, int argc, char *argv[])
 
     free(args);
 
-    DIR* dirp = opendir(options->directory);
+    DIR *dirp = opendir(options->directory);
     if (!dirp) {
-        fprintf(stderr, "error: could not open directory \"%s\"\n", options->directory);
+        fprintf(stderr, "error: could not open directory \"%s\"\n",
+                options->directory);
         free_options(options);
         exit(-1);
     }
@@ -373,8 +366,8 @@ error:
     usage(-1);
 }
 
-struct options_t * create_options(struct configuration_t *config, int argc, char *argv[])
-{
+struct options_t *create_options(struct configuration_t *config, int argc,
+                                 char *argv[]) {
     struct options_t *options = calloc(1, sizeof(*options));
 
     options->search_type = NGP_SEARCH;
@@ -386,30 +379,27 @@ struct options_t * create_options(struct configuration_t *config, int argc, char
     return options;
 }
 
-void free_options(struct options_t* options)
-{
-   if (!options) {
-       return;
-   }
+void free_options(struct options_t *options) {
+    if (!options) {
+        return;
+    }
 
-   if (options->extension) {
-       free_list(&options->extension);
-   }
+    if (options->extension) {
+        free_list(&options->extension);
+    }
 
-   if (options->ignore) {
-       free_list(&options->ignore);
-   }
+    if (options->ignore) {
+        free_list(&options->ignore);
+    }
 
-   if (options->specific_file) {
-       free_list(&options->specific_file);
-   }
+    if (options->specific_file) {
+        free_list(&options->specific_file);
+    }
 
     /* free pcre stuffs if needed */
-    if (options->pcre_compiled)
-        pcre_free((void *) options->pcre_compiled);
+    if (options->pcre_compiled) pcre_free((void *)options->pcre_compiled);
 
-    if (options->pcre_extra)
-        pcre_free((void *) options->pcre_extra);
+    if (options->pcre_extra) pcre_free((void *)options->pcre_extra);
 
     free(options);
 }

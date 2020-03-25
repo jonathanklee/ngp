@@ -18,57 +18,58 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 
 #define _GNU_SOURCE
 
+#include "configuration.h"
+
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "entry.h"
-#include "utils.h"
-#include "list.h"
-#include "configuration.h"
 
-#define CONFIG_DIR     "ngp"
-#define CONFIG_FILE    "ngprc"
+#include "entry.h"
+#include "list.h"
+#include "utils.h"
+
+#define CONFIG_DIR "ngp"
+#define CONFIG_FILE "ngprc"
 
 struct configuration_t {
     config_t config;
 };
 
-struct configuration_t *create_configuration()
-{
+struct configuration_t *create_configuration() {
     struct configuration_t *new = calloc(1, sizeof(struct configuration_t));
     return new;
 }
 
-config_t get_config(struct configuration_t *config)
-{
-    return config->config;
-}
+config_t get_config(struct configuration_t *config) { return config->config; }
 
-static void create_user_ngprc(const char *file_path)
-{
+static void create_user_ngprc(const char *file_path) {
     // The file shouldn't exist (we've tested before). Use O_EXCL though, just
     // to be sure we don't delete anything.
     int fd = open(file_path, O_WRONLY | O_CLOEXEC | O_CREAT | O_EXCL,
-                                                              S_IRUSR | S_IWUSR);
+                  S_IRUSR | S_IWUSR);
     if (0 > fd) {
-       fprintf(stderr, "Failed to open default configuration file in %s (%s).\n",
-                       file_path, strerror(errno));
-       exit(EXIT_FAILURE);
+        fprintf(stderr,
+                "Failed to open default configuration file in %s (%s).\n",
+                file_path, strerror(errno));
+        exit(EXIT_FAILURE);
     }
 
-    const char* buf = CONFIG_CONTENT;
+    const char *buf = CONFIG_CONTENT;
     ssize_t written = 0u;
     ssize_t ret = 0u;
 
     do {
-        ret = write(fd, (void*)(buf + written), (size_t)(strlen(buf) - written));
+        ret = write(fd, (void *)(buf + written),
+                    (size_t)(strlen(buf) - written));
 
         if (-1 == ret) {
-            fprintf(stderr, "Failed to write to default configuration file in %s"
-                            " (%s).\n", file_path, strerror(errno));
+            fprintf(stderr,
+                    "Failed to write to default configuration file in %s"
+                    " (%s).\n",
+                    file_path, strerror(errno));
             exit(EXIT_FAILURE);
         }
 
@@ -78,8 +79,7 @@ static void create_user_ngprc(const char *file_path)
     close(fd);
 }
 
-void load_configuration(struct configuration_t *config)
-{
+void load_configuration(struct configuration_t *config) {
     config_init(&config->config);
 
     char user_ngprc[PATH_MAX];
@@ -87,13 +87,11 @@ void load_configuration(struct configuration_t *config)
     char *xdg_config_home = getenv("XDG_CONFIG_HOME");
 
     if (xdg_config_home != NULL) {
-        snprintf(user_ngprc, PATH_MAX, "%s/%s/%s", xdg_config_home,
-                 CONFIG_DIR, CONFIG_FILE);
+        snprintf(user_ngprc, PATH_MAX, "%s/%s/%s", xdg_config_home, CONFIG_DIR,
+                 CONFIG_FILE);
 
-        if (config_read_file(&config->config, user_ngprc))
-            return;
+        if (config_read_file(&config->config, user_ngprc)) return;
     }
-
 
     char *xdg_config_dirs = getenv("XDG_CONFIG_DIRS");
 
@@ -113,8 +111,7 @@ void load_configuration(struct configuration_t *config)
             snprintf(sys_ngprc, PATH_MAX, "%s/%s/%s", token, CONFIG_DIR,
                      CONFIG_FILE);
 
-            if (config_read_file(&config->config, sys_ngprc))
-                return;
+            if (config_read_file(&config->config, sys_ngprc)) return;
 
             token = strtok(NULL, ":");
         }
@@ -128,8 +125,7 @@ void load_configuration(struct configuration_t *config)
         snprintf(user_ngprc, PATH_MAX, "%s/Library/Preferences/%s/%s", home,
                  CONFIG_DIR, CONFIG_FILE);
 
-        if (config_read_file(&config->config, user_ngprc))
-            return;
+        if (config_read_file(&config->config, user_ngprc)) return;
     }
 
 #endif /* __linux__ / __APPLE__ */
@@ -159,15 +155,11 @@ void load_configuration(struct configuration_t *config)
         create_user_ngprc(user_ngprc);
     }
 
-    if (config_read_file(&config->config, user_ngprc))
-        return;
+    if (config_read_file(&config->config, user_ngprc)) return;
 
     fprintf(stderr, "Failed to create default configuration file in %s.\n",
-                    user_ngprc);
+            user_ngprc);
     exit(EXIT_FAILURE);
 }
 
-void destroy_configuration(struct configuration_t *config)
-{
-    free(config);
-}
+void destroy_configuration(struct configuration_t *config) { free(config); }

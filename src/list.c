@@ -18,13 +18,11 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "list.h"
 
-struct list* create_list()
-{
+struct list *create_list() {
     return NULL;
 }
 
-void add_element(struct list **list, char *element)
-{
+void add_element(struct list **list, char *element) {
     struct list *new, *pointer;
     int len;
 
@@ -35,8 +33,7 @@ void add_element(struct list **list, char *element)
     if (*list) {
         /* list not empty */
         pointer = *list;
-        while (pointer->next)
-            pointer = pointer->next;
+        while (pointer->next) pointer = pointer->next;
 
         pointer->next = new;
     } else {
@@ -45,8 +42,7 @@ void add_element(struct list **list, char *element)
     }
 }
 
-void free_list(struct list **list)
-{
+void free_list(struct list **list) {
     struct list *pointer = *list;
 
     while (*list) {
@@ -55,4 +51,3 @@ void free_list(struct list **list)
         free(pointer);
     }
 }
-

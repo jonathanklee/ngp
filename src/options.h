@@ -19,13 +19,13 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef OPTIONS_H
 #define OPTIONS_H
 
-#include "search.h"
 #include "configuration.h"
+#include "search.h"
 
 #ifdef LINE_MAX
-    #undef LINE_MAX
+#undef LINE_MAX
 #endif
-#define LINE_MAX    512
+#define LINE_MAX 512
 
 typedef enum {
     NGP_SEARCH = 0,
@@ -56,6 +56,7 @@ struct options_t {
     char parser_options[LINE_MAX];
 };
 
-struct options_t * create_options(struct configuration_t *config, int argc, char *argv[]);
-void free_options(struct options_t* options);
+struct options_t *create_options(struct configuration_t *config, int argc,
+                                 char *argv[]);
+void free_options(struct options_t *options);
 #endif

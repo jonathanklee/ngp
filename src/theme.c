@@ -16,11 +16,11 @@ You should have received a copy of the GNU General Public License
 along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "utils.h"
 #include "theme.h"
 
-static int get_color(const char *color)
-{
+#include "utils.h"
+
+static int get_color(const char *color) {
     if (!strcmp(color, "yellow")) {
         return COLOR_YELLOW;
     } else if (!strcmp(color, "red")) {
@@ -41,8 +41,7 @@ static int get_color(const char *color)
     return -1;
 }
 
-struct theme_t *read_theme(struct configuration_t *config)
-{
+struct theme_t *read_theme(struct configuration_t *config) {
     const char *buffer;
     char line_color[64];
     char line_number_color[64];
@@ -99,8 +98,7 @@ exit_read_theme:
     return NULL;
 }
 
-void apply_theme(struct theme_t *theme)
-{
+void apply_theme(struct theme_t *theme) {
     init_pair(COLOR_LINE, theme->line_color, -1);
     init_pair(COLOR_LINE_NUMBER, theme->line_number_color, -1);
     init_pair(COLOR_OPENED_LINE, theme->opened_line_color, -1);
@@ -108,8 +106,4 @@ void apply_theme(struct theme_t *theme)
     init_pair(COLOR_FILE, theme->file_color, -1);
 }
 
-void destroy_theme(struct theme_t *theme)
-{
-    free(theme);
-}
-
+void destroy_theme(struct theme_t *theme) { free(theme); }

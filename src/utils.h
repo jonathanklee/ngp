@@ -19,13 +19,16 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef UTILS_H
 #define UTILS_H
 
-#include "search.h"
 #include <libconfig.h>
+
+#include "search.h"
 
 int is_selectable(struct search_t *search, int index);
 char *regex(struct options_t *options, const char *line, const char *pattern);
 void *get_parser(struct options_t *options);
-char *strstr_wrapper(struct options_t *options, const char *line, const char *pattern);
-char *strcasestr_wrapper(struct options_t *options, const char *line, const char *pattern);
+char *strstr_wrapper(struct options_t *options, const char *line,
+                     const char *pattern);
+char *strcasestr_wrapper(struct options_t *options, const char *line,
+                         const char *pattern);
 
 #endif /* UTILS_H */
