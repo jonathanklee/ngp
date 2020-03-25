@@ -19,6 +19,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdio.h>
 #include <string.h>
 
+#include "circular_list.h"
 #include "configuration.h"
 #include "display.h"
 #include "list.h"
@@ -453,6 +454,46 @@ static char *test_get_file_name_ending_with_slash() {
     return 0;
 }
 
+static char *test_circular_list_add() {
+    struct circular_list *list = create_circular_list(2);
+
+    add_circular_element(&list, "jean-paul");
+    mu_assert("test_circular_list_add failed",
+              strcmp(list->head->data, "jean-paul") == 0);
+    free_circular_list(&list);
+
+    return 0;
+}
+
+static char *test_circular_list_add_two_elements() {
+    struct circular_list *list = create_circular_list(2);
+
+    add_circular_element(&list, "jean-paul");
+    add_circular_element(&list, "jean-mich");
+    mu_assert("test_circular_list_add_two_elements failed",
+              strcmp(list->head->data, "jean-paul") == 0);
+    mu_assert("test_circular_list_add_two_elements failed",
+              strcmp(list->head->next->data, "jean-mich") == 0);
+    free_circular_list(&list);
+
+    return 0;
+}
+
+static char *test_circular_list_add_three_elements_for_overflow() {
+    struct circular_list *list = create_circular_list(2);
+
+    add_circular_element(&list, "jean-paul");
+    add_circular_element(&list, "jean-mich");
+    add_circular_element(&list, "jean-bernard");
+    mu_assert("test_circular_list_add_three_elements_for_overflow failed",
+              strcmp(list->head->data, "jean-mich") == 0);
+    mu_assert("test_circular_list_add_three_elements_for_overflow failed",
+              strcmp(list->head->next->data, "jean-bernard") == 0);
+    free_circular_list(&list);
+
+    return 0;
+}
+
 static char *all_tests() {
     char *message = command_line_arg_tests();
     if (message) return message;
@@ -483,6 +524,9 @@ static char *all_tests() {
     mu_run_test(test_get_file_name_multiple);
     mu_run_test(test_get_file_name_current_dir);
     mu_run_test(test_get_file_name_ending_with_slash);
+    mu_run_test(test_circular_list_add);
+    mu_run_test(test_circular_list_add_two_elements);
+    mu_run_test(test_circular_list_add_three_elements_for_overflow);
     return 0;
 }
 

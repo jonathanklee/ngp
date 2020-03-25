@@ -15,6 +15,7 @@ set(HEADERS
     theme.h
     utils.h
     configuration.h
+    circular_list.h
     )
 
 add_library(objects STATIC
@@ -32,6 +33,7 @@ add_library(objects STATIC
     theme.c
     utils.c
     configuration.c
+    circular_list.c
 )
 
 add_executable(ngp ${SRCS} ${HEADERS})
