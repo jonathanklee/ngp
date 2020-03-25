@@ -19,7 +19,6 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "file.h"
 #include "line.h"
-
 #include "search_utils.h"
 
 /*
@@ -38,8 +37,7 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
  *58[36m-[m
  */
 
-static int match_blank_line(struct result_t *result, const char *output)
-{
+static int match_blank_line(struct result_t *result, const char *output) {
     /* empty line */
     size_t line_length = strlen(output);
     if (line_length == 0) {
@@ -48,9 +46,8 @@ static int match_blank_line(struct result_t *result, const char *output)
     }
 
     /* only colored '--' */
-    const char* match = apply_regex(output, "^(\\033\\[36m)(--)(\\033\\[m)$");
-    if (!match)
-        return 0;
+    const char *match = apply_regex(output, "^(\\033\\[36m)(--)(\\033\\[m)$");
+    if (!match) return 0;
 
     result->entries = create_blank_line(result);
     pcre_free_substring(match);
@@ -58,42 +55,36 @@ static int match_blank_line(struct result_t *result, const char *output)
     return 1;
 }
 
-static int match_file(struct result_t *result, const char *output)
-{
-    const char* match = apply_regex(output, "^([^\\033]+)$");
-    if (!match)
-        return 0;
+static int match_file(struct result_t *result, const char *output) {
+    const char *match = apply_regex(output, "^([^\\033]+)$");
+    if (!match) return 0;
 
-    if(!validate_file(match))
-        return 1;
+    if (!validate_file(match)) return 1;
 
-    result->entries = create_file(result, (char*)match);
+    result->entries = create_file(result, (char *)match);
     pcre_free_substring(match);
 
     return 1;
 }
 
-static int match_line(struct result_t *result, const char *output)
-{
+static int match_line(struct result_t *result, const char *output) {
     /* match line number */
     const char *match = apply_regex(output, "^\\d+");
-    if (!match)
-        return 0;
+    if (!match) return 0;
 
     size_t line_number = atoi(match);
     pcre_free_substring(match);
 
-    if (line_number == 0)
-        return 0;
+    if (line_number == 0) return 0;
 
     /* match context lines ('-' or '=' after line number) */
     match = apply_regex(output, "(?<=([-=]\\033\\[m)).*$");
     if (match) {
-        result->entries = create_unselectable_line(result, (char*)match, line_number);
+        result->entries =
+                create_unselectable_line(result, (char *)match, line_number);
         pcre_free_substring(match);
         return 1;
     }
-
 
     range_t highlight = {0, 0};
     size_t line_length = 1024;
@@ -101,8 +92,7 @@ static int match_line(struct result_t *result, const char *output)
 
     /* match from line number until match */
     match = apply_regex(output, "(?<=([:]\\033\\[m))[^\\033]*");
-    if (!match)
-        return 0;
+    if (!match) return 0;
 
     resize_string(&line, &line_length, strlen(match));
     strcat(line, match);
@@ -110,8 +100,7 @@ static int match_line(struct result_t *result, const char *output)
 
     /* match the highlighted match */
     match = apply_regex(output, "(?<=(\\033\\[1;31m))[^\\033]*");
-    if (!match)
-        return 0;
+    if (!match) return 0;
 
     highlight.begin = strlen(line);
     highlight.end = highlight.begin + strlen(match);
@@ -122,8 +111,7 @@ static int match_line(struct result_t *result, const char *output)
 
     /* match rest of line */
     match = apply_regex(output, "(?<=(\\033\\[m))[^\\033]*$");
-    if (!match)
-        return 0;
+    if (!match) return 0;
 
     resize_string(&line, &line_length, strlen(match));
     strcat(line, match);
@@ -134,15 +122,10 @@ static int match_line(struct result_t *result, const char *output)
     return 1;
 }
 
-void do_git_search(struct search_t *search)
-{
+void do_git_search(struct search_t *search) {
     char default_arguments[] = "-n --heading --color=always ";
-    external_parser_t git_grep = {
-        default_arguments,
-        match_file,
-        match_line,
-        match_blank_line
-    };
+    external_parser_t git_grep = {default_arguments, match_file, match_line,
+                                  match_blank_line};
 
     popen_search(search, &git_grep);
 }

@@ -16,41 +16,38 @@ You should have received a copy of the GNU General Public License
 along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "utils.h"
-#include "theme.h"
+#include <dirent.h>
+#include <errno.h>
+#include <getopt.h>
+#include <signal.h>
+#include <unistd.h>
+
+#include "configuration.h"
+#include "display.h"
 #include "entry.h"
 #include "file.h"
 #include "line.h"
 #include "list.h"
-#include "entry.h"
-#include "display.h"
 #include "options.h"
-#include "configuration.h"
-
 #include "search.h"
-
-#include <errno.h>
-#include <dirent.h>
-#include <signal.h>
-#include <getopt.h>
-#include <unistd.h>
+#include "theme.h"
+#include "utils.h"
 
 #define _GNU_SOURCE
 
-#define CURSOR_UP     'k'
-#define CURSOR_DOWN   'j'
-#define PAGE_UP       'K'
-#define PAGE_DOWN     'J'
-#define ENTER         'p'
-#define QUIT          'q'
-#define MARK          'm'
-#define CTRL_D         4
-#define CTRL_U        21
+#define CURSOR_UP 'k'
+#define CURSOR_DOWN 'j'
+#define PAGE_UP 'K'
+#define PAGE_DOWN 'J'
+#define ENTER 'p'
+#define QUIT 'q'
+#define MARK 'm'
+#define CTRL_D 4
+#define CTRL_U 21
 
-#define lock(MUTEX) \
-for(mutex = &MUTEX; \
-mutex && !pthread_mutex_lock(mutex); \
-pthread_mutex_unlock(mutex), mutex = 0)
+#define lock(MUTEX)                                           \
+    for (mutex = &MUTEX; mutex && !pthread_mutex_lock(mutex); \
+         pthread_mutex_unlock(mutex), mutex = 0)
 
 /* keep a pointer on search_t & display_t for signal handler ONLY */
 static struct search_t *global_search;
@@ -58,8 +55,8 @@ static struct display_t *global_display;
 static struct configuration_t *global_config;
 static pthread_t pid;
 
-void open_entry(struct search_t *search, int index, const char *editor, const char *pattern)
-{
+void open_entry(struct search_t *search, int index, const char *editor,
+                const char *pattern) {
     int i;
     struct entry_t *ptr;
     struct entry_t *file = search->result->start;
@@ -70,27 +67,22 @@ void open_entry(struct search_t *search, int index, const char *editor, const ch
     for (i = 0, ptr = search->result->start; i < index; i++) {
         ptr = ptr->next;
         struct file_t *cast_result = get_type(ptr, FILE_ENTRY);
-        if (cast_result)
-            file = &cast_result->entry;
+        if (cast_result) file = &cast_result->entry;
     }
 
     struct line_t *line = container_of(ptr, struct line_t, entry);
 
     lock(search->data_mutex) {
-        snprintf(command, sizeof(command), editor,
-            pattern,
-            line->line,
-            file->data);
+        snprintf(command, sizeof(command), editor, pattern, line->line,
+                 file->data);
     }
 
-    if (system(command) < 0)
-        return;
+    if (system(command) < 0) return;
 
     line->opened = 1;
 }
 
-void sig_handler(int signo)
-{
+void sig_handler(int signo) {
     if (signo == SIGINT) {
         pthread_cancel(pid);
         pthread_join(pid, NULL);
@@ -101,15 +93,15 @@ void sig_handler(int signo)
     }
 }
 
-void *lookup_thread(void *arg)
-{
+void *lookup_thread(void *arg) {
     DIR *dp;
 
-    struct search_t *d = (struct search_t *) arg;
+    struct search_t *d = (struct search_t *)arg;
     dp = opendir(d->options->directory);
 
     if (!dp) {
-        fprintf(stderr, "error: could not open directory \"%s\"\n", d->options->directory);
+        fprintf(stderr, "error: could not open directory \"%s\"\n",
+                d->options->directory);
         exit(-1);
     }
 
@@ -117,39 +109,29 @@ void *lookup_thread(void *arg)
 
     d->status = 0;
     closedir(dp);
-    return (void *) NULL;
+    return (void *)NULL;
 }
 
-void display_status(struct search_t *search)
-{
+void display_status(struct search_t *search) {
     char *rollingwheel[] = {
-        ".  ", ".  ", ".  ", ".  ",
-        "   ", "   ", "   ", "   ",
-        "   ", "   ", "   ", "   ",
-        "   ", "   ", "   ", "   ",
-        "   ", "   ", "   ", "   ",
-        " . ", " . ", " . ", " . ",
-        "   ", "   ", "   ", "   ",
-        "   ", "   ", "   ", "   ",
-        "   ", "   ", "   ", "   ",
-        "   ", "   ", "   ", "   ",
-        "  .", "  .", "  .", "  .",
-        "   ", "   ", "   ", "   ",
-        "   ", "   ", "   ", "   ",
-        "   ", "   ", "   ", "   ",
-        "   ", "   ", "   ", "   ",
-        };
+            ".  ", ".  ", ".  ", ".  ", "   ", "   ", "   ", "   ", "   ",
+            "   ", "   ", "   ", "   ", "   ", "   ", "   ", "   ", "   ",
+            "   ", "   ", " . ", " . ", " . ", " . ", "   ", "   ", "   ",
+            "   ", "   ", "   ", "   ", "   ", "   ", "   ", "   ", "   ",
+            "   ", "   ", "   ", "   ", "  .", "  .", "  .", "  .", "   ",
+            "   ", "   ", "   ", "   ", "   ", "   ", "   ", "   ", "   ",
+            "   ", "   ", "   ", "   ", "   ", "   ",
+    };
     static int i = 0;
 
     attron(COLOR_PAIR(COLOR_FILE));
     if (search->status)
-        mvaddstr(0, COLS - 3, rollingwheel[++i%60]);
+        mvaddstr(0, COLS - 3, rollingwheel[++i % 60]);
     else
         mvaddstr(0, COLS - 5, "");
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     struct configuration_t *config = create_configuration();
     struct options_t *options = create_options(config, argc, argv);
     struct search_t *search = create_search(options);
@@ -169,52 +151,49 @@ int main(int argc, char *argv[])
     }
 
     pthread_mutex_t *mutex;
-    lock(search->data_mutex)
-        display_results(display, search, LINES);
+    lock(search->data_mutex) display_results(display, search, LINES);
 
     int ch;
     while ((ch = getch())) {
-        switch(ch) {
-        case KEY_RESIZE:
-            lock(search->data_mutex)
-                resize_display(display, search, LINES);
-            break;
-        case CURSOR_DOWN:
-        case KEY_DOWN:
-            lock(search->data_mutex)
-                move_cursor_down_and_refresh(display, search);
-            break;
-        case CURSOR_UP:
-        case KEY_UP:
-            lock(search->data_mutex)
-                move_cursor_up_and_refresh(display, search);
-            break;
-        case KEY_PPAGE:
-        case PAGE_UP:
-        case CTRL_U:
-            lock(search->data_mutex)
-                move_page_up_and_refresh(display, search);
-            break;
-        case KEY_NPAGE:
-        case PAGE_DOWN:
-        case CTRL_D:
-            lock(search->data_mutex)
-                move_page_down_and_refresh(display, search);
-            break;
-        case ENTER:
-        case '\n':
-            if (search->result->nbentry == 0)
+        switch (ch) {
+            case KEY_RESIZE:
+                lock(search->data_mutex) resize_display(display, search, LINES);
                 break;
-            stop_ncurses(display);
-            open_entry(search, display->cursor + display->index,
-                       search->options->editor, search->options->pattern);
-            start_ncurses(display, config);
-            resize_display(display, search, LINES);
-            break;
-        case QUIT:
-            goto quit;
-        default:
-            break;
+            case CURSOR_DOWN:
+            case KEY_DOWN:
+                lock(search->data_mutex)
+                        move_cursor_down_and_refresh(display, search);
+                break;
+            case CURSOR_UP:
+            case KEY_UP:
+                lock(search->data_mutex)
+                        move_cursor_up_and_refresh(display, search);
+                break;
+            case KEY_PPAGE:
+            case PAGE_UP:
+            case CTRL_U:
+                lock(search->data_mutex)
+                        move_page_up_and_refresh(display, search);
+                break;
+            case KEY_NPAGE:
+            case PAGE_DOWN:
+            case CTRL_D:
+                lock(search->data_mutex)
+                        move_page_down_and_refresh(display, search);
+                break;
+            case ENTER:
+            case '\n':
+                if (search->result->nbentry == 0) break;
+                stop_ncurses(display);
+                open_entry(search, display->cursor + display->index,
+                           search->options->editor, search->options->pattern);
+                start_ncurses(display, config);
+                resize_display(display, search, LINES);
+                break;
+            case QUIT:
+                goto quit;
+            default:
+                break;
         }
 
         // disable no-delay mode after search was finished

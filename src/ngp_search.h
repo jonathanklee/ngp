@@ -21,4 +21,4 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 
 char *get_file_name(const char *absolute_path, char *file_name);
 
-#endif // NGP_SEARCH_N
+#endif  // NGP_SEARCH_N

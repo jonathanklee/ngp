@@ -27,7 +27,7 @@ struct list {
     char data[];
 };
 
-struct list* create_list();
+struct list *create_list();
 void add_element(struct list **list, char *element);
 void free_list(struct list **list);
 

@@ -19,9 +19,10 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef SEARCH_H
 #define SEARCH_H
 
-#include <pthread.h>
-#include <pcre.h>
 #include <limits.h>
+#include <pcre.h>
+#include <pthread.h>
+
 #include "options.h"
 
 struct result_t {
@@ -32,16 +33,16 @@ struct result_t {
 
 struct search_t {
 
-    struct result_t* result;
+    struct result_t *result;
 
     /* thread */
     pthread_mutex_t data_mutex;
     int status;
 
-    struct options_t* options;
+    struct options_t *options;
 };
 
-struct search_t * create_search(struct options_t* options);
+struct search_t *create_search(struct options_t *options);
 void do_search(struct search_t *search);
 void free_search(struct search_t *search);
 

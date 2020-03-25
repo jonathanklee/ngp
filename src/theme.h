@@ -20,9 +20,10 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 #define THEMES_H
 
 #include <libconfig.h>
+#include <ncurses.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ncurses.h>
+
 #include "configuration.h"
 
 struct theme_t {
@@ -31,7 +32,6 @@ struct theme_t {
     int line_number_color;
     int highlight_color;
     int opened_line_color;
-
 };
 
 enum color_t {

@@ -17,19 +17,16 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "line.h"
+
 #include "theme.h"
 
 static void *get_line(struct entry_t *entry, entry_type_t type);
 
-struct entry_vtable line_vtable = {
-    display_line,
-    is_line_selectable,
-    free_line,
-    get_line
-};
+struct entry_vtable line_vtable = {display_line, is_line_selectable, free_line,
+                                   get_line};
 
-struct entry_t *create_line(struct result_t *result, char *line, int line_number, range_t match)
-{
+struct entry_t *create_line(struct result_t *result, char *line,
+                            int line_number, range_t match) {
     int len = strlen(line) + 1;
     struct line_t *new;
 
@@ -53,8 +50,8 @@ struct entry_t *create_line(struct result_t *result, char *line, int line_number
     return &new->entry;
 }
 
-struct entry_t *create_unselectable_line(struct result_t *result, char *line, int line_number)
-{
+struct entry_t *create_unselectable_line(struct result_t *result, char *line,
+                                         int line_number) {
     range_t no_match = {0, 0};
     struct entry_t *entry = create_line(result, line, line_number, no_match);
     struct line_t *new = container_of(entry, struct line_t, entry);
@@ -63,20 +60,16 @@ struct entry_t *create_unselectable_line(struct result_t *result, char *line, in
     return entry;
 }
 
-struct entry_t *create_blank_line(struct result_t *result)
-{
+struct entry_t *create_blank_line(struct result_t *result) {
     return create_unselectable_line(result, "", 0);
 }
 
-
-static int get_integer_as_string(int integer, char *string)
-{
+static int get_integer_as_string(int integer, char *string) {
     sprintf(string, "%d", integer);
     return strlen(string) + 1;
 }
 
-static void hilight_pattern(struct line_t *container, char *line, int y)
-{
+static void hilight_pattern(struct line_t *container, char *line, int y) {
     char *ptr = (char *)line;
     char buffer[32];
     int length = get_integer_as_string(container->line, buffer);
@@ -92,27 +85,25 @@ static void hilight_pattern(struct line_t *container, char *line, int y)
     attron(A_REVERSE);
 
     if (container->opened)
-       attron(COLOR_PAIR(COLOR_OPENED_LINE));
+        attron(COLOR_PAIR(COLOR_OPENED_LINE));
     else
-       attron(COLOR_PAIR(COLOR_HIGHLIGHT));
+        attron(COLOR_PAIR(COLOR_HIGHLIGHT));
 
     length = container->highlight.end - container->highlight.begin;
     int counter;
-    for (counter = 0; counter < length; counter++, ptr++)
-        addch(*ptr);
+    for (counter = 0; counter < length; counter++, ptr++) addch(*ptr);
 
     attroff(A_REVERSE);
 }
 
-void display_line(struct entry_t *entry, struct search_t *search, int y, int is_cursor_on_entry)
-{
+void display_line(struct entry_t *entry, struct search_t *search, int y,
+                  int is_cursor_on_entry) {
     int length = 0;
     char cropped_line[PATH_MAX] = "";
     char *line = entry->data;
     int i;
 
-    if (is_cursor_on_entry)
-        attron(A_REVERSE);
+    if (is_cursor_on_entry) attron(A_REVERSE);
 
     /* first clear line */
     move(y, 0);
@@ -121,8 +112,7 @@ void display_line(struct entry_t *entry, struct search_t *search, int y, int is_
     /* display blank line */
     struct line_t *container = container_of(entry, struct line_t, entry);
     if (container->line == 0) {
-        for (i = 0; i < COLS; ++i)
-            cropped_line[i] = '-';
+        for (i = 0; i < COLS; ++i) cropped_line[i] = '-';
 
         attron(A_BOLD);
         attron(COLOR_PAIR(COLOR_FILE));
@@ -146,26 +136,21 @@ void display_line(struct entry_t *entry, struct search_t *search, int y, int is_
 
     hilight_pattern(container, cropped_line, y);
 
-    if (is_cursor_on_entry)
-        attroff(A_REVERSE);
+    if (is_cursor_on_entry) attroff(A_REVERSE);
 }
 
-int is_line_selectable(struct entry_t *entry)
-{
+int is_line_selectable(struct entry_t *entry) {
     struct line_t *line = container_of(entry, struct line_t, entry);
     return line->is_selectable;
 }
 
-void free_line(struct entry_t *entry)
-{
+void free_line(struct entry_t *entry) {
     struct line_t *ptr = container_of(entry, struct line_t, entry);
     free(ptr);
 }
 
-static void *get_line(struct entry_t *entry, entry_type_t type)
-{
-    if (type == LINE_ENTRY)
-        return container_of(entry, struct line_t, entry);
+static void *get_line(struct entry_t *entry, entry_type_t type) {
+    if (type == LINE_ENTRY) return container_of(entry, struct line_t, entry);
 
     return NULL;
 }

@@ -17,31 +17,26 @@ along with ngp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "entry.h"
-#include "string.h"
-#include "utils.h"
-#include "theme.h"
-#include "file.h"
-#include "line.h"
 
 #include <sys/stat.h>
 
-void display_entry(struct entry_t *entry, struct search_t *search, int y, int is_cursor_on_entry)
-{
+#include "file.h"
+#include "line.h"
+#include "string.h"
+#include "theme.h"
+#include "utils.h"
+
+void display_entry(struct entry_t *entry, struct search_t *search, int y,
+                   int is_cursor_on_entry) {
     entry->vtable->display(entry, search, y, is_cursor_on_entry);
 }
 
-void free_entry(struct entry_t *entry)
-{
-    entry->vtable->free(entry);
-}
+void free_entry(struct entry_t *entry) { entry->vtable->free(entry); }
 
-int is_entry_selectable(struct entry_t *entry)
-{
+int is_entry_selectable(struct entry_t *entry) {
     return entry->vtable->is_selectable(entry);
 }
 
-void *get_type(struct entry_t *entry, entry_type_t type)
-{
+void *get_type(struct entry_t *entry, entry_type_t type) {
     return entry->vtable->get_type(entry, type);
 }
-
