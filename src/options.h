@@ -33,7 +33,7 @@ typedef enum {
     GIT_SEARCH,
 
     NUM_SEARCHES
-} SearchType;
+} search_type_t;
 
 struct options_t {
     const pcre *pcre_compiled;
@@ -51,7 +51,7 @@ struct options_t {
     int ignore_option;
     int regexp_is_ok;
 
-    SearchType search_type;
+    search_type_t search_type;
     char parser_cmd[NUM_SEARCHES][LINE_MAX];
     char parser_options[LINE_MAX];
 };
