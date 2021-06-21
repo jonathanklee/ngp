@@ -71,16 +71,14 @@ char *get_file_name(const char *absolute_path, char *file_name) {
     return ret;
 }
 
-static void parse_text(struct search_t *search, const char *file_name,
+static void parse_text(struct search_t *search, const parser_t parser, const char *file_name,
                        int file_size, const char *text, const char *pattern) {
     char *end;
     char *endline;
     int first_occurrence;
     int line_number;
-    char *(*parser)(struct options_t *, const char *, const char *);
     char *pointer = (char *)text;
 
-    parser = get_parser(search->options);
     first_occurrence = 1;
     line_number = 1;
     end = pointer + file_size;
@@ -158,8 +156,8 @@ static int is_extension_good(struct options_t *options, const char *file) {
     return 0;
 }
 
-static int parse_file(struct search_t *search, const char *file,
-                      const char *pattern) {
+static int parse_file(struct search_t *search, const parser_t parser,
+                      const char *file, const char *pattern) {
     int f;
     char *pointer;
     char *start;
@@ -183,15 +181,15 @@ static int parse_file(struct search_t *search, const char *file,
 
     close(f);
 
-    parse_text(search, file, sb.st_size, start, pattern);
+    parse_text(search, parser, file, sb.st_size, start, pattern);
 
     if (munmap(start, sb.st_size) < 0) return -1;
 
     return 0;
 }
 
-static void lookup_file(struct search_t *search, const char *file,
-                        const char *pattern) {
+static void lookup_file(struct search_t *search, const parser_t parser,
+                        const char *file, const char *pattern) {
     errno = 0;
     pthread_mutex_t *mutex;
 
@@ -199,23 +197,23 @@ static void lookup_file(struct search_t *search, const char *file,
         return;
 
     if (search->options->raw_option) {
-        for_lock(search->data_mutex) parse_file(search, file, pattern);
+        for_lock(search->data_mutex) parse_file(search, parser, file, pattern);
         return;
     }
 
     if (is_specific_file(search->options, file)) {
-        for_lock(search->data_mutex) parse_file(search, file, pattern);
+        for_lock(search->data_mutex) parse_file(search, parser, file, pattern);
         return;
     }
 
     if (is_extension_good(search->options, file)) {
-        for_lock(search->data_mutex) parse_file(search, file, pattern);
+        for_lock(search->data_mutex) parse_file(search, parser, file, pattern);
         return;
     }
 }
 
-static void lookup_directory(struct search_t *search, const char *dir,
-                             const char *pattern) {
+static void lookup_directory(struct search_t *search, const parser_t parser,
+                             const char *dir, const char *pattern) {
     DIR *dp;
 
     if (is_ignored_file(search->options, dir)) {
@@ -236,20 +234,23 @@ static void lookup_directory(struct search_t *search, const char *dir,
             snprintf(file_path, PATH_MAX, "%s/%s", dir, ep->d_name);
 
             if (!is_simlink(file_path)) {
-                lookup_file(search, file_path, pattern);
+                lookup_file(search, parser, file_path, pattern);
             }
         }
 
         if (ep->d_type & DT_DIR && is_dir_good(ep->d_name)) {
             char path_dir[PATH_MAX] = "";
             snprintf(path_dir, PATH_MAX, "%s/%s", dir, ep->d_name);
-            lookup_directory(search, path_dir, pattern);
+            lookup_directory(search, parser, path_dir, pattern);
         }
     }
     closedir(dp);
 }
 
 void do_ngp_search(struct search_t *search) {
-    lookup_directory(search, search->options->directory,
+
+    parser_t parser = from_options_to_parser(search->options);
+
+    lookup_directory(search, parser, search->options->directory,
                      search->options->pattern);
 }
