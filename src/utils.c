@@ -70,8 +70,18 @@ char *regex(struct options_t *options, const char *line, const char *pattern) {
     return (char *)matched_string;
 }
 
-void *get_parser(struct options_t *options) {
-    char *(*parser)(struct options_t *, const char *, const char *);
+char *strstr_wrapper(struct options_t *options, const char *line,
+                     const char *pattern) {
+    return strstr(line, pattern);
+}
+
+char *strcasestr_wrapper(struct options_t *options, const char *line,
+                         const char *pattern) {
+    return strcasestr(line, pattern);
+}
+
+void *from_options_to_parser(struct options_t *options) {
+    parser_t parser;
 
     if (!options->incase_option)
         parser = strstr_wrapper;
@@ -81,14 +91,4 @@ void *get_parser(struct options_t *options) {
     if (options->regexp_option) parser = regex;
 
     return parser;
-}
-
-char *strstr_wrapper(struct options_t *options, const char *line,
-                     const char *pattern) {
-    return strstr(line, pattern);
-}
-
-char *strcasestr_wrapper(struct options_t *options, const char *line,
-                         const char *pattern) {
-    return strcasestr(line, pattern);
 }
