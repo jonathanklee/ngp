@@ -17,6 +17,7 @@
 *.app
 *.in
 ngp
+tests/tests
 tags
 
 Makefile
@@ -34,3 +35,8 @@ missing
 config.log
 config.status
 src/.deps/
+
+# cmake
+CMakeFiles/
+*.cmake
+CMakeCache.txt
