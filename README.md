@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/jonathanklee/ngp.svg?branch=master)](https://travis-ci.org/jonathanklee/ngp)
+[![Build Status](https://www.travis-ci.com/jonathanklee/ngp.svg?branch=master)](https://www.travis-ci.com/jonathanklee/ngp)
 
 ngp
 ===
